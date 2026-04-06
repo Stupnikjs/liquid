@@ -1,0 +1,69 @@
+
+// BIGEST MARKET 
+query {
+  markets(
+    first: 5
+    orderBy: SupplyAssetsUsd
+    orderDirection: Desc
+    where: { chainId_in: [8453] }
+  ) {
+    items {
+      uniqueKey
+      loanAsset { symbol }
+      collateralAsset { symbol }
+      state {
+        supplyAssetsUsd
+        borrowAssetsUsd
+      }
+    }
+  }
+}
+
+// LAST LIQUIDATION ON CHAIN 
+query {
+  transactions(
+    first: 20
+    orderBy: Timestamp
+    orderDirection: Desc
+    where: {
+      type_in: [MarketLiquidation]
+      chainId_in: [8453]
+    }
+  ) {
+    items {
+      blockNumber
+      hash
+      type
+      user { address }
+      data {
+        ... on MarketLiquidationTransactionData {
+          seizedAssets
+          seizedAssetsUsd
+          repaidAssets
+          repaidAssetsUsd
+          badDebtAssetsUsd
+          liquidator
+          market {
+            uniqueKey
+            loanAsset { symbol }
+            collateralAsset { symbol }
+          }
+        }
+      }
+    }
+  }
+}
+
+// FIND INFO ABOUT MARKET ID 
+query {
+  marketByUniqueKey(
+    uniqueKey: "0x214c2bf3c899c913efda9c4a49adff23f77bbc2dc525af7c05be7ec93f32d561"
+    chainId: 8453
+  ) {
+    lltv
+    oracleAddress
+    irmAddress
+    loanAsset { address symbol decimals }
+    collateralAsset { address symbol decimals }
+  }
+}

@@ -1,0 +1,171 @@
+package morpho
+
+import (
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/ethereum/go-ethereum/common"
+)
+
+var (
+	BaseParams = []MarketParams{
+		// 1. cbBTC / USDC — 86% LLTV (~$981M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0x9103c3b4e834476c9a62ea009ba2c884ee42e94e6e314a26f04d312434191836")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf"),
+			CollateralTokenStr:      "cbBTC",
+			Oracle:                  common.HexToAddress("0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9"),
+			LLTV:                    utils.ParseBigInt("860000000000000000"),
+			LoanTokenDecimals:       6,
+			CollateralTokenDecimals: 8,
+			PoolFee:                 500,
+			Correlated:              false,
+			CexOnly:                 true,
+		},
+		// 2. WETH / USDC — 86% LLTV (~$51M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0x4200000000000000000000000000000000000006"),
+			CollateralTokenStr:      "WETH",
+			Oracle:                  common.HexToAddress("0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4"),
+			LLTV:                    utils.ParseBigInt("860000000000000000"),
+			LoanTokenDecimals:       6,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 500,
+			Correlated:              false,
+			CexOnly:                 true,
+		},
+		// 3. wstETH / WETH — 94.5% LLTV (~$14M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0x3a4048c64ba1b375330d376b1ce40e4047d03b47ab4d48af484edec9fec801ba")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x4200000000000000000000000000000000000006"),
+			LoanTokenStr:            "WETH",
+			CollateralToken:         common.HexToAddress("0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452"),
+			CollateralTokenStr:      "wstETH",
+			Oracle:                  common.HexToAddress("0x4A11590e5326138B514E08A9B52202D42077Ca65"),
+			LLTV:                    utils.ParseBigInt("945000000000000000"),
+			LoanTokenDecimals:       18,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 100,
+			Correlated:              true,
+			CexOnly:                 false,
+		},
+		// 4. cbXRP / USDC — 62.5% LLTV (~$11M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0xd4a903dc6d949519060c7707f9604fdc9772c046e05c2e3a8fce0bd7196e4109")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0xcb585250f852C6c6bf90434AB21A00f02833a4af"),
+			CollateralTokenStr:      "cbXRP",
+			Oracle:                  common.HexToAddress("0x031b2EFC8d70042Ac8d9f5c793c4149eC4b60fdE"),
+			LLTV:                    utils.ParseBigInt("625000000000000000"),
+			LoanTokenDecimals:       6,
+			CollateralTokenDecimals: 6,
+			PoolFee:                 3000,
+			Correlated:              false,
+			CexOnly:                 true,
+		},
+		// 5. cbBTC / EURC — 86% LLTV (~$7M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0x67ebd84b2fb39e3bc5a13d97e4c07abe1ea617e40654826e9abce252e95f049e")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42"),
+			LoanTokenStr:            "EURC",
+			CollateralToken:         common.HexToAddress("0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf"),
+			CollateralTokenStr:      "cbBTC",
+			Oracle:                  common.HexToAddress("0xA857411CB2231a6A87a3bEF987a4cED8A067d799"),
+			LLTV:                    utils.ParseBigInt("860000000000000000"),
+			LoanTokenDecimals:       6,
+			CollateralTokenDecimals: 8,
+			PoolFee:                 3000,
+			Correlated:              false,
+			CexOnly:                 true,
+		},
+		// 6. weETH / WETH — 94.5% LLTV (~$3M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0xfd0895ba253889c243bf59bc4b96fd1e06d68631241383947b04d1c293a0cfea")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x4200000000000000000000000000000000000006"),
+			LoanTokenStr:            "WETH",
+			CollateralToken:         common.HexToAddress("0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A"),
+			CollateralTokenStr:      "weETH",
+			Oracle:                  common.HexToAddress("0xcE629400c6AEdb64f087CAC40Ae6a382AEEef490"),
+			LLTV:                    utils.ParseBigInt("945000000000000000"),
+			LoanTokenDecimals:       18,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 500,
+			Correlated:              true,
+			CexOnly:                 false,
+		},
+		// 8. cbETH / USDC — Base
+		{
+			ID:                      [32]byte(common.HexToHash("0x0ca10126f6c94cbd9cf0a48cc9516ae5e3dec5aa68303e6d988ee37c5149bf0d")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"), // USDC
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22"), // cbETH
+			CollateralTokenStr:      "cbETH",
+			Oracle:                  common.HexToAddress("0x97FF9CbD7E77348b2B8FfBB883bF29452aD18295"), // ⚠️ verify on app.morpho.org
+			LLTV:                    utils.ParseBigInt("770000000000000000"),                           // ⚠️ verify — likely 860000000000000000
+			LoanTokenDecimals:       6,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 500,
+			Correlated:              false,
+			CexOnly:                 true,
+		},
+		// USDC / cbETH — 86% LLTV (~$1.65M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0x1c21c59df9db44bf6f645d854ee710a8ca17b479451447e9f56758aee10a2fad")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22"),
+			CollateralTokenStr:      "cbETH",
+			Oracle:                  common.HexToAddress("0xb40d93F44411D8C09aD17d7F88195eF9b05cCD96"),
+			LLTV:                    utils.ParseBigInt("860000000000000000"),
+			LoanTokenDecimals:       6,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 500,
+			Correlated:              false,
+			CexOnly:                 true,
+		},
+		// WETH / cbETH — 94.5% LLTV (~$1.51M borrow)
+		{
+			ID:                      [32]byte(common.HexToHash("0x84662b4f95b85d6b082b68d32cf71bb565b3f22f216a65509cc2ede7dccdfe8c")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x4200000000000000000000000000000000000006"),
+			LoanTokenStr:            "WETH",
+			CollateralToken:         common.HexToAddress("0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22"),
+			CollateralTokenStr:      "cbETH",
+			Oracle:                  common.HexToAddress("0xB03855Ad5AFD6B8db8091DD5551CAC4ed621d9E6"),
+			LLTV:                    utils.ParseBigInt("945000000000000000"),
+			LoanTokenDecimals:       18,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 100,
+			Correlated:              true,
+			CexOnly:                 false,
+		},
+		// WETH / wrsETH
+		{
+			ID:                      [32]byte(common.HexToHash("0x214c2bf3c899c913efda9c4a49adff23f77bbc2dc525af7c05be7ec93f32d561")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x4200000000000000000000000000000000000006"),
+			LoanTokenStr:            "WETH",
+			CollateralToken:         common.HexToAddress("0xEDfa23602D0EC14714057867A78d01e94176BEA0"),
+			CollateralTokenStr:      "wrsETH",
+			Oracle:                  common.HexToAddress("0x55E6DE626D8b937782F08C8D3d9e54e340a78D0e"),
+			LLTV:                    utils.ParseBigInt("945000000000000000"),
+			LoanTokenDecimals:       18,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 500,
+			Correlated:              true,
+			CexOnly:                 false,
+		},
+	}
+)
