@@ -213,6 +213,7 @@ func (c *Cache) WriteLogRoutine(ctx context.Context, errCh chan error, logChanne
 
 	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
 		mu.Lock()
+		defer mu.Unlock()
 		if len(logCache) == 0 {
 			return nil
 		}
@@ -224,7 +225,6 @@ func (c *Cache) WriteLogRoutine(ctx context.Context, errCh chan error, logChanne
 
 		// vide le cache
 		clear(logCache)
-		mu.Unlock()
 		return nil
 	})
 }

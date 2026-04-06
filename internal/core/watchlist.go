@@ -152,15 +152,15 @@ func (c *Cache) simulateLiquidationCall(
 		params.ToMarketContractParams(),
 		pos.Address,
 		repayShares,
-		config.UniswapV3Router, // adapt to chainId
-		params.PoolFee,         // adapt to chainId
+		c.Config.Chain.UniswapRouterAddress, // adapt to chainId
+		params.PoolFee,                      // adapt to chainId
 	)
 	if err != nil {
 		return 0, fmt.Errorf("encode liquidate: %w", err)
 	}
 	msg := w3types.Message{
-		From:  config.WalletAddr,      // adapt to chainId
-		To:    &config.LiquidatorAddr, // adapt to chainId
+		From:  c.Config.Chain.WalletAddress,      // adapt to chainId
+		To:    &c.Config.Chain.LiquidatorAddress, // adapt to chainId
 		Input: data,
 	}
 
@@ -202,13 +202,13 @@ func (c *Cache) LiquidateCall(
 	var gasEst uint64
 
 	msg := w3types.Message{
-		From:  config.WalletAddr,      // adapt to chainId
-		To:    &config.LiquidatorAddr, // adapt to chainId
+		From:  c.Config.Chain.WalletAddress,      // adapt to chainId
+		To:    &c.Config.Chain.LiquidatorAddress, // adapt to chainId
 		Input: calldata,
 	}
 
 	if err := client.CallCtx(ctx,
-		eth.Nonce(config.WalletAddr, nil).Returns(&nonce),
+		eth.Nonce(c.Config.Chain.WalletAddress, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
 		eth.EstimateGas(&msg, nil).Returns(&gasEst),
 	); err != nil {
@@ -217,7 +217,7 @@ func (c *Cache) LiquidateCall(
 
 	tx := types.NewTx(&types.DynamicFeeTx{
 		Nonce:     nonce,
-		To:        &config.LiquidatorAddr,
+		To:        &c.Config.Chain.LiquidatorAddress,
 		Data:      calldata,
 		Gas:       gasEst * 12 / 10, // +20% marge
 		GasTipCap: big.NewInt(1e9),  // 1 gwei tip

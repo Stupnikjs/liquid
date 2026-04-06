@@ -13,17 +13,17 @@ import (
 func main() {
 
 	conn := connector.NewConnector(config.BASE_HTTP_RPC, config.BASE_WS_RPC)
-	signer, err := morpho.NewSigner()
+	BaseSigner, err := morpho.NewSigner()
 	if err != nil {
 		fmt.Println(err)
 	}
-	chainConfig := morpho.ChainConfig{
-		WalletAddress:        config.WalletAddr,
-		LiquidatorAddress:    config.LiquidatorAddr,
-		UniswapRouterAddress: config.UniswapV3Router,
-		Signer:               signer,
+	baseConfig := morpho.ChainConfig{
+		WalletAddress:        config.BaseWalletAddr,
+		LiquidatorAddress:    config.BaseLiquidatorAddr,
+		UniswapRouterAddress: config.BaseUniswapV3Router,
+		Signer:               BaseSigner,
 	}
-	CacheConfig := core.NewCacheConfig(morpho.BaseParams, chainConfig)
+	CacheConfig := core.NewCacheConfig(morpho.BaseParams, baseConfig)
 	cexFeed := cex.NewCoinbaseConnector()
 	cache := core.NewCache(CacheConfig)
 	cache.Scan(conn, cexFeed)
