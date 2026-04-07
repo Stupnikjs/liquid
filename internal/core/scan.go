@@ -108,7 +108,6 @@ func (c *Cache) RebuildWatchListRoutine(ctx context.Context, conn *connector.Con
 		case <-ctx.Done():
 			return
 		case event := <-c.rebuildCh:
-
 			c.rebuildWatchlist(conn.ClientHTTP, ctx, logChannel, event)
 		}
 	}
@@ -120,7 +119,18 @@ func (c *Cache) FireLiquidationRoutine(ctx context.Context, conn *connector.Conn
 		case <-ctx.Done():
 			return
 		case liquidable := <-c.liquidCh:
-			_ = liquidable
+			market := c.GetMorphoMarketFromId(liquidable.MarketID)
+			c.GetMorphoMarketFromId(liquidable.MarketID)
+			c.LiquidateCall(
+				conn.ClientHTTP,
+				ctx,
+				*market.ToMarketContractParams(),
+				liquidable.Pos.Address,
+				liquidable.SeizeAssets,
+				liquidable.RepayShares,
+				c.Config.Chain.UniswapRouterAddress,
+				big.NewInt(int64(market.PoolFee)),
+			)
 
 		}
 	}

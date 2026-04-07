@@ -27,8 +27,6 @@ type Cache struct {
 	PositionCache    *PositionCache
 	EthCallCount     atomic.Int64
 	LastMinCallCount atomic.Int64
-	watchlist        []*Liquidable // trié par HF asc
-	watchMu          sync.RWMutex
 	rebuildCh        chan RebuildEvent
 	liquidCh         chan Liquidable
 }

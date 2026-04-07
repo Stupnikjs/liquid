@@ -33,11 +33,11 @@ func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candi
 			sem <- struct{}{}
 			defer func() { <-sem }()
 			enriched := c.SimulatePreComputeTx(client, ctx, liq)
-			fmt.Println("Profit : ", enriched.EstProfit)
-			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 {
+			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 || !enriched.IsLiquidable {
 				return
 			}
 			mu.Lock()
+
 			results = append(results, enriched)
 			mu.Unlock()
 		}(liq)
@@ -69,16 +69,14 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 				if cexPrice == nil {
 					cexPrice = stats.OraclePrice
 				}
-				fmt.Println(cexPrice)
 				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, cexPrice, stats.LLTV)
-				isNotInTargetZone := hf.Cmp(utils.WAD1DOT005) >= 0
+				isNotInTargetZone := hf.Cmp(utils.WAD1DOT01) >= 0
 				if market.Correlated {
 					isNotInTargetZone = hf.Cmp(utils.WAD1DOT0005) >= 0
 				}
 				if hf == nil || hf.Sign() == 0 {
 					continue
 				}
-				fmt.Printf("hf of %s : %s  market in watchlist = %d \n", market.CollateralTokenStr, market.LoanTokenStr, hf)
 				if isNotInTargetZone {
 					continue
 				}
@@ -97,16 +95,15 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 		}(mId)
 	}
 	wg.Wait()
-	if len(flat) == 0 {
-		c.watchMu.Lock()
-		c.watchlist = nil
-		c.watchMu.Unlock()
-		return
-	}
+
 	enriched := c.simulateCandidates(client, ctx, flat)
-	c.watchMu.Lock()
-	c.watchlist = enriched
-	c.watchMu.Unlock()
+	if len(enriched) > 0 {
+		for _, l := range enriched {
+			c.liquidCh <- *l
+			logChan <- fmt.Sprintf("liquidable pos %v", l)
+		}
+	}
+
 }
 
 /* Get Liquidations params by calculating and calling eth_call to test for revert */
