@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"math"
 	"math/big"
 	"os"
+	"path"
 	"slices"
 	"sort"
 	"strings"
@@ -30,15 +32,20 @@ import (
 // swap rpc provider si volatilité augmente a la baisse
 func (c *Cache) Scan(conn *connector.Connector, cexFeed *cex.CoinbaseConnector) error {
 	ctx, cancel := context.WithCancel(context.Background())
-	logChannel := make(chan string)
+	logChannel := make(chan string, 50)
 	defer cancel()
 	errCh := make(chan error, 5)
 
 	priceChan := cexFeed.PriceCh()
+	// Cex Price routine updating cexCache
 	go cexFeed.Run(ctx)
+	// Event based position and markets updates
 	go c.WatchPositionRoutine(ctx, conn, errCh, logChannel)
+	// Onchain rpc pool to update markets
 	go c.OnChainRefreshRoutine(ctx, conn, errCh, logChannel)
+	// Loging Ethcalls per min
 	go c.CountEthCallPerMinuteRoutine(ctx, conn, errCh, logChannel)
+
 	go c.RebuildWatchListRoutine(ctx, conn, errCh, logChannel)
 	go c.FireLiquidationRoutine(ctx, conn, errCh, logChannel)
 	go c.LogMarketsRoutine(ctx, conn, errCh, logChannel)
@@ -108,22 +115,15 @@ func (c *Cache) RebuildWatchListRoutine(ctx context.Context, conn *connector.Con
 }
 
 func (c *Cache) FireLiquidationRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
-	utils.RunTicker(ctx, 200*time.Millisecond, errCh, func() error {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case liquidable := <-c.liquidCh:
+			_ = liquidable
 
-		c.watchMu.RLock()
-		if len(c.watchlist) == 0 {
-			c.watchMu.RUnlock()
-			return nil
 		}
-		best := c.watchlist[0]
-		logChannel <- fmt.Sprintf("firerring liquidation %s  %s", best.MarketID, best.Pos.Address)
-		c.watchMu.RUnlock()
-
-		if best.EstProfit.Sign() > 0 || best.IsLiquidable {
-			// c.LiquidateCall(conn.ClientHTTP, ctx, *market.ToMarketContractParams(), best.Pos.Address,
-		}
-		return nil
-	})
+	}
 }
 
 func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
@@ -143,8 +143,8 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 			lltv := new(big.Int).Set(m.LLTV)
 			positions, stats := c.GetMarketPropsValue(id)
 			m.Mu.RUnlock()
-
-			price := utils.BigIntToFloat(oraclePrice) / 1e36
+			exposant := 36 + market.LoanTokenDecimals - market.CollateralTokenDecimals
+			price := utils.BigIntToFloat(oraclePrice) / math.Pow10(int(exposant))
 			borrowAssets := utils.BigIntWADToFloat(stats.TotalBorrowAssets)
 			borrowShares := utils.BigIntWADToFloat(stats.TotalBorrowShares)
 
@@ -191,7 +191,9 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 func (c *Cache) WriteLogRoutine(ctx context.Context, errCh chan error, logChannel chan string) {
 	var mu sync.Mutex
 	logCache := make(map[int64]string)
-	file, _ := os.Create("logfile")
+
+	pathLog := path.Join("logs", c.Config.Chain.Name)
+	file, _ := os.Create(pathLog)
 	defer file.Close()
 	go func() {
 		for {
@@ -257,6 +259,7 @@ func (c *Cache) OnChainRefresh(client *w3.Client, toRefresh [][32]byte) error {
 	calls = append(calls, marketCalls...)
 
 	if err := c.EthCallCtx(client, ctx, calls); err != nil {
+		fmt.Println("❌ OnChainRefresh EthCall error:", err)
 		return err
 	}
 	c.ApplyMarketStats(marketMap)

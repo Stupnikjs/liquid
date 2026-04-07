@@ -71,22 +71,6 @@ var (
 			Correlated:              false,
 			CexOnly:                 true,
 		},
-		// 5. cbBTC / EURC — 86% LLTV (~$7M borrow)
-		{
-			ID:                      [32]byte(common.HexToHash("0x67ebd84b2fb39e3bc5a13d97e4c07abe1ea617e40654826e9abce252e95f049e")),
-			ChainID:                 8453,
-			LoanToken:               common.HexToAddress("0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42"),
-			LoanTokenStr:            "EURC",
-			CollateralToken:         common.HexToAddress("0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf"),
-			CollateralTokenStr:      "cbBTC",
-			Oracle:                  common.HexToAddress("0xA857411CB2231a6A87a3bEF987a4cED8A067d799"),
-			LLTV:                    utils.ParseBigInt("860000000000000000"),
-			LoanTokenDecimals:       6,
-			CollateralTokenDecimals: 8,
-			PoolFee:                 3000,
-			Correlated:              false,
-			CexOnly:                 true,
-		},
 		// 6. weETH / WETH — 94.5% LLTV (~$3M borrow)
 		{
 			ID:                      [32]byte(common.HexToHash("0xfd0895ba253889c243bf59bc4b96fd1e06d68631241383947b04d1c293a0cfea")),
@@ -103,23 +87,7 @@ var (
 			Correlated:              true,
 			CexOnly:                 false,
 		},
-		// 8. cbETH / USDC — Base
-		{
-			ID:                      [32]byte(common.HexToHash("0x0ca10126f6c94cbd9cf0a48cc9516ae5e3dec5aa68303e6d988ee37c5149bf0d")),
-			ChainID:                 8453,
-			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"), // USDC
-			LoanTokenStr:            "USDC",
-			CollateralToken:         common.HexToAddress("0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22"), // cbETH
-			CollateralTokenStr:      "cbETH",
-			Oracle:                  common.HexToAddress("0x97FF9CbD7E77348b2B8FfBB883bF29452aD18295"), // ⚠️ verify on app.morpho.org
-			LLTV:                    utils.ParseBigInt("770000000000000000"),                           // ⚠️ verify — likely 860000000000000000
-			LoanTokenDecimals:       6,
-			CollateralTokenDecimals: 18,
-			PoolFee:                 500,
-			Correlated:              false,
-			CexOnly:                 true,
-		},
-		// USDC / cbETH — 86% LLTV (~$1.65M borrow)
+
 		{
 			ID:                      [32]byte(common.HexToHash("0x1c21c59df9db44bf6f645d854ee710a8ca17b479451447e9f56758aee10a2fad")),
 			ChainID:                 8453,
@@ -135,7 +103,6 @@ var (
 			Correlated:              false,
 			CexOnly:                 true,
 		},
-		// WETH / cbETH — 94.5% LLTV (~$1.51M borrow)
 		{
 			ID:                      [32]byte(common.HexToHash("0x84662b4f95b85d6b082b68d32cf71bb565b3f22f216a65509cc2ede7dccdfe8c")),
 			ChainID:                 8453,

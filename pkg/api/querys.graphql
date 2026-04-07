@@ -8,7 +8,7 @@ query {
     where: { chainId_in: [8453] }
   ) {
     items {
-      uniqueKey
+      marketId
       loanAsset { symbol }
       collateralAsset { symbol }
       state {

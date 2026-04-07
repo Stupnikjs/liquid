@@ -13,6 +13,7 @@ type ChainConfig struct {
 	LiquidatorAddress    common.Address
 	UniswapRouterAddress common.Address
 	Signer               *Signer
+	Name                 string
 }
 
 type MarketParams struct {

@@ -28,6 +28,7 @@ func NewCache(config CacheConfig) *Cache {
 		PositionCache: NewPositionCache(config.Markets),
 		EthCallCount:  atomic.Int64{},
 		rebuildCh:     make(chan RebuildEvent, 1),
+		liquidCh:      make(chan Liquidable, 1),
 	}
 }
 

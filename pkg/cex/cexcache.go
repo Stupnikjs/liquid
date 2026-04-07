@@ -156,22 +156,9 @@ func GetCollateralPriceInLoan(cex *CexCache, m *morpho.MarketParams) *big.Int {
 	case m.CollateralTokenStr == "cbXRP" && m.LoanTokenStr == "USDC":
 		return cex.XRPtoBigInt()
 
-	case m.CollateralTokenStr == "cbBTC" && m.LoanTokenStr == "EURC":
-		return new(big.Int).Div(cex.BTCtoBigInt(), cex.EURUSDtoBigInt())
-
 	case m.CollateralTokenStr == "cbETH" && m.LoanTokenStr == "USDC":
 		return cex.ETHtoBigInt()
 
-	case m.CollateralTokenStr == "USDC" && m.LoanTokenStr == "cbETH":
-
-		ethPrice := cex.ETHtoBigInt() // e36
-		if ethPrice == nil || ethPrice.Sign() == 0 {
-			return nil
-		}
-		scale := new(big.Int).Mul(big.NewInt(1e18), big.NewInt(1e18)) // 1e36
-		return new(big.Int).Div(scale, ethPrice)
-
-	/*tricky ones */
 	default:
 		return nil
 	}

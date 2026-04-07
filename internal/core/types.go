@@ -30,6 +30,7 @@ type Cache struct {
 	watchlist        []*Liquidable // trié par HF asc
 	watchMu          sync.RWMutex
 	rebuildCh        chan RebuildEvent
+	liquidCh         chan Liquidable
 }
 
 type PositionCache struct {

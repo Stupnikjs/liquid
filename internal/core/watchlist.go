@@ -65,9 +65,11 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 				var cexPrice *big.Int
 				if market.CexOnly {
 					cexPrice = cex.GetCollateralPriceInLoan(c.CexCache, &market)
-				} else {
+				}
+				if cexPrice == nil {
 					cexPrice = stats.OraclePrice
 				}
+				fmt.Println(cexPrice)
 				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, cexPrice, stats.LLTV)
 				isNotInTargetZone := hf.Cmp(utils.WAD1DOT005) >= 0
 				if market.Correlated {

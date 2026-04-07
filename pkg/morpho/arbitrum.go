@@ -23,7 +23,6 @@ var ArbitrumParams = []MarketParams{
 		PoolFee:                 100,
 		Correlated:              true,
 	},
-	// USDC / WBTC — 86% LLTV (~$2.63M borrow)
 	{
 		ID:                      [32]byte(common.HexToHash("0xe6392ff19d10454b099d692b58c361ef93e31af34ed1ef78232e07c78fe99169")),
 		ChainID:                 42161,
@@ -38,7 +37,7 @@ var ArbitrumParams = []MarketParams{
 		PoolFee:                 500,
 		Correlated:              false,
 	},
-	// USDT0 / WBTC — 86% LLTV (~$1.22M borrow)
+
 	{
 		ID:                      [32]byte(common.HexToHash("0xed06d9e82d7c35ca80d3983194e15462a96202bd875800af18183321f4611868")),
 		ChainID:                 42161,
