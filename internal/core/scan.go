@@ -25,13 +25,13 @@ import (
 )
 
 /*
-Filtrer les positions a 10% de liquidation 
-on ignore les autres (reresh toutes les 2h) 
-On print toute ces positions toutes les stats par marchés ( en fonction de l'HF moyen par marché on adapte la fréquence de refresh oracle price) 
-Analyse du profit potentiel des futurs liquidable 
+Filtrer les positions a 10% de liquidation
+on ignore les autres (reresh toutes les 2h)
+On print toute ces positions toutes les stats par marchés ( en fonction de l'HF moyen par marché on adapte la fréquence de refresh oracle price)
+Analyse du profit potentiel des futurs liquidable
 quand hf passe sous seuil de liquidation mettons 1.0001 ou 1.001 lance des ETH_CALL
 Implementer un call pour récupérer les marchés intéressant en terme de TVL et liquidité du collatéral sur Uniswap
- */
+*/
 
 // swap rpc provider si volatilité augmente a la baisse
 func (c *Cache) Scan(conn *connector.Connector, cexFeed *cex.CoinbaseConnector) error {
@@ -75,7 +75,7 @@ func (c *Cache) OnChainRefreshRoutine(ctx context.Context, conn *connector.Conne
 	markets := slices.Collect(maps.Values(c.Config.Markets))
 
 	for {
-		refreshArr, timer, vol := c.CexCache.GetRefreshParams(markets, 2)
+		timer, vol := c.CexCache.GetRefreshParams(2)
 
 		logChannel <- fmt.Sprintf("%d ms", timer/1000)
 		if vol > 2 {
@@ -90,7 +90,7 @@ func (c *Cache) OnChainRefreshRoutine(ctx context.Context, conn *connector.Conne
 		case <-ctx.Done():
 			return
 		case <-time.After(timer):
-			if err := c.OnChainRefresh(conn.ClientHTTP, refreshArr); err != nil {
+			if err := c.OnChainRefresh(conn.ClientHTTP); err != nil {
 				errCh <- err
 			}
 		}
@@ -99,6 +99,7 @@ func (c *Cache) OnChainRefreshRoutine(ctx context.Context, conn *connector.Conne
 
 func (c *Cache) CountEthCallPerMinuteRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
 	utils.RunTicker(ctx, 1*time.Minute, errCh, func() error {
+
 		lastMinuteCount := c.LastMinCallCount.Load()
 		c.LastMinCallCount.Store(0)
 		logChannel <- fmt.Sprintf("%d ETH_CALLS \n", lastMinuteCount)
@@ -112,7 +113,8 @@ func (c *Cache) RebuildWatchListRoutine(ctx context.Context, conn *connector.Con
 		case <-ctx.Done():
 			return
 		case event := <-c.rebuildCh:
-			c.rebuildWatchlist(conn.ClientHTTP, ctx, logChannel, event)
+			_ = event
+			c.rebuildWatchlist(conn.ClientHTTP, ctx, logChannel)
 		}
 	}
 }
@@ -141,10 +143,11 @@ func (c *Cache) FireLiquidationRoutine(ctx context.Context, conn *connector.Conn
 }
 
 func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
-	utils.RunTicker(ctx, 4*time.Minute, errCh, func() error {
+	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
 		var sb strings.Builder
 
 		for id, m := range c.PositionCache.m {
+			market := c.GetMorphoMarketFromId(id)
 			m.Mu.RLock()
 			if m.OraclePrice == nil || m.LLTV == nil ||
 				m.MarketStats.TotalBorrowAssets == nil ||
@@ -152,30 +155,43 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 				m.Mu.RUnlock()
 				continue
 			}
-			market := c.GetMorphoMarketFromId(id)
-			oraclePrice := new(big.Int).Set(m.OraclePrice) // copie de valeur
+
+			// Tout copier sous le même lock
+			oraclePrice := new(big.Int).Set(m.OraclePrice)
 			lltv := new(big.Int).Set(m.LLTV)
-			positions, stats := c.GetMarketPropsValue(id)
+			totalBorrowAssets := new(big.Int).Set(m.MarketStats.TotalBorrowAssets)
+			totalBorrowShares := new(big.Int).Set(m.MarketStats.TotalBorrowShares)
+
+			// Copier les positions sous le même lock
+			positions := make([]*BorrowPosition, 0, len(m.Positions))
+			for _, p := range m.Positions {
+				cp := *p
+				positions = append(positions, &cp)
+			}
 			m.Mu.RUnlock()
+
+			// copie de valeur
+
 			exposant := 36 + market.LoanTokenDecimals - market.CollateralTokenDecimals
 			price := utils.BigIntToFloat(oraclePrice) / math.Pow10(int(exposant))
-			borrowAssets := utils.BigIntWADToFloat(stats.TotalBorrowAssets)
-			borrowShares := utils.BigIntWADToFloat(stats.TotalBorrowShares)
+			borrowAssets := utils.BigIntToFloat(totalBorrowAssets) / math.Pow10(int(market.LoanTokenDecimals))
+			borrowShares := utils.BigIntWADToFloat(totalBorrowShares)
 
 			fmt.Fprintf(&sb, "\n┌─ Market %s/%s\n", market.CollateralTokenStr, market.LoanTokenStr)
 			fmt.Fprintf(&sb, "│  price:         %.6f\n", price)
 			fmt.Fprintf(&sb, "│  borrow assets: %.2f\n", borrowAssets)
 			fmt.Fprintf(&sb, "│  borrow shares: %.2f\n", borrowShares)
-
+			fmt.Fprintf(&sb, "│  positions less than 10pct from liquidation: %d\n", len(positions))
 			type hfPos struct {
 				hf  *big.Int
 				pos BorrowPosition
 			}
 			var atrisk []hfPos
+
 			for _, p := range positions {
-				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, oraclePrice, lltv)
-				if hf.Cmp(utils.WAD1DOT1) < 0 || hf.Sign() != 0 {
-					atrisk = append(atrisk, hfPos{hf, p})
+				hf := p.HF(totalBorrowShares, totalBorrowAssets, oraclePrice, lltv)
+				if hf.Cmp(utils.WAD1DOT1) < 0 && hf.Sign() != 0 {
+					atrisk = append(atrisk, hfPos{hf, *p})
 				}
 			}
 
@@ -192,7 +208,8 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 			fmt.Fprintf(&sb, "│  at-risk positions (%d):\n", len(atrisk))
 			for i, hp := range atrisk[:n] {
 				hf := utils.BigIntWADToFloat(hp.hf)
-				fmt.Fprintf(&sb, "│  [%2d] HF: %.4f  borrower: %s\n", i+1, hf, hp.pos.Address)
+				collAssets := utils.BigIntToFloat(hp.pos.CollateralAssets) / float64(market.CollateralTokenDecimals)
+				fmt.Fprintf(&sb, "│  [%2d] HF: %.4f  borrower: %s borrow_assets: %.4f \n", i+1, hf, hp.pos.Address, collAssets)
 			}
 			fmt.Fprintf(&sb, "└─\n\n")
 		}
@@ -245,20 +262,7 @@ func (c *Cache) WriteLogRoutine(ctx context.Context, errCh chan error, logChanne
 	})
 }
 
-func (c *Cache) OnChainRefreshEvent(client *w3.Client, toRefresh [][32]byte) error {
-	err := c.OnChainRefresh(client, toRefresh)
-	if err != nil {
-		return err
-	}
-	event := RebuildEvent{
-		MarketIDs: toRefresh,
-		Reason:    "on_chain_refresh",
-	}
-	c.rebuildCh <- event
-	return nil
-}
-
-func (c *Cache) OnChainRefresh(client *w3.Client, toRefresh [][32]byte) error {
+func (c *Cache) OnChainRefresh(client *w3.Client) error {
 
 	ctx := context.Background()
 	var calls, marketCalls []w3types.RPCCaller

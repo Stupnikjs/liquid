@@ -134,5 +134,52 @@ var (
 			Correlated:              true,
 			CexOnly:                 false,
 		},
+		{ // 0x46415998764C29aB2a25CbeA6254146D50D22687
+			ID:                      [32]byte(common.HexToHash("0x7acb1a83ad1d818fc68baddbdb61e1d9039d62590c8cd92915054dea54eb512d")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x55380fe7A1910dFf29A47B622057ab4139DA42C5"), // fxUSD on Base
+			LoanTokenStr:            "FXUSD",
+			CollateralToken:         common.HexToAddress("0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf"), // cbBTC on Base
+			CollateralTokenStr:      "cbBTC",
+			Oracle:                  common.HexToAddress("0x3cb1b1862d4581656f14c06dE1bC0973a11EeF34"), // Market specific Oracle
+			LLTV:                    utils.ParseBigInt("860000000000000000"),                           // LLTV determined at creation
+			LoanTokenDecimals:       18,                                                                // FXUSD uses 18 decimals
+			CollateralTokenDecimals: 8,                                                                 // cbBTC uses 8 decimals
+			PoolFee:                 0,
+			Correlated:              false,
+			CexOnly:                 false,
+		},
+		{ // 0x46415998764C29aB2a25CbeA6254146D50D22687
+
+			ID:                      [32]byte(common.HexToHash("0x87c7d6527a86fb5acef2e610c05c4a89810f1abc1af36498a5912167b78f6321")),
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x55380fe7A1910dFf29A47B622057ab4139DA42C5"), // fxUSD on Base
+			LoanTokenStr:            "FXUSD",
+			CollateralToken:         common.HexToAddress("0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf"), // cbBTC on Base
+			CollateralTokenStr:      "VVV",
+			Oracle:                  common.HexToAddress("0xa7813fF2bdd188EbD2109D550f96EF912d1188FA"), // Market specific Oracle
+			LLTV:                    utils.ParseBigInt("625000000000000000"),                           // LLTV determined at creation
+			LoanTokenDecimals:       18,                                                                // FXUSD uses 18 decimals
+			CollateralTokenDecimals: 18,                                                                // cbBTC uses 8 decimals
+			PoolFee:                 0,
+			Correlated:              false,
+			CexOnly:                 false,
+		},
+		{
+			// Tu peux calculer cet ID avec ComputeMarketId ou le récupérer depuis tes logs
+			ID:                      [32]byte(common.HexToHash("0xbe67415847d61a6638cbe300c6cca3a5c34f5c2b1cfd594dd4f8ec21969c6fe2")),
+			ChainID:                 8453,                                                              // Base
+			LoanToken:               common.HexToAddress("0x55380fe7A1910dFf29A47B622057ab4139DA42C5"), // fxUSD
+			LoanTokenStr:            "FXUSD",
+			CollateralToken:         common.HexToAddress("0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452"), // wstETH
+			CollateralTokenStr:      "wstETH",
+			Oracle:                  common.HexToAddress("0xDD626EB9E24bbF4f641bf3502EA1C3d115aD2Fd8"),
+			LLTV:                    utils.ParseBigInt("860000000000000000"), // 86%
+			LoanTokenDecimals:       18,
+			CollateralTokenDecimals: 18,
+			PoolFee:                 0,
+			Correlated:              false,
+			CexOnly:                 false,
+		},
 	}
 )

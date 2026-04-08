@@ -3,6 +3,7 @@ package config
 var (
 	BASE_HTTP_RPC = []string{
 		"https://base-mainnet.g.alchemy.com/v2/ZABfTOT9vAxtJL1gFs5uC", // ALCHEMY
+		"https://base-mainnet.g.alchemy.com/v2/ZABfTOT9vAxtJL1gFs5uC",
 		"https://base-mainnet.core.chainstack.com/6082f10118001c572f3295fca3d5baed",
 	}
 	BASE_WS_RPC = []string{

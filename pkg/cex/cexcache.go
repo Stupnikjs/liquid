@@ -125,7 +125,7 @@ func (mv *MarketVolatility) DownsideStdDev() float64 {
 	return math.Sqrt(variance/float64(n)) * 10_000 / mean
 }
 
-func (cex *CexCache) GetRefreshParams(markets []morpho.MarketParams, treshold float64) ([][32]byte, time.Duration, float64) {
+func (cex *CexCache) GetRefreshParams(treshold float64) (time.Duration, float64) {
 	// plus c'est volatile, plus on refresh souvent
 	maxVol := math.Max(math.Max(cex.VolBTC.DownsideStdDev(), cex.VolETH.DownsideStdDev()), cex.VolXRP.DownsideStdDev())
 	var interval time.Duration
@@ -133,16 +133,12 @@ func (cex *CexCache) GetRefreshParams(markets []morpho.MarketParams, treshold fl
 	case maxVol > 20:
 		interval = 2 * time.Second
 	case maxVol > 10:
-		interval = 10 * time.Second
+		interval = 20 * time.Second
 	default:
-		interval = 30 * time.Second
+		interval = 60 * time.Second
 	}
-	keys := [][32]byte{}
-	for _, m := range morpho.NotCexOnlyMarket(markets) {
-		keys = append(keys, m.ID)
 
-	}
-	return keys, interval, maxVol
+	return interval, maxVol
 }
 
 func GetCollateralPriceInLoan(cex *CexCache, m *morpho.MarketParams) *big.Int {
