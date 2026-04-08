@@ -25,8 +25,12 @@ import (
 )
 
 /*
-
-
+Filtrer les positions a 10% de liquidation 
+on ignore les autres (reresh toutes les 2h) 
+On print toute ces positions toutes les stats par marchés ( en fonction de l'HF moyen par marché on adapte la fréquence de refresh oracle price) 
+Analyse du profit potentiel des futurs liquidable 
+quand hf passe sous seuil de liquidation mettons 1.0001 ou 1.001 lance des ETH_CALL
+Implementer un call pour récupérer les marchés intéressant en terme de TVL et liquidité du collatéral sur Uniswap
  */
 
 // swap rpc provider si volatilité augmente a la baisse
