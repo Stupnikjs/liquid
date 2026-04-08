@@ -136,6 +136,7 @@ func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq
 	out.EstProfit = morpho.EstimateProfit(seizeAssets, repayShares, gasEst)
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
+	fmt.Println("simulation succed on pos: ", out.Pos.Address.String())
 
 	return &out
 }
