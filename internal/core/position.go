@@ -80,15 +80,14 @@ func (pos *BorrowPosition) HF(totShares, totBorrowAssets, oraclePrice, LLTV *big
 	)
 }
 
-func parsePositions(params morpho.MarketParams, result api.GraphQLResult) []BorrowPosition {
-	items := result.Data.MarketPositions.Items
+func parsePositions(params morpho.MarketParams, result api.PositionsResult) []BorrowPosition {
+	items := result.MarketPositions.Items // ✅ plus de .Data
 	positions := make([]BorrowPosition, 0, len(items))
 
 	for _, item := range items {
 		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
 		collateral := utils.ParseBigInt(item.State.Collateral.String())
 
-		// ignore les positions fermées
 		if borrowShares.Sign() == 0 && collateral.Sign() == 0 {
 			continue
 		}

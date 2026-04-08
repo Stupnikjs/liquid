@@ -1,111 +1,308 @@
-[2026-04-07T21:16:58+02:00] 30000000 ms
-[2026-04-07T21:17:28+02:00] 30000000 ms
-[2026-04-07T21:17:58+02:00] 30000000 ms
-[2026-04-07T21:18:28+02:00] 30000000 ms
-[2026-04-07T21:18:58+02:00] 32 ETH_CALLS 
-
-[2026-04-07T21:18:58+02:00] 30000000 ms
-[2026-04-07T21:19:28+02:00] 30000000 ms
-[2026-04-07T21:19:58+02:00] 10000000 ms
-[2026-04-07T21:20:08+02:00] 10000000 ms
-[2026-04-07T21:20:18+02:00] 30000000 ms
-[2026-04-07T21:20:49+02:00] 10000000 ms
-[2026-04-07T21:21:19+02:00] 10000000 ms
-[2026-04-07T21:22:39+02:00] 10000000 ms
-[2026-04-07T21:21:39+02:00] 10000000 ms
-[2026-04-07T21:21:49+02:00] 10000000 ms
-[2026-04-07T21:21:59+02:00] 10000000 ms
-[2026-04-07T21:22:09+02:00] 10000000 ms
-[2026-04-07T21:21:29+02:00] 10000000 ms
-[2026-04-07T21:21:58+02:00] 96 ETH_CALLS 
-
-[2026-04-07T21:22:58+02:00] 96 ETH_CALLS 
-
-[2026-04-07T21:22:19+02:00] 10000000 ms
-[2026-04-07T21:22:29+02:00] 10000000 ms
-[2026-04-07T21:22:49+02:00] 10000000 ms
-[2026-04-07T21:20:58+02:00] 
-┌─ Market wrsETH/WETH
-│  price:         1.068924
-│  borrow assets: 39.12
-│  borrow shares: 36574444.05
-│  no positions at risk
-└─
-
-
+[2026-04-08T15:54:04+02:00] 
 ┌─ Market cbBTC/USDC
-│  price:         68792.698613
-│  borrow assets: 0.00
-│  borrow shares: 933.37
-│  at-risk positions (1):
-│  [ 1] HF: 0.0000  borrower: 0xA3696DA346cE0B5bd43393F856d935C7Ad0765B2
+│  price:         71614.148297
+│  borrow assets: 1027435999.42
+│  borrow shares: 937.16
+│  positions less than 10pct from liquidation: 22
+│  no positions at risk
 └─
 
 
 ┌─ Market WETH/USDC
-│  price:         2097.719689
-│  borrow assets: 0.00
-│  borrow shares: 49.71
-│  at-risk positions (1):
-│  [ 1] HF: 0.7945  borrower: 0xFFf9bbB2Dd2b45376cF7Efbbd7DA085762334e79
-└─
-
-
-┌─ Market wstETH/WETH
-│  price:         1.231306
-│  borrow assets: 5738.38
-│  borrow shares: 5513459619.57
+│  price:         2237.752914
+│  borrow assets: 55274311.74
+│  borrow shares: 49.86
+│  positions less than 10pct from liquidation: 110
 │  no positions at risk
 └─
 
 
-┌─ Market cbXRP/USDC
-│  price:         1.306146
-│  borrow assets: 0.00
-│  borrow shares: 15.17
+┌─ Market cbETH/USDC
+│  price:         2521.243370
+│  borrow assets: 1659939.39
+│  borrow shares: 1.52
+│  positions less than 10pct from liquidation: 123
+│  at-risk positions (2):
+│  [ 1] HF: 0.7235  borrower: 0x4aCEA4053E35e4f27bAd5037B343Bf10d63d8046 borrow_assets: 92685279.7222 
+│  [ 2] HF: 1.0775  borrower: 0x18e3e758CdE760552185F7F073505e03079a22D9 borrow_assets: 4094033787188210.0000 
+└─
+
+
+┌─ Market wrsETH/WETH
+│  price:         1.068924
+│  borrow assets: 39.13
+│  borrow shares: 36574444.04
+│  positions less than 10pct from liquidation: 27
+│  at-risk positions (19):
+│  [ 1] HF: 1.0000  borrower: 0x6e4859A4Ee9cE70425805d60FCbe17Ed7b8040A8 borrow_assets: 68286829297038.0547 
+│  [ 2] HF: 1.0000  borrower: 0x7ABdd10A895aC1Bf14bF78104f2aB8D6Ca389fe7 borrow_assets: 34143412832487.0547 
+│  [ 3] HF: 1.0000  borrower: 0x4CAd862fF4BE549f009789c9EF1d13038483Cc40 borrow_assets: 68286824793120.2812 
+│  [ 4] HF: 1.0000  borrower: 0x0200930871dfEf2C2A2E764b887f31c999E6D05c borrow_assets: 6828681122.1111 
+│  [ 5] HF: 1.0000  borrower: 0x000BfE42bFFaC0C067B08a243d62ED7FB030f906 borrow_assets: 68286828155786.9453 
+│  [ 6] HF: 1.0000  borrower: 0x8FA81024f3D89fE69DA556db4807815d1ef9060f borrow_assets: 682866698841710.8750 
+│  [ 7] HF: 1.0000  borrower: 0x52Da450C3BD340278F681660C42F86C4040B4C69 borrow_assets: 6828669640255.2227 
+│  [ 8] HF: 1.0001  borrower: 0x3b3a3399E61ae54CEC53968e6608Cb8Cc1D8015f borrow_assets: 193176541707507296.0000 
+│  [ 9] HF: 1.0001  borrower: 0x83A34BE6f0038EddCa45Af5c09D3d3FD37efdde3 borrow_assets: 68291237958864.7812 
+│  [10] HF: 1.0001  borrower: 0x2f9FA4Ee644A91691E2381F91B328333734d4406 borrow_assets: 6829123150652.0557 
+└─
+
+
+┌─ Market wstETH/WETH
+│  price:         1.231388
+│  borrow assets: 5582.16
+│  borrow shares: 5363126177.46
+│  positions less than 10pct from liquidation: 171
+│  at-risk positions (121):
+│  [ 1] HF: 1.0034  borrower: 0x39bBBAf0d50e8EB7F7C13F3a5D5d589020Acf1C1 borrow_assets: 1111111111.1111 
+│  [ 2] HF: 1.0211  borrower: 0x2329b09C6E5EBD3Cc3096916778a9EAE8E5D61A6 borrow_assets: 2993111799230011.5000 
+│  [ 3] HF: 1.0349  borrower: 0x4406F32df4cFF19B13527ef0917209F8AC5f3082 borrow_assets: 177959411980053.5000 
+│  [ 4] HF: 1.0349  borrower: 0x3b768ec38E0b85cf83e815da240e697bB45dc6b4 borrow_assets: 255788744769995.6562 
+│  [ 5] HF: 1.0352  borrower: 0x0f8d56f6a46e3B7F43B4743c745Fc309AB11d31f borrow_assets: 29661263856.2778 
+│  [ 6] HF: 1.0355  borrower: 0x1c46797b0a541BeB6ec42D3367cf30F4c0a9015d borrow_assets: 12002847050081.2773 
+│  [ 7] HF: 1.0361  borrower: 0x03a0Cb89a546df85E6f583b88BFf57b83F5D3FD1 borrow_assets: 49948888475076624384.0000 
+│  [ 8] HF: 1.0362  borrower: 0x083b4acc1c0Be4BaA7bc528c21046b8F9fcd9F13 borrow_assets: 7182462230401.0557 
+│  [ 9] HF: 1.0362  borrower: 0x4650C696254B398f10c141826E858c1aD284bBF7 borrow_assets: 6026384497998.7773 
+│  [10] HF: 1.0362  borrower: 0x0D99325d543de3685ea483251fF1634763B98386 borrow_assets: 60255033013251.7188 
+└─
+
+
+┌─ Market wstETH/FXUSD
+│  price:         2755.675184
+│  borrow assets: 115.10
+│  borrow shares: 114956663.56
+│  positions less than 10pct from liquidation: 1
 │  no positions at risk
 └─
 
 
 ┌─ Market weETH/WETH
 │  price:         1.092090
-│  borrow assets: 1034.83
-│  borrow shares: 1014919587.39
+│  borrow assets: 1030.83
+│  borrow shares: 1010963469.61
+│  positions less than 10pct from liquidation: 20
+│  at-risk positions (16):
+│  [ 1] HF: 1.0041  borrower: 0x5a1B533b476701f7BAE1975Bee6B4Eb10df13061 borrow_assets: 75799689389783.0000 
+│  [ 2] HF: 1.0043  borrower: 0x9558B339Bb03246C44c57fCee184645DBfAb253F borrow_assets: 35514998839335051264.0000 
+│  [ 3] HF: 1.0045  borrower: 0x17c8AFd739A175eACF8Af5531671b222102B8083 borrow_assets: 146049833333333344.0000 
+│  [ 4] HF: 1.0278  borrower: 0x13B3080AAAFE52192414aaE37cfE4f8889251BBB borrow_assets: 11813654033127178240.0000 
+│  [ 5] HF: 1.0504  borrower: 0x16Db9563D1b48ab1af0Be2449D0A9fDc5E77E7bB borrow_assets: 45805337281313.4453 
+│  [ 6] HF: 1.0528  borrower: 0x7027f848dD023eEC90Bdcb6359733bE03C966b11 borrow_assets: 178858.7778 
+│  [ 7] HF: 1.0530  borrower: 0x9dC0cd022487223E5B9aBCf05F36f084DFc8d9C5 borrow_assets: 68827175839252.7812 
+│  [ 8] HF: 1.0530  borrower: 0x4fC7c72a26DEE009eA7a0D48397F0AE91a52AE68 borrow_assets: 70711329698569.6094 
+│  [ 9] HF: 1.0530  borrower: 0xeDb03abAC5D4E17E0980b21A0cAbC289bA8C2957 borrow_assets: 353694902666.6667 
+│  [10] HF: 1.0531  borrower: 0xF2de3330a27657FD5D7634C926F09156B3DdFF84 borrow_assets: 1681240632745.7222 
+└─
+
+
+┌─ Market cbBTC/FXUSD
+│  price:         71790.246316
+│  borrow assets: 102026.07
+│  borrow shares: 101918657262.49
+│  positions less than 10pct from liquidation: 1
 │  no positions at risk
 └─
 
 
-┌─ Market cbETH/USDC
-│  price:         2363.469990
-│  borrow assets: 0.00
-│  borrow shares: 1.52
-│  no positions at risk
+┌─ Market cbXRP/USDC
+│  price:         1.376100
+│  borrow assets: 15762245.86
+│  borrow shares: 15.55
+│  positions less than 10pct from liquidation: 12
+│  at-risk positions (10):
+│  [ 1] HF: 1.0746  borrower: 0x31A9CDD6ACA93B4A8a374529B23681009f7079A1 borrow_assets: 1114306.5000 
+│  [ 2] HF: 1.0767  borrower: 0x23e7b1353E6a6E5873c4F231b52D3594B810F5a2 borrow_assets: 1679506.3333 
+│  [ 3] HF: 1.0784  borrower: 0x33B6095A37a69f37a5F65d068d4435b00eCA1eC9 borrow_assets: 1000091869.6667 
+│  [ 4] HF: 1.0791  borrower: 0x0Afd64B8Bf383398317c589a6F9C8A8A6E0D5deF borrow_assets: 17772370.5000 
+│  [ 5] HF: 1.0800  borrower: 0x30bbf5d08C24888FE5a832536ab2B61ad6006E45 borrow_assets: 2170105074.8333 
+│  [ 6] HF: 1.0825  borrower: 0x310985941B88159E68EA8F7C8d17583Ba285FE78 borrow_assets: 12248634.0000 
+│  [ 7] HF: 1.0859  borrower: 0x019428e3873160B43d8DE1bd63164836D8D0aCEF borrow_assets: 848700174.6667 
+│  [ 8] HF: 1.0916  borrower: 0x2aB17646e2cF8d3919a24117A941C91deA25A026 borrow_assets: 15641176.5000 
+│  [ 9] HF: 1.0997  borrower: 0x006c5845E3fecd7c7457BB3c2b10199cc2f2910e borrow_assets: 135912307.8333 
+│  [10] HF: 1.0998  borrower: 0x0Bc0b8459283f0AF3A151E24C6801Dd4A5831661 borrow_assets: 2534144.8333 
 └─
 
 
 ┌─ Market cbETH/WETH
 │  price:         1.127137
-│  borrow assets: 666.81
-│  borrow shares: 637323117.01
+│  borrow assets: 657.34
+│  borrow shares: 628243290.32
+│  positions less than 10pct from liquidation: 149
+│  at-risk positions (83):
+│  [ 1] HF: 1.0074  borrower: 0x24547D75feA1F6FB0a3660d3099B3fAfe9108290 borrow_assets: 564542909374.2778 
+│  [ 2] HF: 1.0164  borrower: 0x0e2852b070fbF866acecb93DeC04b91F02804cFE borrow_assets: 7568681042178636800.0000 
+│  [ 3] HF: 1.0181  borrower: 0x93B728E34633209Dcd273e33d833F022C9BB2773 borrow_assets: 5555555555555.5557 
+│  [ 4] HF: 1.0221  borrower: 0x4Cf2D94d0e4D6F03F402c0a56BDb58B656C49fA9 borrow_assets: 4931544594937882.0000 
+│  [ 5] HF: 1.0283  borrower: 0x65A84ed26f7FE0e3E8753d2C5819D0bf6b86744f borrow_assets: 121231254138959776.0000 
+│  [ 6] HF: 1.0309  borrower: 0x7b00d31bA4f410160d0f43aD8550C6e70B5d1635 borrow_assets: 357743099030445056.0000 
+│  [ 7] HF: 1.0309  borrower: 0xC42eaDE6AB740763c5942932Dd7c09C913644C45 borrow_assets: 20219230618517757952.0000 
+│  [ 8] HF: 1.0325  borrower: 0x5475265169970D4facA23ae922Da02716A2a6c37 borrow_assets: 472257080684732800.0000 
+│  [ 9] HF: 1.0326  borrower: 0x6aaA099102D7C814d71E0c10E3A9eA9bd870dB46 borrow_assets: 63138872900521.5547 
+│  [10] HF: 1.0329  borrower: 0x3c14323973346Abea3e9DFd759f380bEaa2fE2a8 borrow_assets: 6315032397709.3330 
+└─
+
+
+┌─ Market VVV/FXUSD
+│  price:         7.102079
+│  borrow assets: 99995.45
+│  borrow shares: 99886401269.39
+│  positions less than 10pct from liquidation: 2
 │  no positions at risk
 └─
 
 
-[2026-04-07T21:20:59+02:00] 10000000 ms
-[2026-04-07T21:21:09+02:00] 10000000 ms
-[2026-04-07T21:22:59+02:00] 10000000 ms
-[2026-04-07T21:23:09+02:00] 10000000 ms
-[2026-04-07T21:23:19+02:00] 10000000 ms
-[2026-04-07T21:23:30+02:00] 10000000 ms
-[2026-04-07T21:23:40+02:00] 10000000 ms
-[2026-04-07T21:23:58+02:00] 96 ETH_CALLS 
+[2026-04-08T15:54:34+02:00] 22 ETH_CALLS 
 
-[2026-04-07T21:23:50+02:00] 10000000 ms
-[2026-04-07T21:24:10+02:00] 10000000 ms
-[2026-04-07T21:24:20+02:00] 10000000 ms
-[2026-04-07T21:24:40+02:00] 10000000 ms
-[2026-04-07T21:24:50+02:00] 10000000 ms
-[2026-04-07T21:24:00+02:00] 10000000 ms
-[2026-04-07T21:24:30+02:00] 10000000 ms
-[2026-04-07T21:24:58+02:00] 96 ETH_CALLS 
+[2026-04-08T15:53:34+02:00] 60000000 ms
+[2026-04-08T15:54:34+02:00] 60000000 ms
+[2026-04-08T15:55:04+02:00] 
+┌─ Market WETH/USDC
+│  price:         2237.752914
+│  borrow assets: 55274318.21
+│  borrow shares: 49.86
+│  positions less than 10pct from liquidation: 110
+│  no positions at risk
+└─
+
+
+┌─ Market cbETH/USDC
+│  price:         2521.243370
+│  borrow assets: 1659939.39
+│  borrow shares: 1.52
+│  positions less than 10pct from liquidation: 123
+│  at-risk positions (2):
+│  [ 1] HF: 0.7235  borrower: 0x4aCEA4053E35e4f27bAd5037B343Bf10d63d8046 borrow_assets: 92685279.7222 
+│  [ 2] HF: 1.0775  borrower: 0x18e3e758CdE760552185F7F073505e03079a22D9 borrow_assets: 4094033787188210.0000 
+└─
+
+
+┌─ Market wrsETH/WETH
+│  price:         1.068924
+│  borrow assets: 39.13
+│  borrow shares: 36574444.04
+│  positions less than 10pct from liquidation: 27
+│  at-risk positions (19):
+│  [ 1] HF: 1.0000  borrower: 0x6e4859A4Ee9cE70425805d60FCbe17Ed7b8040A8 borrow_assets: 68286829297038.0547 
+│  [ 2] HF: 1.0000  borrower: 0x7ABdd10A895aC1Bf14bF78104f2aB8D6Ca389fe7 borrow_assets: 34143412832487.0547 
+│  [ 3] HF: 1.0000  borrower: 0x4CAd862fF4BE549f009789c9EF1d13038483Cc40 borrow_assets: 68286824793120.2812 
+│  [ 4] HF: 1.0000  borrower: 0x0200930871dfEf2C2A2E764b887f31c999E6D05c borrow_assets: 6828681122.1111 
+│  [ 5] HF: 1.0000  borrower: 0x000BfE42bFFaC0C067B08a243d62ED7FB030f906 borrow_assets: 68286828155786.9453 
+│  [ 6] HF: 1.0000  borrower: 0x8FA81024f3D89fE69DA556db4807815d1ef9060f borrow_assets: 682866698841710.8750 
+│  [ 7] HF: 1.0000  borrower: 0x52Da450C3BD340278F681660C42F86C4040B4C69 borrow_assets: 6828669640255.2227 
+│  [ 8] HF: 1.0001  borrower: 0x3b3a3399E61ae54CEC53968e6608Cb8Cc1D8015f borrow_assets: 193176541707507296.0000 
+│  [ 9] HF: 1.0001  borrower: 0x83A34BE6f0038EddCa45Af5c09D3d3FD37efdde3 borrow_assets: 68291237958864.7812 
+│  [10] HF: 1.0001  borrower: 0x2f9FA4Ee644A91691E2381F91B328333734d4406 borrow_assets: 6829123150652.0557 
+└─
+
+
+┌─ Market wstETH/WETH
+│  price:         1.231388
+│  borrow assets: 5582.16
+│  borrow shares: 5363126177.46
+│  positions less than 10pct from liquidation: 171
+│  at-risk positions (121):
+│  [ 1] HF: 1.0034  borrower: 0x39bBBAf0d50e8EB7F7C13F3a5D5d589020Acf1C1 borrow_assets: 1111111111.1111 
+│  [ 2] HF: 1.0211  borrower: 0x2329b09C6E5EBD3Cc3096916778a9EAE8E5D61A6 borrow_assets: 2993111799230011.5000 
+│  [ 3] HF: 1.0349  borrower: 0x4406F32df4cFF19B13527ef0917209F8AC5f3082 borrow_assets: 177959411980053.5000 
+│  [ 4] HF: 1.0349  borrower: 0x3b768ec38E0b85cf83e815da240e697bB45dc6b4 borrow_assets: 255788744769995.6562 
+│  [ 5] HF: 1.0352  borrower: 0x0f8d56f6a46e3B7F43B4743c745Fc309AB11d31f borrow_assets: 29661263856.2778 
+│  [ 6] HF: 1.0355  borrower: 0x1c46797b0a541BeB6ec42D3367cf30F4c0a9015d borrow_assets: 12002847050081.2773 
+│  [ 7] HF: 1.0361  borrower: 0x03a0Cb89a546df85E6f583b88BFf57b83F5D3FD1 borrow_assets: 49948888475076624384.0000 
+│  [ 8] HF: 1.0362  borrower: 0x083b4acc1c0Be4BaA7bc528c21046b8F9fcd9F13 borrow_assets: 7182462230401.0557 
+│  [ 9] HF: 1.0362  borrower: 0x4650C696254B398f10c141826E858c1aD284bBF7 borrow_assets: 6026384497998.7773 
+│  [10] HF: 1.0362  borrower: 0x0D99325d543de3685ea483251fF1634763B98386 borrow_assets: 60255033013251.7188 
+└─
+
+
+┌─ Market wstETH/FXUSD
+│  price:         2755.675184
+│  borrow assets: 115.10
+│  borrow shares: 114956663.56
+│  positions less than 10pct from liquidation: 1
+│  no positions at risk
+└─
+
+
+┌─ Market weETH/WETH
+│  price:         1.092090
+│  borrow assets: 1030.83
+│  borrow shares: 1010963469.61
+│  positions less than 10pct from liquidation: 20
+│  at-risk positions (16):
+│  [ 1] HF: 1.0041  borrower: 0x5a1B533b476701f7BAE1975Bee6B4Eb10df13061 borrow_assets: 75799689389783.0000 
+│  [ 2] HF: 1.0043  borrower: 0x9558B339Bb03246C44c57fCee184645DBfAb253F borrow_assets: 35514998839335051264.0000 
+│  [ 3] HF: 1.0045  borrower: 0x17c8AFd739A175eACF8Af5531671b222102B8083 borrow_assets: 146049833333333344.0000 
+│  [ 4] HF: 1.0278  borrower: 0x13B3080AAAFE52192414aaE37cfE4f8889251BBB borrow_assets: 11813654033127178240.0000 
+│  [ 5] HF: 1.0504  borrower: 0x16Db9563D1b48ab1af0Be2449D0A9fDc5E77E7bB borrow_assets: 45805337281313.4453 
+│  [ 6] HF: 1.0528  borrower: 0x7027f848dD023eEC90Bdcb6359733bE03C966b11 borrow_assets: 178858.7778 
+│  [ 7] HF: 1.0530  borrower: 0x9dC0cd022487223E5B9aBCf05F36f084DFc8d9C5 borrow_assets: 68827175839252.7812 
+│  [ 8] HF: 1.0530  borrower: 0x4fC7c72a26DEE009eA7a0D48397F0AE91a52AE68 borrow_assets: 70711329698569.6094 
+│  [ 9] HF: 1.0530  borrower: 0xeDb03abAC5D4E17E0980b21A0cAbC289bA8C2957 borrow_assets: 353694902666.6667 
+│  [10] HF: 1.0531  borrower: 0xF2de3330a27657FD5D7634C926F09156B3DdFF84 borrow_assets: 1681240632745.7222 
+└─
+
+
+┌─ Market cbBTC/FXUSD
+│  price:         71790.246316
+│  borrow assets: 102026.07
+│  borrow shares: 101918657262.49
+│  positions less than 10pct from liquidation: 1
+│  no positions at risk
+└─
+
+
+┌─ Market cbXRP/USDC
+│  price:         1.376100
+│  borrow assets: 15762245.86
+│  borrow shares: 15.55
+│  positions less than 10pct from liquidation: 12
+│  at-risk positions (10):
+│  [ 1] HF: 1.0746  borrower: 0x31A9CDD6ACA93B4A8a374529B23681009f7079A1 borrow_assets: 1114306.5000 
+│  [ 2] HF: 1.0767  borrower: 0x23e7b1353E6a6E5873c4F231b52D3594B810F5a2 borrow_assets: 1679506.3333 
+│  [ 3] HF: 1.0784  borrower: 0x33B6095A37a69f37a5F65d068d4435b00eCA1eC9 borrow_assets: 1000091869.6667 
+│  [ 4] HF: 1.0791  borrower: 0x0Afd64B8Bf383398317c589a6F9C8A8A6E0D5deF borrow_assets: 17772370.5000 
+│  [ 5] HF: 1.0800  borrower: 0x30bbf5d08C24888FE5a832536ab2B61ad6006E45 borrow_assets: 2170105074.8333 
+│  [ 6] HF: 1.0825  borrower: 0x310985941B88159E68EA8F7C8d17583Ba285FE78 borrow_assets: 12248634.0000 
+│  [ 7] HF: 1.0859  borrower: 0x019428e3873160B43d8DE1bd63164836D8D0aCEF borrow_assets: 848700174.6667 
+│  [ 8] HF: 1.0916  borrower: 0x2aB17646e2cF8d3919a24117A941C91deA25A026 borrow_assets: 15641176.5000 
+│  [ 9] HF: 1.0997  borrower: 0x006c5845E3fecd7c7457BB3c2b10199cc2f2910e borrow_assets: 135912307.8333 
+│  [10] HF: 1.0998  borrower: 0x0Bc0b8459283f0AF3A151E24C6801Dd4A5831661 borrow_assets: 2534144.8333 
+└─
+
+
+┌─ Market cbETH/WETH
+│  price:         1.127137
+│  borrow assets: 657.34
+│  borrow shares: 628243290.32
+│  positions less than 10pct from liquidation: 149
+│  at-risk positions (83):
+│  [ 1] HF: 1.0074  borrower: 0x24547D75feA1F6FB0a3660d3099B3fAfe9108290 borrow_assets: 564542909374.2778 
+│  [ 2] HF: 1.0164  borrower: 0x0e2852b070fbF866acecb93DeC04b91F02804cFE borrow_assets: 7568681042178636800.0000 
+│  [ 3] HF: 1.0181  borrower: 0x93B728E34633209Dcd273e33d833F022C9BB2773 borrow_assets: 5555555555555.5557 
+│  [ 4] HF: 1.0221  borrower: 0x4Cf2D94d0e4D6F03F402c0a56BDb58B656C49fA9 borrow_assets: 4931544594937882.0000 
+│  [ 5] HF: 1.0283  borrower: 0x65A84ed26f7FE0e3E8753d2C5819D0bf6b86744f borrow_assets: 121231254138959776.0000 
+│  [ 6] HF: 1.0309  borrower: 0x7b00d31bA4f410160d0f43aD8550C6e70B5d1635 borrow_assets: 357743099030445056.0000 
+│  [ 7] HF: 1.0309  borrower: 0xC42eaDE6AB740763c5942932Dd7c09C913644C45 borrow_assets: 20219230618517757952.0000 
+│  [ 8] HF: 1.0325  borrower: 0x5475265169970D4facA23ae922Da02716A2a6c37 borrow_assets: 472257080684732800.0000 
+│  [ 9] HF: 1.0326  borrower: 0x6aaA099102D7C814d71E0c10E3A9eA9bd870dB46 borrow_assets: 63138872900521.5547 
+│  [10] HF: 1.0329  borrower: 0x3c14323973346Abea3e9DFd759f380bEaa2fE2a8 borrow_assets: 6315032397709.3330 
+└─
+
+
+┌─ Market VVV/FXUSD
+│  price:         7.102079
+│  borrow assets: 99995.45
+│  borrow shares: 99886401269.39
+│  positions less than 10pct from liquidation: 2
+│  no positions at risk
+└─
+
+
+┌─ Market cbBTC/USDC
+│  price:         71614.148297
+│  borrow assets: 1027461158.22
+│  borrow shares: 937.18
+│  positions less than 10pct from liquidation: 22
+│  no positions at risk
+└─
+
 

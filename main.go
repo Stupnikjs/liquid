@@ -36,7 +36,8 @@ func RunBase() {
 
 	// base cache instance
 	cache := core.NewCache(CacheConfig)
-
+	// cache.LogHotMarket()
+	cache.Init(conn)
 	cache.Scan(conn, cexFeed)
 }
 

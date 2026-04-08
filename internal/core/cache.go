@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/cex"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -68,16 +69,15 @@ func NewPositionCache(markets map[[32]byte]morpho.MarketParams) *PositionCache {
 // Overall loop logic
 
 func (c *Cache) Init(conn *connector.Connector) error {
-	err := c.ApiRefreshCache(conn.ClientHTTP)
+
+	// REFRESH ON ALL MARKET FOR INIT
+	c.OnChainRefresh(conn.ClientHTTP)
+	// FILTER OUT ALL HF OVER 1.1
+	err := c.ApiRefreshCache(conn.ClientHTTP, utils.WAD1DOT1)
 	if err != nil {
 		return err
 	}
-	arr := [][32]byte{}
-	for k := range c.Config.Markets {
-		arr = append(arr, k)
-	}
-	// REFRESH ON ALL MARKET FOR INIT
-	c.OnChainRefresh(conn.ClientHTTP, arr)
+
 	return nil
 }
 

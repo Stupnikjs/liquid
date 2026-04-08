@@ -20,6 +20,66 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan chan string) {
+	var flat []*Liquidable
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for mId := range c.PositionCache.m {
+		wg.Add(1)
+		go func(mId [32]byte) {
+			defer wg.Done()
+			positions, stats := c.GetMarketProps(mId)
+			var local []*Liquidable
+			for _, p := range positions {
+				market := c.GetMorphoMarketFromId(mId)
+				var cexPrice *big.Int
+				if market.CexOnly {
+					cexPrice = cex.GetCollateralPriceInLoan(c.CexCache, &market)
+				}
+				if cexPrice == nil {
+					cexPrice = stats.OraclePrice
+				}
+				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, cexPrice, stats.LLTV)
+				isNotInTargetZone := hf.Cmp(utils.WAD) >= 0
+
+				if hf == nil || hf.Sign() == 0 {
+					continue
+				}
+				if isNotInTargetZone {
+					continue
+				}
+				if p.SimulationCount > 8 {
+					continue
+				}
+				local = append(local, &Liquidable{HF: hf, Pos: p, MarketID: mId})
+			}
+			if len(local) == 0 {
+				return
+			}
+			logChan <- fmt.Sprintf("%d liquidable", len(local))
+			mu.Lock()
+			flat = append(flat, local...)
+			mu.Unlock()
+		}(mId)
+	}
+	wg.Wait()
+
+	// ✅ mieux : pipeline non-bloquant avec timeout global
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	enriched := c.simulateCandidates(client, ctx, flat)
+	for _, l := range enriched {
+		select {
+		case c.liquidCh <- *l:
+		case <-ctx.Done():
+			log.Println("liquidCh timeout, positions ignorées")
+			return
+		}
+	}
+
+}
+
 /* Loop over liquidable and test liquidate call with precompute values */
 func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candidates []*Liquidable) []*Liquidable {
 	var wg sync.WaitGroup
@@ -49,63 +109,6 @@ func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candi
 	return results
 }
 
-func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan chan string, event RebuildEvent) {
-	var flat []*Liquidable
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-
-	for mId := range c.PositionCache.m {
-		wg.Add(1)
-		go func(mId [32]byte) {
-			defer wg.Done()
-			positions, stats := c.GetMarketProps(mId)
-			var local []*Liquidable
-			for _, p := range positions {
-				market := c.GetMorphoMarketFromId(mId)
-				var cexPrice *big.Int
-				if market.CexOnly {
-					cexPrice = cex.GetCollateralPriceInLoan(c.CexCache, &market)
-				}
-				if cexPrice == nil {
-					cexPrice = stats.OraclePrice
-				}
-				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, cexPrice, stats.LLTV)
-				isNotInTargetZone := hf.Cmp(utils.WAD1DOT01) >= 0
-				if market.Correlated {
-					isNotInTargetZone = hf.Cmp(utils.WAD1DOT0005) >= 0
-				}
-				if hf == nil || hf.Sign() == 0 {
-					continue
-				}
-				if isNotInTargetZone {
-					continue
-				}
-				if p.SimulationCount > 8 {
-					continue
-				}
-				local = append(local, &Liquidable{HF: hf, Pos: p, MarketID: mId})
-			}
-			if len(local) == 0 {
-				return
-			}
-			logChan <- fmt.Sprintf("%d liquidable", len(local))
-			mu.Lock()
-			flat = append(flat, local...)
-			mu.Unlock()
-		}(mId)
-	}
-	wg.Wait()
-
-	enriched := c.simulateCandidates(client, ctx, flat)
-	if len(enriched) > 0 {
-		for _, l := range enriched {
-			c.liquidCh <- *l
-			logChan <- fmt.Sprintf("liquidable pos %v", l)
-		}
-	}
-
-}
-
 /* Get Liquidations params by calculating and calling eth_call to test for revert */
 func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq *Liquidable) *Liquidable {
 	out := *liq
@@ -123,7 +126,7 @@ func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq
 	// 2. Dry-run eth_call
 	gasEst, err := c.simulateLiquidationCall(client, ctx, params, liq.Pos, repayShares)
 	if err != nil {
-		log.Printf("simulation failed: %s \n", err.Error())
+		log.Printf("simulation failed: %s for borrower %s \n", err.Error(), out.Pos.Address.String())
 		out.SimErr = fmt.Errorf("simulation failed: %w", err)
 		return &out
 	}
@@ -150,9 +153,10 @@ func (c *Cache) simulateLiquidationCall(
 	data, err := config.FuncLiquidate.EncodeArgs(
 		params.ToMarketContractParams(),
 		pos.Address,
+		big.NewInt(0),
 		repayShares,
 		c.Config.Chain.UniswapRouterAddress, // adapt to chainId
-		params.PoolFee,                      // adapt to chainId
+		big.NewInt(int64(params.PoolFee)),   // adapt to chainId
 	)
 	if err != nil {
 		return 0, fmt.Errorf("encode liquidate: %w", err)
