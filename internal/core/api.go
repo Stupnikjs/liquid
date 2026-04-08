@@ -39,7 +39,7 @@ func (c *Cache) ApiRefreshCache(client *w3.Client) error {
 
 		market.Mu.Lock()
 		for _, p := range fetched {
-
+   // filtre ici 
 			market.Positions[p.Address] = &p
 
 		}
