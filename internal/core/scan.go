@@ -208,7 +208,7 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 			fmt.Fprintf(&sb, "│  at-risk positions (%d):\n", len(atrisk))
 			for i, hp := range atrisk[:n] {
 				hf := utils.BigIntWADToFloat(hp.hf)
-				collAssets := utils.BigIntToFloat(hp.pos.CollateralAssets) / float64(market.CollateralTokenDecimals)
+				collAssets := utils.BigIntToFloat(hp.pos.CollateralAssets) / math.Pow10(int(float64(market.CollateralTokenDecimals)))
 				fmt.Fprintf(&sb, "│  [%2d] HF: %.4f  borrower: %s borrow_assets: %.4f \n", i+1, hf, hp.pos.Address, collAssets)
 			}
 			fmt.Fprintf(&sb, "└─\n\n")
