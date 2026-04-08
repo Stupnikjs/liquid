@@ -48,3 +48,55 @@ func (c *Cache) ApiRefreshCache(client *w3.Client) error {
 
 	return nil
 }
+
+
+type MarketCandidate struct {
+    MarketID  [32]byte
+    CreatedAt time.Time
+    Params    morpho.MarketParams // collateral, loan, oracle, lltv
+}
+
+type MarketFilter struct {
+    Candidates     map[[32]byte]*MarketCandidate
+    MinBorrowUSD   float64 // ex: 500_000
+    MinUniLiquidity float64 // ex: 200_000
+    MaxAgeDays     int     // ex: 90
+    Mu             sync.RWMutex
+}
+
+func (mf *MarketFilter) OnCreateMarket(event MarketCreatedEvent) {
+    mf.Mu.Lock()
+    defer mf.Mu.Unlock()
+    mf.Candidates[event.MarketID] = &MarketCandidate{
+        MarketID:  event.MarketID,
+        CreatedAt: time.Now(),
+        Params:    event.Params,
+    }
+}
+
+func (mf *MarketFilter) ScanCandidates(client *w3.Client) []MarketCandidate {
+    mf.Mu.RLock()
+    defer mf.Mu.RUnlock()
+
+    var approved []MarketCandidate
+
+    for _, candidate := range mf.Candidates {
+        // trop vieux
+        if time.Since(candidate.CreatedAt).Hours() > float64(mf.MaxAgeDays*24) {
+            delete(mf.Candidates, candidate.MarketID)
+            continue
+        }
+        // check borrow TVL
+        borrowAssets := fetchTotalBorrow(client, candidate.MarketID)
+        if borrowAssets < mf.MinBorrowUSD {
+            continue
+        }
+        // check liquidité Uniswap
+        liquidity := fetchUniswapLiquidity(client, candidate.Params.CollateralToken, candidate.Params.LoanToken)
+        if liquidity < mf.MinUniLiquidity {
+            continue
+        }
+        approved = append(approved, *candidate)
+    }
+    return approved
+}
