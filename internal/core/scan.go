@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
+	"github.com/Stupnikjs/morpho-sepolia/internal/logging"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
 
@@ -14,13 +15,14 @@ type Runner struct {
 
 func (r *Runner) Scan(conn *connector.Connector) error {
 	ctx, cancel := context.WithCancel(context.Background())
-
+	logChan := logging.WriteLogRoutine(ctx, "log.yaml")
 	defer cancel()
 
-	go r.WatchPositionRoutine(ctx, conn)
+	go r.WatchPositionRoutine(ctx, conn, logChan)
 	// Onchain rpc pool to update markets
-	go r.OnChainRefreshRoutine(ctx, conn)
+	go r.OnChainRefreshRoutine(ctx, conn, logChan)
 	// Loging Ethcalls per min
+
 	for {
 		event := <-conn.PositionCh
 		r.Cache.ProcessEvents(event)
@@ -28,14 +30,13 @@ func (r *Runner) Scan(conn *connector.Connector) error {
 	}
 }
 
-func (r *Runner) WatchPositionRoutine(ctx context.Context, conn *connector.Connector) {
+func (r *Runner) WatchPositionRoutine(ctx context.Context, conn *connector.Connector, logChannel chan string) {
 	conn.WatchPositions(ctx)
 }
 
-func (r *Runner) OnChainRefreshRoutine(ctx context.Context, conn *connector.Connector) {
-	errCh := make(chan error)
-	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
-		return r.Cache.OnChainRefresh(conn.ClientHTTP)
+func (r *Runner) OnChainRefreshRoutine(ctx context.Context, conn *connector.Connector, logChannel chan string) {
+	utils.RunTicker(ctx, 2*time.Minute, func() {
+		r.Cache.OnChainRefresh(conn.ClientHTTP)
 	})
 }
 

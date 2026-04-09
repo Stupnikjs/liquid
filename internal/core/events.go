@@ -21,14 +21,14 @@ func (c *Cache) ProcessEvents(log *types.Log) {
 
 	case config.EventBorrow.Topic0:
 		BorrowEventProcess(c, log)
-		/*
-			case config.EventLiquidate.Topic0:
-				c.PositionCache.LiquidateEventProcess(log)
-			case config.EventRepay.Topic0:
-				c.PositionCache.RepayEventProcess(log)
-			case config.EventSupplyCollateral.Topic0:
-				c.PositionCache.SupplyCollateralEventProcess(log)
-		*/
+
+	case config.EventLiquidate.Topic0:
+		LiquidateEventProcess(c, log)
+	case config.EventRepay.Topic0:
+		RepayEventProcess(c, log)
+	case config.EventSupplyCollateral.Topic0:
+		SupplyCollateralEventProcess(c, log)
+
 	// ajouter les prix oracle
 	default:
 		fmt.Println("malformed log event")
@@ -72,66 +72,68 @@ func BorrowEventProcess(cache *Cache, log *types.Log) {
 
 }
 
-/*
-	func (c *PositionCache) RepayEventProcess(log *types.Log) {
-		var (
-			id       [32]byte
-			caller   common.Address
-			onBehalf common.Address
-			assets   big.Int
-			shares   big.Int
-		)
+func RepayEventProcess(cache *Cache, log *types.Log) {
+	var (
+		id       [32]byte
+		caller   common.Address
+		onBehalf common.Address
+		assets   big.Int
+		shares   big.Int
+	)
 
-		if err := config.EventRepay.DecodeArgs(log, &id, &caller, &onBehalf, &assets, &shares); err != nil {
-			fmt.Println("decode error:", err)
-			return
-		}
-		if !c.IsMarketInCache(id) {
-			return
-		}
-		market := c.m[id]
-		market.Mu.Lock()
-		if p, ok := market.Positions[onBehalf]; ok {
-			p.BorrowShares.Sub(p.BorrowShares, &shares)
-			if p.BorrowShares.Sign() <= 0 {
-				delete(market.Positions, p.Address)
-			}
-		}
-		market.Mu.Unlock()
+	if err := config.EventRepay.DecodeArgs(log, &id, &caller, &onBehalf, &assets, &shares); err != nil {
+		fmt.Println("decode error:", err)
+		return
+	}
+	if !slices.Contains(cache.Markets.Ids(), id) {
+		return
 	}
 
-	func (c *PositionCache) LiquidateEventProcess(log *types.Log) {
-		var (
-			id            [32]byte
-			caller        common.Address
-			borrower      common.Address
-			repaidAssets  big.Int
-			repaidShares  big.Int
-			seizedAssets  big.Int
-			badDebtAssets big.Int
-			badDebtShares big.Int
-		)
+	cache.Markets.Update(id, func(m *market.Market) {
+		if p, ok := m.Positions[onBehalf]; ok {
+			p.BorrowShares.Sub(p.BorrowShares, &shares)
+			if p.BorrowShares.Sign() <= 0 {
+				delete(m.Positions, p.Address)
+			}
+		}
+	})
 
-		if err := config.EventLiquidate.DecodeArgs(log, &id, &caller, &borrower, &repaidAssets, &repaidShares, &seizedAssets, &badDebtAssets, &badDebtShares); err != nil {
-			fmt.Println("liquidate ", log)
-			fmt.Println("decode error:", err)
-			return
-		}
-		if !c.IsMarketInCache(id) {
-			return
-		}
-		market := c.m[id]
-		market.Mu.Lock()
-		if p, ok := market.Positions[borrower]; ok {
+}
+
+func LiquidateEventProcess(cache *Cache, log *types.Log) {
+	var (
+		id            [32]byte
+		caller        common.Address
+		borrower      common.Address
+		repaidAssets  big.Int
+		repaidShares  big.Int
+		seizedAssets  big.Int
+		badDebtAssets big.Int
+		badDebtShares big.Int
+	)
+
+	if err := config.EventLiquidate.DecodeArgs(log, &id, &caller, &borrower, &repaidAssets, &repaidShares, &seizedAssets, &badDebtAssets, &badDebtShares); err != nil {
+		fmt.Println("liquidate ", log)
+		fmt.Println("decode error:", err)
+		return
+	}
+
+	if !slices.Contains(cache.Markets.Ids(), id) {
+		return
+	}
+
+	cache.Markets.Update(id, func(m *market.Market) {
+		if p, ok := m.Positions[borrower]; ok {
 			p.BorrowShares.Sub(p.BorrowShares, &repaidShares)
 			if p.BorrowShares.Sign() <= 0 {
 				fmt.Println("borrow liquidated :", p.Address)
-				delete(market.Positions, borrower)
+				delete(m.Positions, borrower)
 			}
 		}
-		market.Mu.Unlock()
-	}
-*/
+	})
+
+}
+
 func AccrueInterestEventProcess(c *Cache, log *types.Log) {
 	var (
 		id             [32]byte
@@ -162,9 +164,7 @@ func AccrueInterestEventProcess(c *Cache, log *types.Log) {
 
 }
 
-/*
-
-func (c *PositionCache) SupplyCollateralEventProcess(log *types.Log) {
+func SupplyCollateralEventProcess(cache *Cache, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -175,23 +175,18 @@ func (c *PositionCache) SupplyCollateralEventProcess(log *types.Log) {
 		fmt.Println("decode error:", err)
 		return
 	}
-	if !c.IsMarketInCache(id) {
+	if !slices.Contains(cache.Markets.Ids(), id) {
 		return
 	}
-	market := c.m[id]
-	market.Mu.Lock()
-	if p, ok := market.Positions[onBehalf]; ok {
-		if p.CollateralAssets == nil {
-			p.CollateralAssets = &assets
-		} else {
-			p.CollateralAssets.Add(p.CollateralAssets, &assets)
-		}
-	}
-	market.Mu.Unlock()
-}
 
-func (p *PositionCache) IsMarketInCache(marketID [32]byte) bool {
-	market, ok := p.m[marketID]
-	return ok && market != nil
+	cache.Markets.Update(id, func(m *market.Market) {
+		if p, ok := m.Positions[onBehalf]; ok {
+			if p.CollateralAssets == nil {
+				p.CollateralAssets = &assets
+			} else {
+				p.CollateralAssets.Add(p.CollateralAssets, &assets)
+			}
+		}
+	})
+
 }
-*/
