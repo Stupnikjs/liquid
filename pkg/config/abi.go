@@ -47,4 +47,19 @@ var (
 		address swapRouter,
 		uint24 poolFee
 	)`, "")
+
+	// Chainlink v2
+	FuncLatestAnswer = w3.MustNewFunc("latestAnswer()", "int256")
+	FuncDecimals     = w3.MustNewFunc("decimals()", "uint8")
+	// Chainlink v3
+	FuncLatestRoundData = w3.MustNewFunc(
+		"latestRoundData()",
+		"uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound",
+	)
+
+	FuncPrice                 = w3.MustNewFunc("price()", "uint256")
+	FuncQuoteExactInputSingle = w3.MustNewFunc(
+		"quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96))",
+		"uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate",
+	)
 )

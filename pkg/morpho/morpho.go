@@ -25,6 +25,21 @@ func LiquidationIncentiveFactor(lltv *big.Int) *big.Int {
 	return lif
 }
 
+func BorrowAssetsFromShares(posShares, totShares, totBorrowAssets *big.Int) *big.Int {
+	if totBorrowAssets == nil || totShares == nil {
+		return new(big.Int)
+	}
+	if totShares.Sign() == 0 {
+		return new(big.Int)
+	}
+	if totBorrowAssets.Sign() == 0 {
+		return new(big.Int)
+	}
+	return new(big.Int).Div(
+		new(big.Int).Mul(posShares, totBorrowAssets),
+		totShares)
+}
+
 // sharesToAssets : shares * totalAssets / totalShares
 func SharesToAssets(shares, totalAssets, totalShares *big.Int) *big.Int {
 	if totalShares.Sign() == 0 {

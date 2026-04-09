@@ -1,4 +1,5 @@
-package core
+/*
+package engine
 
 import (
 	"context"
@@ -9,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/config"
+	"github.com/Stupnikjs/morpho-sepolia/internal/position"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/cex"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -20,6 +21,20 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+type Liquidable struct {
+	Pos          *position.BorrowPosition
+	MarketID     [32]byte
+	HF           *big.Int
+	RepayShares  *big.Int
+	SeizeAssets  *big.Int
+	EstProfit    *big.Int
+	GasEstimate  uint64
+	SimulatedAt  time.Time
+	SimErr       error
+	IsLiquidable bool
+}
+
+// Send every liquidable pos ranked by profit on liquidable channel
 func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan chan string) {
 	var flat []*Liquidable
 	var wg sync.WaitGroup
@@ -32,24 +47,9 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 			positions, stats := c.GetMarketProps(mId)
 			var local []*Liquidable
 			for _, p := range positions {
-				market := c.GetMorphoMarketFromId(mId)
-				var cexPrice *big.Int
-				if market.CexOnly {
-					cexPrice = cex.GetCollateralPriceInLoan(c.CexCache, &market)
-				}
-				if cexPrice == nil {
-					cexPrice = stats.OraclePrice
-				}
-				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, cexPrice, stats.LLTV)
+				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, stats.OraclePrice, stats.LLTV)
 				isNotInTargetZone := hf.Cmp(utils.WAD) >= 0
-
-				if hf == nil || hf.Sign() == 0 {
-					continue
-				}
-				if isNotInTargetZone {
-					continue
-				}
-				if p.SimulationCount > 8 {
+				if hf == nil || hf.Sign() == 0 || isNotInTargetZone {
 					continue
 				}
 				local = append(local, &Liquidable{HF: hf, Pos: p, MarketID: mId})
@@ -64,11 +64,9 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 		}(mId)
 	}
 	wg.Wait()
-
-	// ✅ mieux : pipeline non-bloquant avec timeout global
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	enriched := c.simulateCandidates(client, ctx, flat)
+	enriched := c.simulateCandidates(client, ctx, flat, logChan)
 	for _, l := range enriched {
 		select {
 		case c.liquidCh <- *l:
@@ -80,8 +78,7 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 
 }
 
-/* Loop over liquidable and test liquidate call with precompute values */
-func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candidates []*Liquidable) []*Liquidable {
+func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candidates []*Liquidable, logChan chan string) []*Liquidable {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var results []*Liquidable
@@ -94,6 +91,7 @@ func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candi
 			defer func() { <-sem }()
 			enriched := c.SimulatePreComputeTx(client, ctx, liq)
 			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 || !enriched.IsLiquidable {
+				logChan <- fmt.Sprintf("Err in liq simulation: %s for borrower %s with %d repaid shares on %s", enriched.SimErr, enriched.Pos.Address, enriched.RepayShares, c.GetMorphoMarketFromId(liq.MarketID).CollateralTokenStr)
 				return
 			}
 			mu.Lock()
@@ -109,7 +107,7 @@ func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candi
 	return results
 }
 
-/* Get Liquidations params by calculating and calling eth_call to test for revert */
+
 func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq *Liquidable) *Liquidable {
 	out := *liq
 	params := c.Config.Markets[liq.MarketID]
@@ -136,12 +134,11 @@ func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq
 	out.EstProfit = morpho.EstimateProfit(seizeAssets, repayShares, gasEst)
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
-	fmt.Println("simulation succed on pos: ", out.Pos.Address.String())
 
 	return &out
 }
 
-/* ETH_CALL to check for revert */
+
 func (c *Cache) simulateLiquidationCall(
 	client *w3.Client,
 	ctx context.Context,
@@ -173,7 +170,6 @@ func (c *Cache) simulateLiquidationCall(
 	var callers []w3types.RPCCaller
 	callers = append(callers, eth.Call(&msg, nil, nil).Returns(&result))
 	callers = append(callers, eth.EstimateGas(&msg, nil).Returns(&gasVal))
-	pos.SimulationCount += 1
 	if err := c.EthCallCtx(client, ctx, callers); err != nil {
 		return 0, fmt.Errorf("eth_call failed: %w", err)
 	}
@@ -243,3 +239,4 @@ func (c *Cache) LiquidateCall(
 	log.Printf("[liquidate] tx sent: %s", receipt.Hex())
 	return nil
 }
+*/ 
