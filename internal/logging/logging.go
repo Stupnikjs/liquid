@@ -1,4 +1,3 @@
-/*
 package logging
 
 import (
@@ -12,14 +11,20 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
 
-func WriteLogRoutine(ctx context.Context, filename string) {
+func WriteLogRoutine(ctx context.Context, filename string) chan string {
 	var mu sync.Mutex
+	logChannel := make(chan string, 100) // ✅ buffered pour éviter les blocages
 	logCache := make(map[int64]string)
 
 	pathLog := path.Join("logs", filename)
-	file, _ := os.Create(pathLog)
-	defer file.Close()
+	file, err := os.Create(pathLog)
+	if err != nil {
+		panic(err)
+	}
+
+	// ✅ goroutine qui lit le channel
 	go func() {
+		defer file.Close() // ✅ déplacé ici — sinon file.Close() s'exécute avant les writes
 		for {
 			select {
 			case <-ctx.Done():
@@ -28,30 +33,23 @@ func WriteLogRoutine(ctx context.Context, filename string) {
 				mu.Lock()
 				logCache[time.Now().Unix()] = msg
 				mu.Unlock()
-
-			case err := <-errCh:
-				mu.Lock()
-				logCache[time.Now().Unix()] = err.Error()
-				mu.Unlock()
 			}
 		}
 	}()
 
-	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
+	// ✅ ticker dans sa propre goroutine
+	go utils.RunTicker(ctx, 2*time.Minute, func() {
 		mu.Lock()
 		defer mu.Unlock()
 		if len(logCache) == 0 {
-			return nil
+			return
 		}
-
 		for ts, msg := range logCache {
-			_, _ = fmt.Fprintf(file, "[%s] %s\n", time.Unix(ts, 0).Format(time.RFC3339), msg)
-
+			fmt.Fprintf(file, "[%s] %s\n", time.Unix(ts, 0).Format(time.RFC3339), msg)
 		}
-
-		// vide le cache
 		clear(logCache)
-		return nil
+
 	})
+
+	return logChannel // ✅ retourné pour être utilisé depuis n'importe quel package
 }
-*/
