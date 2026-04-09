@@ -1,8 +1,7 @@
-package core
+package position
 
 import (
 	"math/big"
-	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
@@ -15,54 +14,11 @@ type BorrowPosition struct {
 	MarketID                       [32]byte
 	Address                        common.Address
 	BorrowShares, CollateralAssets *big.Int
-	SimulationCount                int
-	Attempts                       int
-	LastAttempt                    int64
-}
-
-// AccruedBorrowAssets retourne totalBorrowAssets mis à jour jusqu'à `now`
-// To Simulate Morpho call accrue interest at begin of liquidate func
-func (ms *MarketStats) AccruedBorrowAssets() *big.Int {
-	if ms.TotalBorrowAssets == nil {
-		return ms.TotalBorrowAssets
-	}
-	if ms.TotalBorrowAssets.Sign() == 0 {
-		return ms.TotalBorrowAssets
-	}
-
-	dt := big.NewInt(time.Now().Unix() - ms.LastUpdate)
-	if dt.Sign() <= 0 {
-		return ms.TotalBorrowAssets
-	}
-	if ms.BorrowRate == nil {
-		return ms.TotalBorrowAssets
-	}
-	// interest = totalBorrowAssets * borrowRate * dt / WAD
-	interest := new(big.Int).Mul(ms.TotalBorrowAssets, ms.BorrowRate)
-	interest.Mul(interest, dt)
-	interest.Div(interest, utils.WAD)
-
-	return new(big.Int).Add(ms.TotalBorrowAssets, interest)
-}
-
-func (pos *BorrowPosition) GetBorrowAssets(totShares, totBorrowAssets *big.Int) *big.Int {
-	if totBorrowAssets == nil || totShares == nil {
-		return new(big.Int)
-	}
-	if totShares.Sign() == 0 {
-		return new(big.Int)
-	}
-	if totBorrowAssets.Sign() == 0 {
-		return new(big.Int)
-	}
-	return new(big.Int).Div(
-		new(big.Int).Mul(pos.BorrowShares, totBorrowAssets),
-		totShares)
 }
 
 // prec 1e18
 func (pos *BorrowPosition) HF(totShares, totBorrowAssets, oraclePrice, LLTV *big.Int) *big.Int {
-	borrowAssets := pos.GetBorrowAssets(totShares, totBorrowAssets)
+	borrowAssets := morpho.BorrowAssetsFromShares(pos.BorrowShares, totShares, totBorrowAssets)
 	if borrowAssets == nil || pos.CollateralAssets == nil {
 		return big.NewInt(0)
 	}
@@ -80,7 +36,7 @@ func (pos *BorrowPosition) HF(totShares, totBorrowAssets, oraclePrice, LLTV *big
 	)
 }
 
-func parsePositions(params morpho.MarketParams, result api.PositionsResult) []BorrowPosition {
+func ParsePositions(id [32]byte, result api.PositionsResult) []BorrowPosition {
 	items := result.MarketPositions.Items // ✅ plus de .Data
 	positions := make([]BorrowPosition, 0, len(items))
 
@@ -93,7 +49,7 @@ func parsePositions(params morpho.MarketParams, result api.PositionsResult) []Bo
 		}
 
 		positions = append(positions, BorrowPosition{
-			MarketID:         params.ID,
+			MarketID:         id,
 			Address:          common.HexToAddress(item.User.Address),
 			BorrowShares:     borrowShares,
 			CollateralAssets: collateral,
@@ -108,7 +64,7 @@ func (pos *BorrowPosition) EstimateProfit(
 	totShares, totBorrowAssets, oraclePrice *big.Int,
 	m morpho.MarketParams,
 ) *big.Int {
-	borrowAssets := pos.GetBorrowAssets(totShares, totBorrowAssets)
+	borrowAssets := morpho.BorrowAssetsFromShares(pos.BorrowShares, totShares, totBorrowAssets)
 	if borrowAssets.Sign() == 0 || pos.CollateralAssets.Sign() == 0 {
 		return big.NewInt(0)
 	}

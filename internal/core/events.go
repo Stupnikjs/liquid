@@ -3,9 +3,12 @@ package core
 import (
 	"fmt"
 	"math/big"
+	"slices"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/config"
+	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/internal/position"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -14,24 +17,25 @@ import (
 func (c *Cache) ProcessEvents(log *types.Log) {
 	switch log.Topics[0] {
 	case config.EventAccrueInterest.Topic0:
-		c.PositionCache.AccrueInterestEventProcess(log)
+		AccrueInterestEventProcess(c, log)
 
 	case config.EventBorrow.Topic0:
-		c.PositionCache.BorrowEventProcess(log)
-
-	case config.EventLiquidate.Topic0:
-		c.PositionCache.LiquidateEventProcess(log)
-	case config.EventRepay.Topic0:
-		c.PositionCache.RepayEventProcess(log)
-	case config.EventSupplyCollateral.Topic0:
-		c.PositionCache.SupplyCollateralEventProcess(log)
-
+		BorrowEventProcess(c, log)
+		/*
+			case config.EventLiquidate.Topic0:
+				c.PositionCache.LiquidateEventProcess(log)
+			case config.EventRepay.Topic0:
+				c.PositionCache.RepayEventProcess(log)
+			case config.EventSupplyCollateral.Topic0:
+				c.PositionCache.SupplyCollateralEventProcess(log)
+		*/
+	// ajouter les prix oracle
 	default:
 		fmt.Println("malformed log event")
 	}
 }
 
-func (c *PositionCache) BorrowEventProcess(log *types.Log) {
+func BorrowEventProcess(cache *Cache, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -45,86 +49,90 @@ func (c *PositionCache) BorrowEventProcess(log *types.Log) {
 		fmt.Println("decode error:", err)
 		return
 	}
-	if !c.IsMarketInCache(id) {
+
+	if !slices.Contains(cache.Markets.Ids(), id) {
 		return
 	}
-	market := c.m[id]
-	market.Mu.Lock()
-	if p, ok := market.Positions[onBehalf]; ok {
-		if p.BorrowShares == nil {
-			p.BorrowShares = new(big.Int)
-			fmt.Println("borrowed:", p.Address)
+	cache.Markets.Update(id, func(m *market.Market) {
+		if p, ok := m.Positions[onBehalf]; ok {
+			if p.BorrowShares == nil {
+				p.BorrowShares = new(big.Int)
+				fmt.Println("borrowed:", p.Address)
+			}
+			p.BorrowShares.Add(p.BorrowShares, &shares)
+
+		} else {
+			m.Positions[onBehalf] = &position.BorrowPosition{
+				MarketID:     id,
+				Address:      onBehalf,
+				BorrowShares: new(big.Int).Set(&shares),
+			}
 		}
-		p.BorrowShares.Add(p.BorrowShares, &shares)
-	} else {
-		market.Positions[onBehalf] = &BorrowPosition{
-			MarketID:     id,
-			Address:      onBehalf,
-			BorrowShares: new(big.Int).Set(&shares),
-		}
-	}
-	market.Mu.Unlock()
+	})
+
 }
 
-func (c *PositionCache) RepayEventProcess(log *types.Log) {
-	var (
-		id       [32]byte
-		caller   common.Address
-		onBehalf common.Address
-		assets   big.Int
-		shares   big.Int
-	)
+/*
+	func (c *PositionCache) RepayEventProcess(log *types.Log) {
+		var (
+			id       [32]byte
+			caller   common.Address
+			onBehalf common.Address
+			assets   big.Int
+			shares   big.Int
+		)
 
-	if err := config.EventRepay.DecodeArgs(log, &id, &caller, &onBehalf, &assets, &shares); err != nil {
-		fmt.Println("decode error:", err)
-		return
-	}
-	if !c.IsMarketInCache(id) {
-		return
-	}
-	market := c.m[id]
-	market.Mu.Lock()
-	if p, ok := market.Positions[onBehalf]; ok {
-		p.BorrowShares.Sub(p.BorrowShares, &shares)
-		if p.BorrowShares.Sign() <= 0 {
-			delete(market.Positions, p.Address)
+		if err := config.EventRepay.DecodeArgs(log, &id, &caller, &onBehalf, &assets, &shares); err != nil {
+			fmt.Println("decode error:", err)
+			return
 		}
-	}
-	market.Mu.Unlock()
-}
-
-func (c *PositionCache) LiquidateEventProcess(log *types.Log) {
-	var (
-		id            [32]byte
-		caller        common.Address
-		borrower      common.Address
-		repaidAssets  big.Int
-		repaidShares  big.Int
-		seizedAssets  big.Int
-		badDebtAssets big.Int
-		badDebtShares big.Int
-	)
-
-	if err := config.EventLiquidate.DecodeArgs(log, &id, &caller, &borrower, &repaidAssets, &repaidShares, &seizedAssets, &badDebtAssets, &badDebtShares); err != nil {
-		fmt.Println("liquidate ", log)
-		fmt.Println("decode error:", err)
-		return
-	}
-	if !c.IsMarketInCache(id) {
-		return
-	}
-	market := c.m[id]
-	market.Mu.Lock()
-	if p, ok := market.Positions[borrower]; ok {
-		p.BorrowShares.Sub(p.BorrowShares, &repaidShares)
-		if p.BorrowShares.Sign() <= 0 {
-			fmt.Println("borrow liquidated :", p.Address)
-			delete(market.Positions, borrower)
+		if !c.IsMarketInCache(id) {
+			return
 		}
+		market := c.m[id]
+		market.Mu.Lock()
+		if p, ok := market.Positions[onBehalf]; ok {
+			p.BorrowShares.Sub(p.BorrowShares, &shares)
+			if p.BorrowShares.Sign() <= 0 {
+				delete(market.Positions, p.Address)
+			}
+		}
+		market.Mu.Unlock()
 	}
-	market.Mu.Unlock()
-}
-func (c *PositionCache) AccrueInterestEventProcess(log *types.Log) {
+
+	func (c *PositionCache) LiquidateEventProcess(log *types.Log) {
+		var (
+			id            [32]byte
+			caller        common.Address
+			borrower      common.Address
+			repaidAssets  big.Int
+			repaidShares  big.Int
+			seizedAssets  big.Int
+			badDebtAssets big.Int
+			badDebtShares big.Int
+		)
+
+		if err := config.EventLiquidate.DecodeArgs(log, &id, &caller, &borrower, &repaidAssets, &repaidShares, &seizedAssets, &badDebtAssets, &badDebtShares); err != nil {
+			fmt.Println("liquidate ", log)
+			fmt.Println("decode error:", err)
+			return
+		}
+		if !c.IsMarketInCache(id) {
+			return
+		}
+		market := c.m[id]
+		market.Mu.Lock()
+		if p, ok := market.Positions[borrower]; ok {
+			p.BorrowShares.Sub(p.BorrowShares, &repaidShares)
+			if p.BorrowShares.Sign() <= 0 {
+				fmt.Println("borrow liquidated :", p.Address)
+				delete(market.Positions, borrower)
+			}
+		}
+		market.Mu.Unlock()
+	}
+*/
+func AccrueInterestEventProcess(c *Cache, log *types.Log) {
 	var (
 		id             [32]byte
 		prevBorrowRate big.Int
@@ -135,22 +143,26 @@ func (c *PositionCache) AccrueInterestEventProcess(log *types.Log) {
 		fmt.Println("decode error:", err)
 		return
 	}
-	if !c.IsMarketInCache(id) {
-		return
-	}
-	market := c.m[id]
-	market.Mu.Lock()
-	// TotalBorrowAssets augmente des intérêts accumulés
 
-	if market.TotalBorrowAssets == nil {
-		market.Mu.Unlock()
+	if !slices.Contains(c.Markets.Ids(), id) {
 		return
 	}
-	market.TotalBorrowAssets = new(big.Int).Add(market.TotalBorrowAssets, &interest)
-	market.BorrowRate = &prevBorrowRate
-	market.LastUpdate = time.Now().Unix()
-	market.Mu.Unlock()
+
+	// TotalBorrowAssets augmente des intérêts accumulés
+	c.Markets.Update(id, func(m *market.Market) {
+
+		if m.Stats.TotalBorrowAssets == nil {
+			return
+		}
+		m.Stats.TotalBorrowAssets = new(big.Int).Add(m.Stats.TotalBorrowAssets, &interest)
+		m.Stats.BorrowRate = &prevBorrowRate
+		m.Stats.LastUpdate = time.Now().Unix()
+
+	})
+
 }
+
+/*
 
 func (c *PositionCache) SupplyCollateralEventProcess(log *types.Log) {
 	var (
@@ -182,3 +194,4 @@ func (p *PositionCache) IsMarketInCache(marketID [32]byte) bool {
 	market, ok := p.m[marketID]
 	return ok && market != nil
 }
+*/

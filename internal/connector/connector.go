@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/config"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"

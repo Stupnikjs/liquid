@@ -2,111 +2,44 @@ package core
 
 import (
 	"context"
-	"fmt"
-	"maps"
-	"math"
-	"math/big"
-	"os"
-	"path"
-	"slices"
-	"sort"
-	"strings"
-	"sync"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/config"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/cex"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
-	"github.com/lmittmann/w3"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
 )
 
-/*
-Filtrer les positions a 10% de liquidation
-on ignore les autres (reresh toutes les 2h)
-On print toute ces positions toutes les stats par marchés ( en fonction de l'HF moyen par marché on adapte la fréquence de refresh oracle price)
-Analyse du profit potentiel des futurs liquidable
-quand hf passe sous seuil de liquidation mettons 1.0001 ou 1.001 lance des ETH_CALL
-Implementer un call pour récupérer les marchés intéressant en terme de TVL et liquidité du collatéral sur Uniswap
-*/
+type Runner struct {
+	Cache *Cache
+}
 
-// swap rpc provider si volatilité augmente a la baisse
-func (c *Cache) Scan(conn *connector.Connector, cexFeed *cex.CoinbaseConnector) error {
+func (r *Runner) Scan(conn *connector.Connector) error {
 	ctx, cancel := context.WithCancel(context.Background())
-	logChannel := make(chan string, 50)
+
 	defer cancel()
-	errCh := make(chan error, 5)
 
-	priceChan := cexFeed.PriceCh()
-	// Cex Price routine updating cexCache
-	go cexFeed.Run(ctx)
-	// Event based position and markets updates
-	go c.WatchPositionRoutine(ctx, conn, errCh, logChannel)
+	go r.WatchPositionRoutine(ctx, conn)
 	// Onchain rpc pool to update markets
-	go c.OnChainRefreshRoutine(ctx, conn, errCh, logChannel)
+	go r.OnChainRefreshRoutine(ctx, conn)
 	// Loging Ethcalls per min
-	go c.CountEthCallPerMinuteRoutine(ctx, conn, errCh, logChannel)
-
-	go c.RebuildWatchListRoutine(ctx, conn, errCh, logChannel)
-	go c.FireLiquidationRoutine(ctx, conn, errCh, logChannel)
-	go c.LogMarketsRoutine(ctx, conn, errCh, logChannel)
-	go c.WriteLogRoutine(ctx, errCh, logChannel)
 	for {
-		select {
-		case priceUpdate := <-priceChan:
-			c.CexCache.UpdateNonCorrelated(priceUpdate)
+		event := <-conn.PositionCh
+		r.Cache.ProcessEvents(event)
 
-		case event := <-conn.PositionCh:
-			c.ProcessEvents(event)
-		}
 	}
 }
 
-func (c *Cache) WatchPositionRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
+func (r *Runner) WatchPositionRoutine(ctx context.Context, conn *connector.Connector) {
 	conn.WatchPositions(ctx)
-	errCh <- fmt.Errorf("WatchPositions exited unexpectedly")
 }
 
-func (c *Cache) OnChainRefreshRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
-
-	markets := slices.Collect(maps.Values(c.Config.Markets))
-
-	for {
-		timer, vol := c.CexCache.GetRefreshParams(2)
-
-		logChannel <- fmt.Sprintf("%d ms", timer/1000)
-		if vol > 2 {
-			event := RebuildEvent{
-				MarketIDs: morpho.NotCexOnlyIds(markets),
-				Reason:    "high_vol_refresh_not_cex",
-			}
-			c.rebuildCh <- event
-
-		}
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(timer):
-			if err := c.OnChainRefresh(conn.ClientHTTP); err != nil {
-				errCh <- err
-			}
-		}
-	}
-}
-
-func (c *Cache) CountEthCallPerMinuteRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
-	utils.RunTicker(ctx, 1*time.Minute, errCh, func() error {
-
-		lastMinuteCount := c.LastMinCallCount.Load()
-		c.LastMinCallCount.Store(0)
-		logChannel <- fmt.Sprintf("%d ETH_CALLS \n", lastMinuteCount)
-		return nil
+func (r *Runner) OnChainRefreshRoutine(ctx context.Context, conn *connector.Connector) {
+	errCh := make(chan error)
+	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
+		return r.Cache.OnChainRefresh(conn.ClientHTTP)
 	})
 }
 
+/*
 func (c *Cache) RebuildWatchListRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
 	for {
 		select {
@@ -142,7 +75,7 @@ func (c *Cache) FireLiquidationRoutine(ctx context.Context, conn *connector.Conn
 	}
 }
 
-func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
+func (c *Cache) MarketsRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
 	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
 		var sb strings.Builder
 
@@ -151,7 +84,8 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 			m.Mu.RLock()
 			if m.OraclePrice == nil || m.LLTV == nil ||
 				m.MarketStats.TotalBorrowAssets == nil ||
-				m.MarketStats.TotalBorrowShares == nil {
+				m.MarketStats.TotalBorrowShares == nil ||
+				m.Canceled {
 				m.Mu.RUnlock()
 				continue
 			}
@@ -168,10 +102,11 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 				cp := *p
 				positions = append(positions, &cp)
 			}
+
 			m.Mu.RUnlock()
-
-			// copie de valeur
-
+			if len(positions) < 5 {
+				c.CancelMarket(id)
+			}
 			exposant := 36 + market.LoanTokenDecimals - market.CollateralTokenDecimals
 			price := utils.BigIntToFloat(oraclePrice) / math.Pow10(int(exposant))
 			borrowAssets := utils.BigIntToFloat(totalBorrowAssets) / math.Pow10(int(market.LoanTokenDecimals))
@@ -205,7 +140,7 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 			})
 
 			n := min(10, len(atrisk))
-			fmt.Fprintf(&sb, "│  at-risk positions (%d):\n", len(atrisk))
+			fmt.Fprintf(&sb, "│  10 most at-risk positions (%d):\n", len(atrisk))
 			for i, hp := range atrisk[:n] {
 				hf := utils.BigIntWADToFloat(hp.hf)
 				collAssets := utils.BigIntToFloat(hp.pos.CollateralAssets) / math.Pow10(int(float64(market.CollateralTokenDecimals)))
@@ -219,108 +154,4 @@ func (c *Cache) LogMarketsRoutine(ctx context.Context, conn *connector.Connector
 	})
 }
 
-func (c *Cache) WriteLogRoutine(ctx context.Context, errCh chan error, logChannel chan string) {
-	var mu sync.Mutex
-	logCache := make(map[int64]string)
-
-	pathLog := path.Join("logs", c.Config.Chain.Name)
-	file, _ := os.Create(pathLog)
-	defer file.Close()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case msg := <-logChannel:
-				mu.Lock()
-				logCache[time.Now().Unix()] = msg
-				mu.Unlock()
-
-			case err := <-errCh:
-				mu.Lock()
-				logCache[time.Now().Unix()] = err.Error()
-				mu.Unlock()
-			}
-		}
-	}()
-
-	utils.RunTicker(ctx, 2*time.Minute, errCh, func() error {
-		mu.Lock()
-		defer mu.Unlock()
-		if len(logCache) == 0 {
-			return nil
-		}
-
-		for ts, msg := range logCache {
-			_, _ = fmt.Fprintf(file, "[%s] %s\n", time.Unix(ts, 0).Format(time.RFC3339), msg)
-
-		}
-
-		// vide le cache
-		clear(logCache)
-		return nil
-	})
-}
-
-func (c *Cache) OnChainRefresh(client *w3.Client) error {
-
-	ctx := context.Background()
-	var calls, marketCalls []w3types.RPCCaller
-	var marketMap map[[32]byte]*MarketStats
-
-	// calls based on tracker state
-	arr := [][32]byte{}
-	for k := range c.Config.Markets {
-		arr = append(arr, k)
-	}
-	marketMap, marketCalls = c.OnChainCalls(arr)
-	calls = append(calls, marketCalls...)
-
-	if err := c.EthCallCtx(client, ctx, calls); err != nil {
-		fmt.Println("❌ OnChainRefresh EthCall error:", err)
-		return err
-	}
-	c.ApplyMarketStats(marketMap)
-
-	return nil
-}
-
-func (c *Cache) OnChainCalls(toRefresh [][32]byte) (map[[32]byte]*MarketStats, []w3types.RPCCaller) {
-	var calls []w3types.RPCCaller
-	marketStates := make(map[[32]byte]*MarketStats, len(toRefresh))
-
-	for _, id := range toRefresh {
-		// market stats
-		ms := MarketStats{
-			TotalBorrowAssets: new(big.Int),
-			TotalBorrowShares: new(big.Int),
-			OraclePrice:       new(big.Int),
-		}
-		marketStates[id] = &ms
-		calls = append(calls, eth.CallFunc(config.MorphoMain, config.MarketFunc, id).Returns(
-			new(big.Int), new(big.Int),
-			ms.TotalBorrowAssets, ms.TotalBorrowShares,
-			new(big.Int), new(big.Int),
-		))
-
-		// oracle price — direct dans market
-		calls = append(calls, eth.CallFunc(c.GetMorphoMarketFromId(id).Oracle, config.OraclePriceFunc).Returns(ms.OraclePrice))
-	}
-
-	return marketStates, calls
-}
-
-func (c *Cache) ApplyMarketStats(marketMap map[[32]byte]*MarketStats) {
-	for id, m := range c.PositionCache.m {
-		ms, ok := marketMap[id]
-		if !ok {
-			continue
-		}
-		m.Mu.Lock()
-		m.MarketStats.TotalBorrowAssets = ms.TotalBorrowAssets
-		m.MarketStats.TotalBorrowShares = ms.TotalBorrowShares
-		m.MarketStats.OraclePrice = ms.OraclePrice
-		m.MarketStats.LastUpdate = time.Now().Unix()
-		m.Mu.Unlock()
-	}
-}
+*/

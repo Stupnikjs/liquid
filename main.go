@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/config"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/core"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/cex"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
@@ -15,11 +15,17 @@ func main() {
 }
 
 func RunBase() {
-	cexFeed := cex.NewCoinbaseConnector()
+
 	/*
 		Base Init
 	*/
 	conn := connector.NewConnector(config.BASE_HTTP_RPC, config.BASE_WS_RPC)
+	markets := api.LogHotMarket(conn.ClientHTTP, 10)
+
+	params := []morpho.MarketParams{}
+	for _, m := range markets {
+		params = append(params, m.MarketParams)
+	}
 	BaseSigner, err := morpho.NewSigner()
 	if err != nil {
 		fmt.Println(err)
@@ -32,15 +38,16 @@ func RunBase() {
 		Name:                 "base",
 	}
 
-	CacheConfig := core.NewCacheConfig(morpho.BaseParams, baseConfig)
+	CacheConfig := baseConfig
 
-	// base cache instance
-	cache := core.NewCache(CacheConfig)
-	// cache.LogHotMarket()
-	cache.Init(conn)
-	cache.Scan(conn, cexFeed)
+	cache := core.NewCache(params, CacheConfig)
+	runner := core.Runner{
+		Cache: cache,
+	}
+	runner.Scan(conn)
 }
 
+/*
 func RunMain() {
 	cexFeed := cex.NewCoinbaseConnector()
 
@@ -64,3 +71,4 @@ func RunMain() {
 
 	cache.Scan(conn, cexFeed)
 }
+*/

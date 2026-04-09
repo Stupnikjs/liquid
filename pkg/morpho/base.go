@@ -181,5 +181,35 @@ var (
 			Correlated:              false,
 			CexOnly:                 false,
 		},
+		{
+			ID:                      [32]byte(common.HexToHash("0x2e2548390b8894d2ffaaababebc2b5f2501920e03a4c611b63b46e19bfc6b75d")), // L'ID unique du marché (MarketByUniqueKey) n'était pas dans ton JSON, à générer si besoin.
+			ChainID:                 8453,                                                                                             // Supposé Base au vu de l'USDC (0x833...)
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),                                // USDC
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0x93919784C523f39CACaa98Ee0a9d96c3F32b593e"), // uniBTC
+			CollateralTokenStr:      "uniBTC",
+			Oracle:                  common.HexToAddress("0x9932FAbEdf44F52081a98f0Cc254ED4B22fBE3a3"),
+			LLTV:                    utils.ParseBigInt("770000000000000000"), // 77% LLTV
+			LoanTokenDecimals:       6,                                       // USDC utilise 6 décimales
+			CollateralTokenDecimals: 8,                                       // uniBTC utilise 8 décimales
+			PoolFee:                 0,
+			Correlated:              false,
+			CexOnly:                 false,
+		},
+		{
+			ID:                      [32]byte(common.HexToHash("0x")), // ID à compléter si nécessaire
+			ChainID:                 8453,
+			LoanToken:               common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"), // USDC
+			LoanTokenStr:            "USDC",
+			CollateralToken:         common.HexToAddress("0x4bcaf180df5b13c0441FE41A66e9638A2a410C6D"), // HERMES
+			CollateralTokenStr:      "HERMES",
+			Oracle:                  common.HexToAddress("0x535BeD796890e17445542d3365ddF444E014daa2"),
+			LLTV:                    utils.ParseBigInt("980000000000000000"), // 98% LLTV
+			LoanTokenDecimals:       6,                                       // USDC (6 decimals)
+			CollateralTokenDecimals: 18,                                      // HERMES (18 decimals)
+			PoolFee:                 0,
+			Correlated:              false,
+			CexOnly:                 false,
+		},
 	}
 )
