@@ -34,6 +34,7 @@ func Filter(marketReader MarketReader, maxHF *big.Int) {
 		toKeep := []*market.BorrowPosition{}
 		for _, p := range snap.Positions {
 			cp := &p
+
 			hf := cp.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
 			if hf.Cmp(maxHF) < 0 && hf.Sign() != 0 && hf.Cmp(utils.HALF_WAD) > 0 {
 				toKeep = append(toKeep, cp)
@@ -84,7 +85,8 @@ func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.Marke
 
 			hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
 			if hf.Cmp(utils.WAD1DOT01) < 1 {
-				fmt.Fprintf(&sb, "│ mostly liquidable %s : %f  %f \n", p.Address, utils.BigIntToFloat(hf), utils.BigIntToFloat(p.CollateralAssets)/1e18)
+				// refactor
+				fmt.Fprintf(&sb, "│  hf %f : %s  %f  %s\n", utils.BigIntToFloat(hf)/1e18, p.Address, utils.BigIntToFloat(snap.Oracle.Price)/1e36, mParams.CollateralTokenStr)
 			}
 
 		}

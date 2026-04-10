@@ -1,7 +1,6 @@
 package market
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
@@ -22,7 +21,6 @@ func (pos *BorrowPosition) HF(
 	totShares, totBorrowAssets, oraclePrice, LLTV *big.Int,
 ) *big.Int {
 
-	fmt.Println(pos.BorrowShares, totShares, totBorrowAssets, oraclePrice)
 	borrowAssets := morpho.BorrowAssetsFromShares(
 		pos.BorrowShares, totShares, totBorrowAssets,
 	)
@@ -39,7 +37,7 @@ func (pos *BorrowPosition) HF(
 	numerator.Mul(numerator, LLTV)
 
 	// denominator = borrow * 1e36
-	denominator := new(big.Int).Mul(borrowAssets, utils.TenPowInt(18))
+	denominator := new(big.Int).Mul(borrowAssets, utils.TenPowInt(36))
 
 	// HF = numerator / denominator
 	return new(big.Int).Div(numerator, denominator)
