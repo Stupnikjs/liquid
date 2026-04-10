@@ -11,6 +11,11 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
+/*
+Filter encore plus les positions sur le profit potentiels et la proba de liquidation
+Trouver sur quels elements ont trigger rebuildEvent
+*/
+
 func main() {
 	RunBase()
 }
@@ -41,7 +46,7 @@ func RunBase() {
 	}
 	CacheConfig := baseConfig
 	cache := scanner.NewCache(params, CacheConfig)
-	runner := scanner.NewRunner(conn, cache)
+	runner := scanner.NewRunner(conn, cache, BaseSigner)
 	runner.Run(context.Background())
 }
 
