@@ -57,7 +57,7 @@ func OnChainCalls(c *Cache) ([]w3types.RPCCaller, map[int][32]byte, []*OnChainRe
 		snap := c.Markets.GetSnapshot(id)
 		if snap != nil {
 			calls = append(calls,
-				eth.CallFunc(c.Markets.GetSnapshot(id).Oracle.Address, config.OraclePriceFunc).
+				eth.CallFunc(snap.Oracle.Address, config.OraclePriceFunc).
 					Returns(res.Oracle),
 			)
 		}

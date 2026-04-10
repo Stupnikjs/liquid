@@ -67,7 +67,7 @@ func EstimateProfit(
 	return profit
 }
 
-func ComputeLiquidationAmounts(BorrowShares, TotalBorrowAssets, TotalBorrowShares *big.Int, params MarketParams) (*big.Int, *big.Int) {
+func ComputeLiquidationAmounts(BorrowShares, TotalBorrowAssets, TotalBorrowShares, LLTV *big.Int) (*big.Int, *big.Int) {
 	// Morpho permet de liquider jusqu'à 100% des shares
 	repayShares := new(big.Int).Set(BorrowShares)
 	// repayAssets = repayShares * totalBorrowAssets / totalBorrowShares
@@ -75,7 +75,7 @@ func ComputeLiquidationAmounts(BorrowShares, TotalBorrowAssets, TotalBorrowShare
 
 	// seizeAssets = repayAssets * (WAD + liquidationIncentiveFactor) / WAD
 	// liquidationIncentiveFactor dépend de LLTV (voir Morpho docs)
-	lif := LiquidationIncentiveFactor(params.LLTV)
+	lif := LiquidationIncentiveFactor(LLTV)
 	seizeAssets := new(big.Int).Mul(repayAssets, new(big.Int).Add(WAD, lif))
 	seizeAssets.Div(seizeAssets, WAD)
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
-	"github.com/Stupnikjs/morpho-sepolia/internal/core"
+	"github.com/Stupnikjs/morpho-sepolia/internal/scanner"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
@@ -40,8 +40,8 @@ func RunBase() {
 		Name:                 "base",
 	}
 	CacheConfig := baseConfig
-	cache := core.NewCache(params, CacheConfig)
-	runner := core.NewRunner(conn, cache)
+	cache := scanner.NewCache(params, CacheConfig)
+	runner := scanner.NewRunner(conn, cache)
 	runner.Run(context.Background())
 }
 
