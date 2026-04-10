@@ -26,6 +26,7 @@ func (pos *BorrowPosition) HF(
 	)
 
 	if borrowAssets == nil || pos.CollateralAssets == nil {
+
 		return big.NewInt(0)
 	}
 	if borrowAssets.Sign() == 0 || pos.CollateralAssets.Sign() == 0 {
@@ -39,8 +40,11 @@ func (pos *BorrowPosition) HF(
 	// denominator = borrow * 1e36
 	denominator := new(big.Int).Mul(borrowAssets, utils.TenPowInt(36))
 
-	// HF = numerator / denominator
-	return new(big.Int).Div(numerator, denominator)
+	hf := new(big.Int).Div(numerator, denominator)
+
+	// utils.BigIntToFloat(hf)/1e18
+
+	return hf
 }
 
 func ParsePositions(id [32]byte, result api.PositionsResult) []BorrowPosition {

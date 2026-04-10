@@ -30,24 +30,48 @@ type SimResult struct {
 }
 
 func GetCandidates(c state.MarketReader) []*Liquidable {
-	var candidates []*Liquidable
-	for _, id := range c.Ids() {
+	ids := c.Ids()
+
+	type result struct {
+		candidates []*Liquidable
+	}
+
+	resultsCh := make(chan result, len(ids))
+	var wg sync.WaitGroup
+
+	for _, id := range ids {
 		snap := c.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
-		for _, pos := range snap.Positions {
-			cp := pos
-			hf := cp.HF(snap.Stats.TotalBorrowShares, snap.Stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
-			if hf == nil || hf.Sign() == 0 || hf.Cmp(utils.WAD) >= 0 {
-				continue
+
+		wg.Add(1)
+		go func(snap *market.MarketSnapshot, id [32]byte) {
+			defer wg.Done()
+			var local []*Liquidable
+
+			for _, pos := range snap.Positions {
+				cp := pos
+				hf := cp.HF(snap.Stats.TotalBorrowShares, snap.Stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
+				if hf == nil || hf.Sign() == 0 || hf.Cmp(utils.WAD) >= 0 {
+					continue
+				}
+				local = append(local, &Liquidable{
+					Pos:      &cp,
+					MarketID: id,
+					HF:       hf,
+				})
 			}
-			candidates = append(candidates, &Liquidable{
-				Pos:      &cp,
-				MarketID: id,
-				HF:       hf,
-			})
-		}
+			resultsCh <- result{local}
+		}(snap, id)
+	}
+
+	wg.Wait()
+	close(resultsCh)
+
+	var candidates []*Liquidable
+	for r := range resultsCh {
+		candidates = append(candidates, r.candidates...)
 	}
 	return candidates
 }
@@ -67,7 +91,8 @@ func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketM
 
 			enriched := SimulatePreComputeTx(conn, c, marketMap, liq)
 			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 || !enriched.IsLiquidable {
-				logChan <- fmt.Sprintf("sim failed for %s: %v", enriched.Pos.Address, enriched.SimErr)
+				logChan <- fmt.Sprintf("sim failed for %s: %v market %s", enriched.Pos.Address, enriched.SimErr, liq.MarketID)
+				// logChan <- Position details for debug
 				return
 			}
 			mu.Lock()
