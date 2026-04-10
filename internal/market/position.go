@@ -1,6 +1,7 @@
 package market
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
@@ -17,8 +18,15 @@ type BorrowPosition struct {
 }
 
 // prec 1e18
-func (pos *BorrowPosition) HF(totShares, totBorrowAssets, oraclePrice, LLTV *big.Int) *big.Int {
-	borrowAssets := morpho.BorrowAssetsFromShares(pos.BorrowShares, totShares, totBorrowAssets)
+func (pos *BorrowPosition) HF(
+	totShares, totBorrowAssets, oraclePrice, LLTV *big.Int,
+) *big.Int {
+
+	fmt.Println(pos.BorrowShares, totShares, totBorrowAssets, oraclePrice)
+	borrowAssets := morpho.BorrowAssetsFromShares(
+		pos.BorrowShares, totShares, totBorrowAssets,
+	)
+
 	if borrowAssets == nil || pos.CollateralAssets == nil {
 		return big.NewInt(0)
 	}
@@ -26,14 +34,15 @@ func (pos *BorrowPosition) HF(totShares, totBorrowAssets, oraclePrice, LLTV *big
 		return big.NewInt(0)
 	}
 
-	hf := new(big.Int).Div(
-		new(big.Int).Mul(pos.CollateralAssets, oraclePrice),
-		borrowAssets)
+	// numerator = collateral * price * LLTV
+	numerator := new(big.Int).Mul(pos.CollateralAssets, oraclePrice)
+	numerator.Mul(numerator, LLTV)
 
-	return new(big.Int).Div(
-		new(big.Int).Mul(hf, LLTV),
-		utils.TenPowInt(36),
-	)
+	// denominator = borrow * 1e36
+	denominator := new(big.Int).Mul(borrowAssets, utils.TenPowInt(18))
+
+	// HF = numerator / denominator
+	return new(big.Int).Div(numerator, denominator)
 }
 
 func ParsePositions(id [32]byte, result api.PositionsResult) []BorrowPosition {
