@@ -82,11 +82,12 @@ func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.Marke
 		fmt.Fprintf(&sb, "│  positions less than 10pct from liquidation: %d\n", len(snap.Positions))
 
 		for _, p := range snap.Positions {
-
+			/* sort by hf */
 			hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
-			if hf.Cmp(utils.WAD1DOT01) < 1 {
-				// refactor
-				fmt.Fprintf(&sb, "│  hf %f : %s  %f  %s\n", utils.BigIntToFloat(hf)/1e18, p.Address, utils.BigIntToFloat(snap.Oracle.Price)/1e36, mParams.CollateralTokenStr)
+			hfFloat := utils.BigIntToFloat(hf) / 1e18
+			if hf.Cmp(utils.WAD1DOT05) < 0 && hf.Cmp(big.NewInt(0)) > 0 {
+				fmt.Fprintf(&sb, "│  hf %.6f : %s  %.6f  %s\n",
+					hfFloat, p.Address, price, mParams.CollateralTokenStr)
 			}
 
 		}
