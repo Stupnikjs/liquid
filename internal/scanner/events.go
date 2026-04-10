@@ -1,4 +1,4 @@
-package core
+package scanner
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
-	"github.com/Stupnikjs/morpho-sepolia/internal/position"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 
 	"github.com/ethereum/go-ethereum/common"

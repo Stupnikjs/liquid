@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/position"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -18,7 +17,7 @@ func NewStore(markets []morpho.MarketParams) *MarketStore {
 	marketsMap := make(map[[32]byte]*Market, len(markets))
 	for _, m := range markets {
 		market := &Market{
-			Positions: make(map[common.Address]*position.BorrowPosition),
+			Positions: make(map[common.Address]*BorrowPosition),
 		}
 		marketsMap[m.ID] = market
 	}
@@ -98,7 +97,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 			TotalBorrowAssets: new(big.Int).Set(market.Stats.TotalBorrowAssets),
 			TotalBorrowShares: new(big.Int).Set(market.Stats.TotalBorrowShares),
 		},
-		Positions: make([]position.BorrowPosition, 0, len(market.Positions)),
+		Positions: make([]BorrowPosition, 0, len(market.Positions)),
 	}
 
 	for _, p := range market.Positions {

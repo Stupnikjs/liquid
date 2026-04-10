@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/position"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -16,7 +15,7 @@ type Market struct {
 	Oracle    Oracle
 	LLTV      *big.Int
 	Stats     MarketStats
-	Positions map[common.Address]*position.BorrowPosition
+	Positions map[common.Address]*BorrowPosition
 }
 
 type Oracle struct {
@@ -34,7 +33,7 @@ type MarketSnapshot struct {
 	Oracle    Oracle
 	LLTV      *big.Int
 	Stats     MarketStats
-	Positions []position.BorrowPosition
+	Positions []BorrowPosition
 }
 
 // AccruedBorrowAssets retourne totalBorrowAssets mis à jour jusqu'à `now`

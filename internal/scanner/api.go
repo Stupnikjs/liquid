@@ -1,4 +1,4 @@
-package core
+package scanner
 
 import (
 	"context"
@@ -6,13 +6,12 @@ import (
 	"fmt"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
-	"github.com/Stupnikjs/morpho-sepolia/internal/position"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
 	"github.com/lmittmann/w3"
 )
 
 // Call all pos from market with id
-func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]position.BorrowPosition, error) {
+func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]market.BorrowPosition, error) {
 	ctx := context.Background()
 	marketID := "0x" + hex.EncodeToString(marketId[:])
 	var result api.PositionsResult
@@ -21,7 +20,7 @@ func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]position.Bor
 		return nil, fmt.Errorf("graphql fetch: %w", err)
 	}
 
-	return position.ParsePositions(marketId, result), nil
+	return market.ParsePositions(marketId, result), nil
 }
 
 // Wrapper for api call

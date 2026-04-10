@@ -4,11 +4,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/position"
+	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 )
 
 type Liquidable struct {
-	Pos          *position.BorrowPosition
+	Pos          *market.BorrowPosition
 	MarketID     [32]byte
 	HF           *big.Int
 	RepayShares  *big.Int
