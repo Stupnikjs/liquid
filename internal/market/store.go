@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/position"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type MarketStore struct {
@@ -12,10 +14,18 @@ type MarketStore struct {
 	markets map[[32]byte]*Market
 }
 
-func NewStore(n int) *MarketStore {
+func NewStore(markets []morpho.MarketParams) *MarketStore {
+	marketsMap := make(map[[32]byte]*Market, len(markets))
+	for _, m := range markets {
+		market := &Market{
+			Positions: make(map[common.Address]*position.BorrowPosition),
+		}
+		marketsMap[m.ID] = market
+	}
+
 	return &MarketStore{
 		mu:      sync.RWMutex{},
-		markets: make(map[[32]byte]*Market, n),
+		markets: marketsMap,
 	}
 }
 
@@ -42,6 +52,7 @@ func (s *MarketStore) Upsert(id [32]byte, m *Market) {
 	s.markets[id] = m
 	s.mu.Unlock()
 }
+
 func (s *MarketStore) Update(id [32]byte, fn func(m *Market)) {
 	s.mu.RLock()
 	m := s.markets[id]
@@ -55,6 +66,7 @@ func (s *MarketStore) Update(id [32]byte, fn func(m *Market)) {
 	fn(m)
 	m.Mu.Unlock()
 }
+
 func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 	s.mu.RLock()
 	market := s.markets[id]

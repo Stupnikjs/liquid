@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 
 	"github.com/ethereum/go-ethereum"
@@ -14,21 +16,20 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
+	"github.com/lmittmann/w3/w3types"
 )
 
 type Connector struct {
-	WS        []string
-	HTTP      []string
-	MainIndex int
-
+	WS         []string
+	HTTP       []string
+	MainIndex  int
+	ethCalls   atomic.Uint64
 	mu         sync.RWMutex
 	currHTTP   int
 	currWS     int
 	ClientHTTP *w3.Client
 	ClientWS   *w3.Client
-
 	PositionCh chan *types.Log
-	OracleCh   chan *types.Log
 }
 
 func NewConnector(httpRPC, websocket []string) *Connector {
@@ -47,7 +48,6 @@ func NewConnector(httpRPC, websocket []string) *Connector {
 		HTTP:       httpRPC,
 		ClientHTTP: clientHTTP,
 		ClientWS:   clientWS,
-		OracleCh:   make(chan *types.Log, 100),
 		PositionCh: make(chan *types.Log, 100),
 	}
 }
@@ -101,75 +101,17 @@ func (c *Connector) watchLogs(ctx context.Context, query ethereum.FilterQuery, c
 	}
 }
 
-func (c *Connector) reconnectWS() {
-	backoff := 1 * time.Second
-	for i := range c.WS {
-		endpoint := c.WS[(c.currWS+i)%len(c.WS)]
-		client, err := w3.Dial(endpoint)
-		if err != nil {
-			fmt.Printf("ws reconnect failed for %s: %v, retry in %s\n", endpoint, err, backoff)
-			time.Sleep(backoff)
-			backoff = min(backoff*2, 30*time.Second)
-			continue
-		}
+func (conn *Connector) LogsEthCallsFromLastMin(ctx context.Context, logChan chan string) {
+	utils.RunTicker(ctx, time.Minute, func() {
+		count := conn.ethCalls.Load()
+		logChan <- fmt.Sprintf("%d ETH_CALLS \n", count)
+		conn.ethCalls.Store(0)
+	})
 
-		c.mu.Lock()
-		old := c.ClientWS
-		c.ClientWS = client
-		c.currWS = (c.currWS + i) % len(c.WS)
-		c.mu.Unlock()
-
-		if old != nil {
-			old.Close()
-		}
-		log.Printf("[connector] WS reconnected to %s", endpoint)
-		return
-	}
-	// All endpoints failed — keep retrying from start after delay
-	time.Sleep(backoff)
-	c.reconnectWS()
 }
 
-// SwapToMainHttp tries the main index first, falls back to rotating through others.
-func (c *Connector) SwapToMainHttp() (bool, error) {
-	client, err := w3.Dial(c.HTTP[c.MainIndex])
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err != nil {
-		c.currHTTP = (c.currHTTP + 1) % len(c.HTTP)
-		fallback, err2 := w3.Dial(c.HTTP[c.currHTTP])
-		if err2 != nil {
-			return false, fmt.Errorf("swap to main failed, fallback also failed: %w", err2)
-		}
-		if c.ClientHTTP != nil {
-			c.ClientHTTP.Close()
-		}
-		c.ClientHTTP = fallback
-		return false, fmt.Errorf("swap to main failed, using fallback: %w", err)
-	}
-
-	if c.ClientHTTP != nil {
-		c.ClientHTTP.Close()
-	}
-	c.ClientHTTP = client
-	c.currHTTP = c.MainIndex
-	return true, nil
-}
-
-func (c *Connector) RefreshRPC() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.currHTTP = (c.currHTTP + 1) % len(c.HTTP)
-	client, err := w3.Dial(c.HTTP[c.currHTTP])
-	if err != nil {
-		return fmt.Errorf("RefreshRPC: failed to dial %s: %w", c.HTTP[c.currHTTP], err)
-	}
-	if c.ClientHTTP != nil {
-		c.ClientHTTP.Close()
-	}
-	c.ClientHTTP = client
-	return nil
+// func (c *w3.Client) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
+func (conn *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error {
+	defer conn.ethCalls.Add(uint64(len(calls)))
+	return conn.ClientHTTP.CallCtx(ctx, calls...)
 }

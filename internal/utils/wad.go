@@ -11,6 +11,7 @@ var (
 	WAD1DOT3     = new(big.Int).Div(WADX13, big.NewInt(10)) // 1.3 WAD
 	WADON10      = new(big.Int).Div(WAD, big.NewInt(10))    // 0.1 WAD
 	WAD          = TenPowInt(18)
+	HALF_WAD     = new(big.Int).Div(WAD, big.NewInt(2))
 	WAD1DOT01    = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(100)))   // 1.01%
 	WAD1DOT005   = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(200)))   // 1.005%
 	WAD1DOT0005  = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(2000)))  // 1.005%

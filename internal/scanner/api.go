@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/position"
@@ -25,30 +24,20 @@ func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]position.Bor
 	return position.ParsePositions(marketId, result), nil
 }
 
-// Wrapper for api call that filters out pos with big HF
-func (c *Cache) ApiRefreshCache(client *w3.Client, threshold *big.Int) error {
+// Wrapper for api call
+func (c *Cache) ApiCall(client *w3.Client) error {
 
-	for _, id := range c.Markets.Ids() {
+	for id := range c.marketMap {
+
 		fetched, err := FetchBorrowersFromMarket(id, 8453)
 		if err != nil {
 			return err
 		}
-
-		snap := c.Markets.GetSnapshot(id)
 		for _, p := range fetched {
-
-			stats := snap.Stats
-			// filter here
-			hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
-			if hf.Cmp(threshold) < 0 {
-				c.Markets.Update(id, func(m *market.Market) {
-					m.Positions[p.Address] = &p
-				})
-
-			}
-
+			c.Markets.Update(id, func(m *market.Market) {
+				m.Positions[p.Address] = &p
+			})
 		}
-
 	}
 
 	return nil
