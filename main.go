@@ -14,6 +14,7 @@ import (
 /*
 Filter encore plus les positions sur le profit potentiels et la proba de liquidation
 Trouver sur quels elements ont trigger rebuildEvent
+Log chaque simulation
 */
 
 func main() {

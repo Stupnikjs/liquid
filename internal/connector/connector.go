@@ -115,3 +115,9 @@ func (conn *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller
 	defer conn.ethCalls.Add(uint64(len(calls)))
 	return conn.ClientHTTP.CallCtx(ctx, calls...)
 }
+
+// func (c *w3.Client) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
+func (conn *Connector) EthSingleCallCtx(ctx context.Context, call w3types.RPCCaller) error {
+	defer conn.ethCalls.Add(1)
+	return conn.ClientHTTP.CallCtx(ctx, call)
+}

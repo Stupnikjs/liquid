@@ -40,7 +40,7 @@ func Filter(marketReader MarketReader, maxHF *big.Int) {
 			}
 
 		}
-		if len(toKeep) == 0 {
+		if len(toKeep) < 2 {
 			marketReader.Update(id, func(m *market.Market) {
 				m.Canceled = true
 			})
@@ -80,6 +80,14 @@ func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.Marke
 		fmt.Fprintf(&sb, "│  borrow shares: %.2f\n", borrowShares)
 		fmt.Fprintf(&sb, "│  positions less than 10pct from liquidation: %d\n", len(snap.Positions))
 
+		for _, p := range snap.Positions {
+
+			hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
+			if hf.Cmp(utils.WAD1DOT01) < 1 {
+				fmt.Fprintf(&sb, "│ mostly liquidable %s : %f  %f \n", p.Address, utils.BigIntToFloat(hf), utils.BigIntToFloat(p.CollateralAssets)/1e18)
+			}
+
+		}
 	}
 	return sb.String()
 

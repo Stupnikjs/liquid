@@ -2,16 +2,11 @@ package scanner
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
-	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -87,8 +82,16 @@ func ApplyResults(c *Cache, results []*OnChainResult) {
 	}
 }
 
-/* refactor */
-func CheckSlippage(c *Cache, client *w3.Client, ctx context.Context, m morpho.MarketParams, seizeAssets *big.Int, oraclePrice *big.Int) (float64, error) {
+/*
+
+func GetSlippageBps(
+	ctx context.Context,
+	conn *connector.Connector,
+	m morpho.MarketParams,
+	seizeAssets *big.Int,
+	oraclePrice *big.Int,
+) (int64, error) {
+
 	params := api.QuoteParams{
 		TokenIn:           m.CollateralToken,
 		TokenOut:          m.LoanToken,
@@ -97,26 +100,58 @@ func CheckSlippage(c *Cache, client *w3.Client, ctx context.Context, m morpho.Ma
 		SqrtPriceLimitX96: big.NewInt(0),
 	}
 
-	var amountOut *big.Int
+	amountOut, err := QuoteUniswap(ctx, conn, params)
+	if err != nil {
+		return 0, err
+	}
+
+	expected := ComputeExpectedOut(seizeAssets, oraclePrice)
+
+	return ComputeSlippageBps(expected, amountOut)
+}
+
+func QuoteUniswap(
+	ctx context.Context,
+	conn *connector.Connector,
+	params api.QuoteParams,
+) (amountOut *big.Int, err error) {
+
 	var sqrtPriceAfter *big.Int
 	var ticksCrossed uint32
 	var gasEst *big.Int
 
-	if err := client.CallCtx(ctx,
+	err = conn.EthSingleCallCtx(ctx,
 		eth.CallFunc(config.BaseUniswapV3Router, config.FuncQuoteExactInputSingle, params).Returns(
 			&amountOut, &sqrtPriceAfter, &ticksCrossed, &gasEst,
 		),
-	); err != nil {
-		return 0, fmt.Errorf("quote failed: %w", err)
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("uniswap quote failed: %w", err)
 	}
 
-	// Prix oracle : ce qu'on s'attend à recevoir
-	expectedOut := new(big.Int).Mul(seizeAssets, oraclePrice)
-	expectedOut.Div(expectedOut, utils.TenPowInt(36))
-
-	// Slippage = (expectedOut - amountOut) / expectedOut
-	diff := new(big.Int).Sub(expectedOut, amountOut)
-	slippage := utils.BigIntToFloat(diff) / utils.BigIntToFloat(expectedOut)
-
-	return slippage, nil
+	return amountOut, nil
 }
+
+func ComputeExpectedOut(
+	seizeAssets *big.Int,
+	oraclePrice *big.Int,
+) *big.Int {
+	out := new(big.Int).Mul(seizeAssets, oraclePrice)
+	return out.Div(out, utils.TenPowInt(36))
+}
+
+func ComputeSlippageBps(expected, actual *big.Int) (int64, error) {
+	if expected.Sign() == 0 {
+		return 0, fmt.Errorf("expectedOut is zero")
+	}
+
+	diff := new(big.Int).Sub(expected, actual)
+
+	// (diff / expected) * 10_000  (bps)
+	bps := new(big.Int).Mul(diff, big.NewInt(10_000))
+	bps.Div(bps, expected)
+
+	return bps.Int64(), nil
+}
+*/

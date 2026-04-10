@@ -44,6 +44,7 @@ func (r *Runner) Run(ctx context.Context) {
 	go r.SimulateCandidatesRoutine(ctx)
 	go r.FireLiquidationRoutine(ctx)
 	go r.EventLoop(ctx)
+	// go r.PrintSlippage(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
 }
@@ -64,7 +65,7 @@ func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 
 func (r *Runner) CleanMarketsRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, time.Minute, func() {
-		_ = state.Filter(r.Cache.Markets, utils.WAD1DOT1)
+		state.Filter(r.Cache.Markets, utils.WAD1DOT1)
 	})
 }
 
@@ -79,6 +80,15 @@ func (r *Runner) LogEthCallsPerMin(ctx context.Context) {
 	r.Conn.LogsEthCallsFromLastMin(ctx, r.Logger)
 }
 
+/*
+	func (r *Runner) PrintSlippage(ctx context.Context) {
+		time.Sleep(2 * time.Minute)
+		r.Cache.Markets.Range(func(id [32]byte) {
+			snap := r.Cache.Markets.GetSnapshot(id)
+			fmt.Println(GetSlippageBps(ctx, r.Conn, r.Cache.GetMorphoMarketFromId(id), big.NewInt(1000), snap.Oracle.Price))
+		})
+	}
+*/
 func (r *Runner) SimulateCandidatesRoutine(ctx context.Context) {
 	for {
 		select {
