@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -20,6 +21,7 @@ func RunBase() {
 		Base Init
 	*/
 	conn := connector.NewConnector(config.BASE_HTTP_RPC, config.BASE_WS_RPC)
+	// market from less than 10mounth
 	markets := api.LogHotMarket(conn.ClientHTTP, 10)
 
 	params := []morpho.MarketParams{}
@@ -37,14 +39,10 @@ func RunBase() {
 		Signer:               BaseSigner,
 		Name:                 "base",
 	}
-
 	CacheConfig := baseConfig
-
 	cache := core.NewCache(params, CacheConfig)
-	runner := core.Runner{
-		Cache: cache,
-	}
-	runner.Scan(conn)
+	runner := core.NewRunner(conn, cache)
+	runner.Run(context.Background())
 }
 
 /*

@@ -1,64 +1,102 @@
-package core
+package scanner
 
 import (
 	"context"
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
+	"github.com/Stupnikjs/morpho-sepolia/internal/engine"
 	"github.com/Stupnikjs/morpho-sepolia/internal/logging"
+	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
 
 type Runner struct {
-	Cache *Cache
+	Cache  *Cache
+	Engine *engine.LiquidationEngine
+	Conn   *connector.Connector
+	Logger chan string
 }
 
-func (r *Runner) Scan(conn *connector.Connector) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	logChan := logging.WriteLogRoutine(ctx, "log.yaml")
-	defer cancel()
-
-	go r.WatchPositionRoutine(ctx, conn, logChan)
-	// Onchain rpc pool to update markets
-	go r.OnChainRefreshRoutine(ctx, conn, logChan)
-	// Loging Ethcalls per min
-
-	for {
-		event := <-conn.PositionCh
-		r.Cache.ProcessEvents(event)
-
+func NewRunner(conn *connector.Connector, cache *Cache) *Runner {
+	return &Runner{
+		Cache:  cache,
+		Engine: engine.New(),
+		Conn:   conn,
+		Logger: logging.NewLogger(context.Background(), "logg"),
 	}
 }
 
-func (r *Runner) WatchPositionRoutine(ctx context.Context, conn *connector.Connector, logChannel chan string) {
-	conn.WatchPositions(ctx)
+func (r *Runner) Run(ctx context.Context) {
+	go r.ApiCallRoutine(ctx)
+	go r.WatchPositionRoutine(ctx)
+	// Onchain rpc pool to update markets
+	go r.OnChainRefreshRoutine(ctx)
+	go r.CleanMarketsRoutine(ctx)
+	// Loging Ethcalls per min
+	go r.LogEthCallsPerMin(ctx)
+	go r.EventLoop(ctx)
+	// 👇 bloque proprement
+	<-ctx.Done()
 }
 
-func (r *Runner) OnChainRefreshRoutine(ctx context.Context, conn *connector.Connector, logChannel chan string) {
-	utils.RunTicker(ctx, 2*time.Minute, func() {
-		r.Cache.OnChainRefresh(conn.ClientHTTP)
+func (r *Runner) ApiCallRoutine(ctx context.Context) {
+	r.Cache.ApiCall(r.Conn.ClientHTTP)
+}
+
+func (r *Runner) WatchPositionRoutine(ctx context.Context) {
+	r.Conn.WatchPositions(ctx)
+}
+
+func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
+	utils.RunTicker(ctx, 5*time.Second, func() {
+		OnChainRefresh(r.Conn, r.Cache)
 	})
 }
 
-/*
-func (c *Cache) RebuildWatchListRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
+func (r *Runner) CleanMarketsRoutine(ctx context.Context) {
+	utils.RunTicker(ctx, time.Minute, func() {
+		state.Filter(r.Cache.Markets, utils.WAD1DOT1)
+	})
+}
+
+func (r *Runner) LogEthCallsPerMin(ctx context.Context) {
+	r.Conn.LogsEthCallsFromLastMin(ctx, r.Logger)
+}
+
+func (r *Runner) RebuildWatchListRoutine(ctx context.Context, conn *connector.Connector, logChannel chan string) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case event := <-c.rebuildCh:
+		case event := <-r.Engine.RebuildCh:
 			_ = event
-			c.rebuildWatchlist(conn.ClientHTTP, ctx, logChannel)
 		}
 	}
 }
 
-func (c *Cache) FireLiquidationRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
+func (r *Runner) EventLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case liquidable := <-c.liquidCh:
+
+		case event, ok := <-r.Conn.PositionCh:
+			if !ok {
+				return
+			}
+			r.Cache.ProcessEvents(event)
+		}
+	}
+}
+
+/*
+func (r *Runner) FireLiquidationRoutine(ctx context.Context, conn *connector.Connector, errCh chan error, logChannel chan string) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case liquidable := <-r.Cache.liquidCh:
 			market := c.GetMorphoMarketFromId(liquidable.MarketID)
 			c.GetMorphoMarketFromId(liquidable.MarketID)
 			c.LiquidateCall(

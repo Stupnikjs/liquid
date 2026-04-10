@@ -11,7 +11,7 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
 
-func WriteLogRoutine(ctx context.Context, filename string) chan string {
+func NewLogger(ctx context.Context, filename string) chan string {
 	var mu sync.Mutex
 	logChannel := make(chan string, 100) // ✅ buffered pour éviter les blocages
 	logCache := make(map[int64]string)

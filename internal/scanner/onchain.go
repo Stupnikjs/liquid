@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
@@ -22,11 +23,10 @@ type OnChainResult struct {
 	Oracle *big.Int
 }
 
-func (c *Cache) OnChainCalls() ([]w3types.RPCCaller, map[int][32]byte, []*OnChainResult) {
+func OnChainCalls(c *Cache) ([]w3types.RPCCaller, map[int][32]byte, []*OnChainResult) {
 	var calls []w3types.RPCCaller
 
 	ids := c.Markets.Ids()
-
 	results := make([]*OnChainResult, 0, len(ids))
 
 	callIndexToID := make(map[int][32]byte)
@@ -54,34 +54,31 @@ func (c *Cache) OnChainCalls() ([]w3types.RPCCaller, map[int][32]byte, []*OnChai
 				new(big.Int),
 			),
 		)
+		snap := c.Markets.GetSnapshot(id)
+		if snap != nil {
+			calls = append(calls,
+				eth.CallFunc(c.Markets.GetSnapshot(id).Oracle.Address, config.OraclePriceFunc).
+					Returns(res.Oracle),
+			)
+		}
 
 		// oracle call
-		calls = append(calls,
-			eth.CallFunc(c.Markets.GetSnapshot(id).Oracle.Address, config.OraclePriceFunc).
-				Returns(res.Oracle),
-		)
-	}
 
+	}
 	return calls, callIndexToID, results
 }
 
-func (c *Cache) OnChainRefresh(client *w3.Client) error {
-
+func OnChainRefresh(conn *connector.Connector, c *Cache) error {
 	ctx := context.Background()
-
-	calls, _, results := c.OnChainCalls()
-
-	if err := c.EthCallCtx(client, ctx, calls); err != nil {
+	calls, _, results := OnChainCalls(c)
+	if err := conn.EthCallCtx(ctx, calls); err != nil {
 		return err
 	}
-
-	c.ApplyResults(results)
-
+	ApplyResults(c, results)
 	return nil
 }
 
-func (c *Cache) ApplyResults(results []*OnChainResult) {
-
+func ApplyResults(c *Cache, results []*OnChainResult) {
 	for _, r := range results {
 		c.Markets.Update(r.ID, func(m *market.Market) {
 			m.Stats = r.Stats
@@ -90,7 +87,8 @@ func (c *Cache) ApplyResults(results []*OnChainResult) {
 	}
 }
 
-func (c *Cache) CheckSlippage(client *w3.Client, ctx context.Context, m morpho.MarketParams, seizeAssets *big.Int, oraclePrice *big.Int) (float64, error) {
+/* refactor */
+func CheckSlippage(c *Cache, client *w3.Client, ctx context.Context, m morpho.MarketParams, seizeAssets *big.Int, oraclePrice *big.Int) (float64, error) {
 	params := api.QuoteParams{
 		TokenIn:           m.CollateralToken,
 		TokenOut:          m.LoanToken,

@@ -1,24 +1,10 @@
-/*
 package engine
 
 import (
-	"context"
-	"fmt"
-	"log"
 	"math/big"
-	"sort"
-	"sync"
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/position"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/lmittmann/w3"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
 )
 
 type Liquidable struct {
@@ -34,25 +20,39 @@ type Liquidable struct {
 	IsLiquidable bool
 }
 
-// Send every liquidable pos ranked by profit on liquidable channel
-func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan chan string) {
+type LiquidationEngine struct {
+	RebuildCh   chan bool
+	LiquidateCh chan *Liquidable
+}
+
+func New() *LiquidationEngine {
+	return &LiquidationEngine{
+		RebuildCh:   make(chan bool, 1),
+		LiquidateCh: make(chan *Liquidable, 1),
+	}
+}
+
+/*
+func rebuildWatchlist(c *core.Cache, client *w3.Client, ctx context.Context, logChan chan string) {
 	var flat []*Liquidable
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	for mId := range c.PositionCache.m {
+	for _, mId := range c.Markets.Ids() {
 		wg.Add(1)
 		go func(mId [32]byte) {
 			defer wg.Done()
-			positions, stats := c.GetMarketProps(mId)
+			snap := c.Markets.GetSnapshot(mId)
+			stats := snap.Stats
+			oracle := snap.Oracle
 			var local []*Liquidable
-			for _, p := range positions {
-				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, stats.OraclePrice, stats.LLTV)
+			for _, p := range snap.Positions {
+				hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, oracle.Price, snap.LLTV)
 				isNotInTargetZone := hf.Cmp(utils.WAD) >= 0
 				if hf == nil || hf.Sign() == 0 || isNotInTargetZone {
 					continue
 				}
-				local = append(local, &Liquidable{HF: hf, Pos: p, MarketID: mId})
+				local = append(local, &Liquidable{HF: hf, Pos: &p, MarketID: mId})
 			}
 			if len(local) == 0 {
 				return
@@ -78,7 +78,7 @@ func (c *Cache) rebuildWatchlist(client *w3.Client, ctx context.Context, logChan
 
 }
 
-func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candidates []*Liquidable, logChan chan string) []*Liquidable {
+func simulateCandidates(c *core.Cache, client *w3.Client, ctx context.Context, candidates []*Liquidable, logChan chan string) []*Liquidable {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var results []*Liquidable
@@ -89,7 +89,7 @@ func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candi
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			enriched := c.SimulatePreComputeTx(client, ctx, liq)
+			enriched := SimulatePreComputeTx(c, client, ctx, liq)
 			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 || !enriched.IsLiquidable {
 				logChan <- fmt.Sprintf("Err in liq simulation: %s for borrower %s with %d repaid shares on %s", enriched.SimErr, enriched.Pos.Address, enriched.RepayShares, c.GetMorphoMarketFromId(liq.MarketID).CollateralTokenStr)
 				return
@@ -107,14 +107,11 @@ func (c *Cache) simulateCandidates(client *w3.Client, ctx context.Context, candi
 	return results
 }
 
-
-func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq *Liquidable) *Liquidable {
+func SimulatePreComputeTx(c *core.Cache, client *w3.Client, ctx context.Context, liq *Liquidable) *Liquidable {
 	out := *liq
-	params := c.Config.Markets[liq.MarketID]
-	market := c.PositionCache.m[liq.MarketID]
-	market.Mu.RLock()
-	stats := market.MarketStats
-	market.Mu.RUnlock()
+
+	market := c.Markets.GetSnapshot(liq.MarketID)
+	stats := market.Stats
 
 	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(liq.Pos.BorrowShares, stats.TotalBorrowAssets, stats.TotalBorrowShares, params)
@@ -138,12 +135,12 @@ func (c *Cache) SimulatePreComputeTx(client *w3.Client, ctx context.Context, liq
 	return &out
 }
 
-
-func (c *Cache) simulateLiquidationCall(
+func simulateLiquidationCall(
+	c *core.Cache,
 	client *w3.Client,
 	ctx context.Context,
 	params morpho.MarketParams,
-	pos *BorrowPosition,
+	pos *position.BorrowPosition,
 	repayShares *big.Int,
 ) (uint64, error) {
 
@@ -239,4 +236,5 @@ func (c *Cache) LiquidateCall(
 	log.Printf("[liquidate] tx sent: %s", receipt.Hex())
 	return nil
 }
-*/ 
+
+*/
