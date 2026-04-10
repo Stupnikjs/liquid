@@ -19,8 +19,8 @@ type MarketReader interface {
 }
 
 // filter out pos with HF > maxHF
-func Filter(marketReader MarketReader, maxHF *big.Int) int {
-	filtered := 0
+func Filter(marketReader MarketReader, maxHF *big.Int) {
+
 	for _, id := range marketReader.Ids() {
 		snap := marketReader.GetSnapshot(id)
 		if snap == nil {
@@ -30,11 +30,7 @@ func Filter(marketReader MarketReader, maxHF *big.Int) int {
 		if stats.TotalBorrowAssets == nil || stats.TotalBorrowShares == nil || snap.LLTV == nil || snap.Oracle.Price == nil {
 			continue
 		}
-		if len(snap.Positions) == 0 {
-			marketReader.Update(id, func(m *market.Market) {
-				m.Canceled = true
-			})
-		}
+
 		toKeep := []*market.BorrowPosition{}
 		for _, p := range snap.Positions {
 			cp := &p
@@ -44,7 +40,12 @@ func Filter(marketReader MarketReader, maxHF *big.Int) int {
 			}
 
 		}
-		filtered += len(snap.Positions) - len(toKeep)
+		if len(toKeep) == 0 {
+			marketReader.Update(id, func(m *market.Market) {
+				m.Canceled = true
+			})
+			continue
+		}
 		marketReader.Update(id, func(m *market.Market) {
 			m.Positions = make(map[common.Address]*market.BorrowPosition, len(toKeep))
 			for _, p := range toKeep {
@@ -53,7 +54,7 @@ func Filter(marketReader MarketReader, maxHF *big.Int) int {
 
 		})
 	}
-	return filtered
+
 }
 
 func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.MarketParams) string {

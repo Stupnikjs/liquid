@@ -1293,3 +1293,2191 @@
 │  borrow shares: 5.00
 │  positions less than 10pct from liquidation: 1
 
+[2026-04-10T16:19:11+02:00] 
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 206
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 4
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 447
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 218
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 260
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 314
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 12
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 22
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 362
+
+┌─ Market VVV/FXUSD
+│  price:         7.755464
+│  borrow assets: 99977.90
+│  borrow shares: 99868420842.81
+│  positions less than 10pct from liquidation: 8
+
+┌─ Market cbETH/VCHF
+│  price:         1992.045645
+│  borrow assets: 69341.01
+│  borrow shares: 69090714962.79
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 9
+
+┌─ Market TOSHI/USDC
+│  price:         0.000180
+│  borrow assets: 83351.06
+│  borrow shares: 0.07
+│  positions less than 10pct from liquidation: 28
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 164
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363162.36
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 737
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5031094.55
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbBTC/FXUSD
+│  price:         72731.347262
+│  borrow assets: 101826.35
+│  borrow shares: 101718844501.40
+│  positions less than 10pct from liquidation: 14
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market superOETHb/USDC
+│  price:         2246.532188
+│  borrow assets: 213941.44
+│  borrow shares: 0.21
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:19:21+02:00] 
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market TOSHI/USDC
+│  price:         0.000180
+│  borrow assets: 83351.06
+│  borrow shares: 0.07
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363162.36
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 20
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5031094.55
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbBTC/FXUSD
+│  price:         72731.347262
+│  borrow assets: 101826.35
+│  borrow shares: 101718844501.40
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market superOETHb/USDC
+│  price:         2246.532188
+│  borrow assets: 213941.44
+│  borrow shares: 0.21
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market VVV/FXUSD
+│  price:         7.755464
+│  borrow assets: 99977.90
+│  borrow shares: 99868420842.81
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/VCHF
+│  price:         1992.045645
+│  borrow assets: 69341.01
+│  borrow shares: 69090714962.79
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:19:31+02:00] 
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market VVV/FXUSD
+│  price:         7.755464
+│  borrow assets: 99977.90
+│  borrow shares: 99868420842.81
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/VCHF
+│  price:         1992.045645
+│  borrow assets: 69341.01
+│  borrow shares: 69090714962.79
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market TOSHI/USDC
+│  price:         0.000180
+│  borrow assets: 83351.06
+│  borrow shares: 0.07
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363162.36
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 20
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5031094.55
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbBTC/FXUSD
+│  price:         72731.347262
+│  borrow assets: 101826.35
+│  borrow shares: 101718844501.40
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market superOETHb/USDC
+│  price:         2246.532188
+│  borrow assets: 213941.44
+│  borrow shares: 0.21
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:19:41+02:00] 
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market VVV/FXUSD
+│  price:         7.755464
+│  borrow assets: 99977.90
+│  borrow shares: 99868420842.81
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/VCHF
+│  price:         1992.045645
+│  borrow assets: 69341.01
+│  borrow shares: 69090714962.79
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market TOSHI/USDC
+│  price:         0.000180
+│  borrow assets: 83351.06
+│  borrow shares: 0.07
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363176.94
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 21
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5031094.55
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbBTC/FXUSD
+│  price:         72731.347262
+│  borrow assets: 101826.35
+│  borrow shares: 101718844501.40
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market superOETHb/USDC
+│  price:         2246.532188
+│  borrow assets: 213941.44
+│  borrow shares: 0.21
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:19:51+02:00] 
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market superOETHb/USDC
+│  price:         2242.481823
+│  borrow assets: 213941.44
+│  borrow shares: 0.21
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market VVV/FXUSD
+│  price:         7.755464
+│  borrow assets: 99977.90
+│  borrow shares: 99868420842.81
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/VCHF
+│  price:         1988.454105
+│  borrow assets: 69341.01
+│  borrow shares: 69090714962.79
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market TOSHI/USDC
+│  price:         0.000180
+│  borrow assets: 83351.06
+│  borrow shares: 0.07
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363176.94
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 21
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5031094.55
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbBTC/FXUSD
+│  price:         72731.347262
+│  borrow assets: 101826.35
+│  borrow shares: 101718844501.40
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:20:01+02:00] 
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market VVV/FXUSD
+│  price:         7.706997
+│  borrow assets: 99977.90
+│  borrow shares: 99868420842.81
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/VCHF
+│  price:         1988.454105
+│  borrow assets: 69341.01
+│  borrow shares: 69090714962.79
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market TOSHI/USDC
+│  price:         0.000180
+│  borrow assets: 83351.06
+│  borrow shares: 0.07
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363176.94
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 21
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5031094.55
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbBTC/FXUSD
+│  price:         72731.347262
+│  borrow assets: 101826.35
+│  borrow shares: 101718844501.40
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market superOETHb/USDC
+│  price:         2242.481823
+│  borrow assets: 213941.44
+│  borrow shares: 0.21
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:20:11+02:00] 
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market uniBTC/USDC
+│  price:         72799.191927
+│  borrow assets: 437480.62
+│  borrow shares: 0.44
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 100000.00
+│  borrow shares: 0.10
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 5000000.00
+│  borrow shares: 5.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market HERMES/USDC
+│  price:         1000000000000000000000.000000
+│  borrow assets: 1000000.00
+│  borrow shares: 1.00
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 891572.80
+│  borrow shares: 0.86
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 284136.17
+│  borrow shares: 0.28
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363176.94
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 20
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market satUSD/USDC
+│  price:         0.996204
+│  borrow assets: 60763.59
+│  borrow shares: 0.04
+│  positions less than 10pct from liquidation: 0
+
+[2026-04-10T16:20:21+02:00] 
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         54.973423
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363178.38
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 21
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+[2026-04-10T16:20:31+02:00] 
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 22
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+[2026-04-10T16:20:41+02:00] 
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 22
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+[2026-04-10T16:20:51+02:00] 
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 22
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+[2026-04-10T16:21:01+02:00] 
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2529.062629
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbADA/USDC
+│  price:         0.253193
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 10
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 22
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+[2026-04-10T16:21:11+02:00] 
+┌─ Market cbADA/USDC
+│  price:         0.254598
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 7
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320902
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 22
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 6
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2533.452296
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 1
+
+[2026-04-10T16:21:21+02:00] 
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 4
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2533.452296
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.254598
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 7
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320903
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 20
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+[2026-04-10T16:21:31+02:00] 
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 4
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
+┌─ Market cbETH/USDC
+│  price:         2533.452296
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.254598
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 7
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320903
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 20
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+[2026-04-10T16:21:41+02:00] 
+┌─ Market cbETH/USDC
+│  price:         2533.452296
+│  borrow assets: 1850835.58
+│  borrow shares: 1.82
+│  positions less than 10pct from liquidation: 0
+
+┌─ Market cbADA/USDC
+│  price:         0.254598
+│  borrow assets: 1107244.60
+│  borrow shares: 1.09
+│  positions less than 10pct from liquidation: 7
+
+┌─ Market steakUSDC/XSGD
+│  price:         1.320903
+│  borrow assets: 1033018.63
+│  borrow shares: 1.02
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market stkWELL/USDC
+│  price:         0.004376
+│  borrow assets: 59429.83
+│  borrow shares: 0.06
+│  positions less than 10pct from liquidation: 1
+
+┌─ Market cbXRP/USDC
+│  price:         1.347888
+│  borrow assets: 16363587.95
+│  borrow shares: 16.14
+│  positions less than 10pct from liquidation: 20
+
+┌─ Market yoETH/WETH
+│  price:         1.082691
+│  borrow assets: 123.25
+│  borrow shares: 120140185.58
+│  positions less than 10pct from liquidation: 87
+
+┌─ Market cbDOGE/USDC
+│  price:         0.093429
+│  borrow assets: 1300329.49
+│  borrow shares: 1.26
+│  positions less than 10pct from liquidation: 5
+
+┌─ Market cbLTC/USDC
+│  price:         55.273093
+│  borrow assets: 400804.55
+│  borrow shares: 0.39
+│  positions less than 10pct from liquidation: 4
+
+┌─ Market yoUSD/USDC
+│  price:         1.077294
+│  borrow assets: 2780949.63
+│  borrow shares: 2.65
+│  positions less than 10pct from liquidation: 94
+
