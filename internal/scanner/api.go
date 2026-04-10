@@ -19,7 +19,6 @@ func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]market.Borro
 	if err != nil {
 		return nil, fmt.Errorf("graphql fetch: %w", err)
 	}
-
 	return market.ParsePositions(marketId, result), nil
 }
 

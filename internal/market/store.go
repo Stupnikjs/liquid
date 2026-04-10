@@ -38,8 +38,10 @@ func (s *MarketStore) Range(fn func(id [32]byte)) {
 func (s *MarketStore) Ids() [][32]byte {
 	s.mu.RLock()
 	ids := make([][32]byte, 0, len(s.markets))
-	for id := range s.markets {
-		ids = append(ids, id)
+	for id, m := range s.markets {
+		if !m.Canceled {
+			ids = append(ids, id)
+		}
 	}
 	s.mu.RUnlock()
 	return ids

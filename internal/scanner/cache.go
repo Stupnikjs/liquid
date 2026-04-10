@@ -12,11 +12,17 @@ type Cache struct {
 
 func NewCache(markets []morpho.MarketParams, config morpho.ChainConfig) *Cache {
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
-	for _, m := range markets {
-		marketMap[m.ID] = m
+	store := market.NewStore(markets)
+	for _, mk := range markets {
+		marketMap[mk.ID] = mk
+		store.Update(mk.ID, func(m *market.Market) {
+			m.LLTV = mk.LLTV
+			m.Oracle.Address = mk.Oracle
+		})
 	}
+
 	return &Cache{
-		Markets:   market.NewStore(markets),
+		Markets:   store,
 		marketMap: marketMap, // immutable
 	}
 }

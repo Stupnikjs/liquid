@@ -28,13 +28,14 @@ func NewRunner(conn *connector.Connector, cache *Cache) *Runner {
 }
 
 func (r *Runner) Run(ctx context.Context) {
-	go r.ApiCallRoutine(ctx)
+	r.ApiCallRoutine(ctx)
 	go r.WatchPositionRoutine(ctx)
 	// Onchain rpc pool to update markets
 	go r.OnChainRefreshRoutine(ctx)
 	go r.CleanMarketsRoutine(ctx)
 	// Loging Ethcalls per min
 	go r.LogEthCallsPerMin(ctx)
+	go r.LogState(ctx)
 	go r.EventLoop(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
@@ -56,7 +57,14 @@ func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 
 func (r *Runner) CleanMarketsRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, time.Minute, func() {
-		state.Filter(r.Cache.Markets, utils.WAD1DOT1)
+		_ = state.Filter(r.Cache.Markets, utils.WAD1DOT1)
+	})
+}
+
+func (r *Runner) LogState(ctx context.Context) {
+	utils.RunTicker(ctx, 10*time.Second, func() {
+		logs := state.MarketReport(r.Cache.Markets, r.Cache.marketMap)
+		r.Logger <- logs
 	})
 }
 
@@ -64,15 +72,17 @@ func (r *Runner) LogEthCallsPerMin(ctx context.Context) {
 	r.Conn.LogsEthCallsFromLastMin(ctx, r.Logger)
 }
 
-func (r *Runner) RebuildWatchListRoutine(ctx context.Context, conn *connector.Connector, logChannel chan string) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case event := <-r.Engine.RebuildCh:
-			_ = event
-		}
+func GetCandidates() []*engine.Liquidable {
+	return nil
+}
+
+func (r *Runner) SimulateCandidatesRoutine(ctx context.Context) {
+	candidates := GetCandidates()
+	simulated := r.Engine.SimulateCandidates(r.Conn, r.Cache, r.Cache.marketMap, candidates, r.Logger)
+	for _, l := range simulated {
+
 	}
+
 }
 
 func (r *Runner) EventLoop(ctx context.Context) {

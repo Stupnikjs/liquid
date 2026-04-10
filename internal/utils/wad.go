@@ -17,8 +17,4 @@ var (
 	WAD1DOT0005  = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(2000)))  // 1.005%
 	WAD1DOT00005 = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(20000))) // 1.0005%
 	WAD_2        = new(big.Int).Mul(big.NewInt(2), WAD)
-	// Oracle thresholds
-	OracleThreshold0DOT1Pct = new(big.Int).Div(WAD, big.NewInt(1000)) // 0.1%
-	OracleThreshold0DOT5Pct = new(big.Int).Div(WAD, big.NewInt(200))  // 0.5%
-	OracleThreshold0DOT2Pct = new(big.Int).Div(WAD, big.NewInt(500))  // 0.2%
 )

@@ -61,7 +61,7 @@ func BorrowEventProcess(cache *Cache, log *types.Log) {
 			p.BorrowShares.Add(p.BorrowShares, &shares)
 
 		} else {
-			m.Positions[onBehalf] = &position.BorrowPosition{
+			m.Positions[onBehalf] = &market.BorrowPosition{
 				MarketID:     id,
 				Address:      onBehalf,
 				BorrowShares: new(big.Int).Set(&shares),
