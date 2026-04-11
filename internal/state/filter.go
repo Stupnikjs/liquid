@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"sort"
 	"strings"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
@@ -81,16 +82,36 @@ func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.Marke
 		fmt.Fprintf(&sb, "│  borrow shares: %.2f\n", borrowShares)
 		fmt.Fprintf(&sb, "│  positions less than 10pct from liquidation: %d\n", len(snap.Positions))
 
+		type riskyPos struct {
+			Pos market.BorrowPosition
+			hf  *big.Int
+		}
+		riskyPosArr := []riskyPos{}
 		for _, p := range snap.Positions {
 			/* sort by hf */
+
 			hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
-			hfFloat := utils.BigIntToFloat(hf) / 1e18
 			if hf.Cmp(utils.WAD1DOT05) < 0 && hf.Cmp(big.NewInt(0)) > 0 {
-				fmt.Fprintf(&sb, "│  hf %.6f : %s  %.6f  %s\n",
-					hfFloat, p.Address, price, mParams.CollateralTokenStr)
+				riskyPosArr = append(riskyPosArr, riskyPos{
+					Pos: p,
+					hf:  hf,
+				})
 			}
 
 		}
+		sort.Slice(riskyPosArr, func(i, j int) bool {
+			return riskyPosArr[i].hf.Cmp(riskyPosArr[j].hf) < 0
+		})
+		if len(riskyPosArr) > 10 {
+			for _, r := range riskyPosArr {
+				fmt.Fprintf(&sb, "| borrower %s %d %d", r.Pos.Address, r.hf, r.Pos.CollateralAssets)
+			}
+		} else {
+			for _, r := range riskyPosArr {
+				fmt.Fprintf(&sb, "| borrower %s %d %d", r.Pos.Address, r.hf, r.Pos.CollateralAssets)
+			}
+		}
+
 	}
 	return sb.String()
 
