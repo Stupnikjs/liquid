@@ -24,6 +24,7 @@ type Runner struct {
 	Conn   *connector.Connector
 	Logger chan string
 	signer *config.Signer
+ // Config avec signer 
 }
 
 func NewRunner(conn *connector.Connector, cache *Cache, signer *config.Signer) *Runner {
