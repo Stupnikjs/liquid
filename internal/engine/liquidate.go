@@ -43,12 +43,12 @@ func New() *LiquidationEngine {
 }
 
 type LiquidateArgs struct {
-	MarketParams morpho.MarketContractParams
-	Borrower     common.Address
-	SeizedAssets *big.Int
-	RepaidShares *big.Int
-	SwapRouter   common.Address
-	PoolFee      *big.Int
+	MarketParams  morpho.MarketContractParams
+	Borrower      common.Address
+	SeizedAssets  *big.Int
+	RepaidShares  *big.Int
+	OdosPathId    string
+	OdosAmountOut *big.Int
 }
 
 func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
