@@ -33,6 +33,7 @@ type OdosToken struct {
 }
 
 type OdosQuoteResponse struct {
+ PathId      string   `json:"pathId"`
 	OutAmounts  []string `json:"outAmounts"`
 	PriceImpact float64  `json:"priceImpact"`
 }
