@@ -14,6 +14,12 @@ import (
 	"github.com/lmittmann/w3"
 )
 
+type Odos struct {
+PathId string
+Ts int64
+}
+
+
 type OdosQuoteRequest struct {
 	InputTokens          []OdosToken `json:"inputTokens"`
 	OutputTokens         []OdosToken `json:"outputTokens"`
