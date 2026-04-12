@@ -193,12 +193,12 @@ func (r *Runner) FireLiquidationRoutine(ctx context.Context) {
 		case liquidable := <-r.Engine.LiquidateCh:
 			market := r.Cache.GetMorphoMarketFromId(liquidable.MarketID)
 			liquidateArgs := engine.LiquidateArgs{
-				MarketParams: *market.ToMarketContractParams(),
-				Borrower:     liquidable.Pos.Address,
-				SeizedAssets: liquidable.SeizeAssets,
-				RepaidShares: liquidable.RepayShares,
-				SwapRouter:   config.BaseUniswapV3Router, // multichain to change
-				PoolFee:      big.NewInt(int64(market.PoolFee)),
+				MarketParams:  *market.ToMarketContractParams(),
+				Borrower:      liquidable.Pos.Address,
+				SeizedAssets:  liquidable.SeizeAssets,
+				RepaidShares:  liquidable.RepayShares,
+				OdosPathId:    "",
+				OdosAmountOut: big.NewInt(0),
 			}
 
 			engine.LiquidateCall(
