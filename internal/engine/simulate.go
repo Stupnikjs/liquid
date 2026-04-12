@@ -99,6 +99,7 @@ func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketM
 				simCache.RecordFailure(enriched.Pos.Address)
 				return
 			}
+   // call for Odos.PathId in seperate routine
 			mu.Lock()
 			results = append(results, enriched)
 			mu.Unlock()
@@ -167,6 +168,6 @@ func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marke
 	out.EstProfit = morpho.EstimateProfit(seizeAssets, repayShares, gasVal)
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
-
+ 
 	return &out
 }
