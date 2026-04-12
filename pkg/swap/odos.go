@@ -110,7 +110,7 @@ func QuoteSwapOdos(tokenIn, tokenOut common.Address, amountIn *big.Int) (*big.In
 		return nil, 0, fmt.Errorf("failed to parse amountOut: %s", result.OutAmounts[0])
 	}
 
-	return amountOut, result.PriceImpact, nil
+	return amountOut, result.PriceImpact,result.PathId, nil
 }
 
 func AssembleOdos(pathId string, liquidatorAddr common.Address) ([]byte, error) {
