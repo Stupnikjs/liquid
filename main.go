@@ -16,37 +16,29 @@ Recuperer la raison du revert
 */
 
 func main() {
+
 	RunBase()
 }
 
 func RunBase() {
 
-	/*
-		Base Init
-	*/
 	conn := connector.NewConnector(config.BASE_HTTP_RPC, config.BASE_WS_RPC)
 	// market from less than 10mounth
-	markets := api.LogHotMarket(conn.ClientHTTP, 10)
+	markets := api.FilterMarket(conn.ClientHTTP)
 
 	params := []morpho.MarketParams{}
 	for _, m := range markets {
 		params = append(params, m.MarketParams)
 	}
-	BaseSigner, err := morpho.NewSigner()
+
+	BaseSigner, err := config.NewSigner()
 	if err != nil {
 		fmt.Println(err)
 	}
-	baseConfig := morpho.ChainConfig{
-		WalletAddress:        config.BaseWalletAddr,
-		LiquidatorAddress:    config.BaseLiquidatorAddr,
-		UniswapRouterAddress: config.BaseUniswapV3Router,
-		Signer:               BaseSigner,
-		Name:                 "base",
-	}
-	CacheConfig := baseConfig
-	cache := scanner.NewCache(params, CacheConfig)
+
+	cache := scanner.NewCache(params)
 	runner := scanner.NewRunner(conn, cache, BaseSigner)
-	runner.Run(context.Background())
+	runner.Init(context.Background())
 }
 
 /*

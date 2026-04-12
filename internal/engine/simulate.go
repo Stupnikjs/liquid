@@ -29,7 +29,7 @@ type SimResult struct {
 	SimErr       error
 }
 
-func GetCandidates(c state.MarketReader) []*Liquidable {
+func GetCandidates(c state.MarketReader, simCache *SimCache) []*Liquidable {
 	ids := c.Ids()
 
 	type result struct {
@@ -51,6 +51,9 @@ func GetCandidates(c state.MarketReader) []*Liquidable {
 			var local []*Liquidable
 
 			for _, pos := range snap.Positions {
+				if simCache.Blacklisted(pos.Address) {
+					continue
+				}
 				cp := pos
 				hf := cp.HF(snap.Stats.TotalBorrowShares, snap.Stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
 				if hf == nil || hf.Sign() == 0 || hf.Cmp(utils.WAD) >= 0 {
@@ -76,7 +79,7 @@ func GetCandidates(c state.MarketReader) []*Liquidable {
 	return candidates
 }
 
-func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, candidates []*Liquidable, logChan chan string) []*Liquidable {
+func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, candidates []*Liquidable, logChan chan string, simCache *SimCache) []*Liquidable {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var results []*Liquidable
@@ -93,6 +96,7 @@ func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketM
 			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 || !enriched.IsLiquidable {
 				logChan <- fmt.Sprintf("sim failed for %s: %v market %s", enriched.Pos.Address, enriched.SimErr, liq.MarketID)
 				// logChan <- Position details for debug
+				simCache.RecordFailure(enriched.Pos.Address)
 				return
 			}
 			mu.Lock()
@@ -143,8 +147,8 @@ func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marke
 	}
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr,      // change for multichain
-		To:    &config.BaseLiquidatorAddr, //
+		From:  config.BaseWalletAddr,        // change for multichain
+		To:    &config.BaseLiquidatorAddrV2, //
 		Input: data,
 	}
 

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
-	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -43,38 +42,25 @@ func New() *LiquidationEngine {
 	}
 }
 
-func LiquidateCall(
-	signer *morpho.Signer,
-	m state.MarketReader,
-	client *w3.Client,
-	ctx context.Context,
-	marketParams morpho.MarketContractParams,
-	borrower common.Address,
-	seizedAssets *big.Int,
-	repaidShares *big.Int,
-	swapRouter common.Address,
-	poolFee *big.Int,
+type LiquidateArgs struct {
+	MarketParams morpho.MarketContractParams
+	Borrower     common.Address
+	SeizedAssets *big.Int
+	RepaidShares *big.Int
+	SwapRouter   common.Address
+	PoolFee      *big.Int
+}
 
-) error {
-	calldata, err := config.FuncLiquidate.EncodeArgs(
-		marketParams,
-		borrower,
-		seizedAssets,
-		repaidShares,
-		swapRouter,
-		poolFee,
-	)
-	if err != nil {
-		return fmt.Errorf("LiquidateCall: encode args: %w", err)
-	}
+func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
 	var gasEst uint64
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr,      // adapt to chainId
-		To:    &config.BaseLiquidatorAddr, // adapt to chainId
-		Input: calldata,
+		From:  config.BaseWalletAddr,
+		To:    params.To,
+		Input: params.Calldata,
+		Value: params.Value,
 	}
 
 	if err := client.CallCtx(ctx,
@@ -82,31 +68,48 @@ func LiquidateCall(
 		eth.GasPrice().Returns(&gasPrice),
 		eth.EstimateGas(&msg, nil).Returns(&gasEst),
 	); err != nil {
-		return fmt.Errorf("LiquidateCall: fetch tx params: %w", err)
+		return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", err)
 	}
 
 	tx := types.NewTx(&types.DynamicFeeTx{
 		Nonce:     nonce,
-		To:        &config.BaseLiquidatorAddr,
-		Data:      calldata,
-		Gas:       gasEst * 12 / 10, // +20% marge
-		GasTipCap: big.NewInt(1e9),  // 1 gwei tip
+		To:        params.To,
+		Data:      params.Calldata,
+		Value:     params.Value,
+		Gas:       gasEst * 12 / 10,
+		GasTipCap: big.NewInt(1e9),
 		GasFeeCap: new(big.Int).Add(gasPrice, big.NewInt(1e9)),
 	})
 
-	// Sign
-
 	signedTx, err := signer.Sign(tx)
-
 	if err != nil {
-		return fmt.Errorf("LiquidateCall: sign tx: %w", err)
+		return common.Hash{}, fmt.Errorf("SendSignedTx: sign: %w", err)
 	}
 
 	var receipt common.Hash
 	if err := client.CallCtx(ctx, eth.SendTx(signedTx).Returns(&receipt)); err != nil {
-		return fmt.Errorf("LiquidateCall: send tx: %w", err)
+		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
 	}
 
-	log.Printf("[liquidate] tx sent: %s", receipt.Hex())
-	return nil
+	log.Printf("[tx] sent: %s", receipt.Hex())
+	return receipt, nil
+}
+
+type TxParams struct {
+	To       *common.Address
+	Calldata []byte
+	Value    *big.Int // nil = 0
+}
+
+func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context, args LiquidateArgs) error {
+	calldata, err := config.FuncLiquidate.EncodeArgs(args)
+	if err != nil {
+		return fmt.Errorf("LiquidateCall: encode: %w", err)
+	}
+
+	_, err = SendSignedTx(signer, client, ctx, TxParams{
+		To:       &config.BaseLiquidatorAddrV2,
+		Calldata: calldata,
+	})
+	return err
 }

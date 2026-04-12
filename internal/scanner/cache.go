@@ -10,7 +10,7 @@ type Cache struct {
 	marketMap map[[32]byte]morpho.MarketParams
 }
 
-func NewCache(markets []morpho.MarketParams, config morpho.ChainConfig) *Cache {
+func NewCache(markets []morpho.MarketParams) *Cache {
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
 	store := market.NewStore(markets)
 	for _, mk := range markets {
