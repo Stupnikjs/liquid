@@ -11,6 +11,8 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+
+/* sortir dans un package séparé avec event.go */
 type OnChainResult struct {
 	ID          [32]byte
 	Stats       market.MarketStats
