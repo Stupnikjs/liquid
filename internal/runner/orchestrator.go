@@ -1,19 +1,21 @@
-package scanner
+package runner
 
 import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/engine"
 	"github.com/Stupnikjs/morpho-sepolia/internal/logging"
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 )
 
 type Runner struct {
@@ -36,7 +38,7 @@ func NewRunner(conn *connector.Connector, cache *Cache, signer *config.Signer) *
 
 func (r *Runner) Init(ctx context.Context) {
 	r.ApiCallRoutine(ctx)
-	err := OnChainRefresh(r.Conn, r.Cache)
+	err := onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.marketMap, false)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -49,7 +51,7 @@ func (r *Runner) Run(ctx context.Context) {
 
 	go r.WatchPositionRoutine(ctx)
 	// Onchain rpc pool to update markets
-	go r.OnChainRefreshRoutine(ctx)
+	go r.OnChainRefreshRoutineOnlyOracle(ctx)
 	go r.CleanMarketsRoutine(ctx)
 	// Loging Ethcalls per min
 	go r.LogEthCallsPerMin(ctx)
@@ -75,11 +77,18 @@ func (r *Runner) FilterMarketBySlippage(ctx context.Context) {
 			continue
 		}
 
-		// montant test : 10k$ en unités du collateral
-		testAmount := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(marketP.CollateralTokenDecimals)), nil)
-		testAmount.Mul(testAmount, big.NewInt(10_000))
+		var testAmount *big.Int
+		if strings.Contains(marketP.CollateralTokenStr, "ETH") || strings.Contains(marketP.CollateralTokenStr, "BTC") {
+			testAmount = new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(marketP.CollateralTokenDecimals)), nil)
+			testAmount.Mul(testAmount, big.NewInt(1))
 
-		bestFee, bestSlippage := api.FindBestPool(
+		} else {
+			testAmount = new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(marketP.CollateralTokenDecimals)), nil)
+			testAmount = testAmount.Mul(testAmount, big.NewInt(1000))
+			// montant test : 10k$ en unités du collateral
+		}
+
+		priceImpact, oracleSlipage := swap.FindBestPool(
 			r.Conn.ClientHTTP,
 			marketP.CollateralToken,
 			marketP.LoanToken,
@@ -87,15 +96,13 @@ func (r *Runner) FilterMarketBySlippage(ctx context.Context) {
 			snap.Oracle.Price,
 		)
 
-		if bestSlippage > 2.0 || bestFee == 0 {
+		if priceImpact > 2.0 || oracleSlipage > 3.0 {
 			r.Cache.Markets.Update(id, func(m *market.Market) {
 				m.Canceled = true
 			})
 			continue
 		}
 
-		marketP.PoolFee = int32(bestFee)
-		r.Cache.marketMap[id] = marketP
 	}
 }
 
@@ -107,9 +114,9 @@ func (r *Runner) WatchPositionRoutine(ctx context.Context) {
 	r.Conn.WatchPositions(ctx)
 }
 
-func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
+func (r *Runner) OnChainRefreshRoutineOnlyOracle(ctx context.Context) {
 	utils.RunTicker(ctx, 2*time.Second, func() {
-		OnChainRefresh(r.Conn, r.Cache)
+		onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.marketMap, true)
 	})
 }
 
@@ -172,7 +179,7 @@ func (r *Runner) EventLoop(ctx context.Context) {
 			if !ok {
 				return
 			}
-			r.Cache.ProcessEvents(event)
+			onchain.ProcessEvents(r.Cache.Markets, event)
 		}
 	}
 }

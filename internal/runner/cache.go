@@ -1,4 +1,4 @@
-package scanner
+package runner
 
 import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"

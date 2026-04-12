@@ -1,4 +1,4 @@
-package scanner
+package onchain
 
 import (
 	"fmt"
@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-func (c *Cache) ProcessEvents(log *types.Log) {
+func ProcessEvents(c state.MarketReader, log *types.Log) {
 	switch log.Topics[0] {
 	case config.EventAccrueInterest.Topic0:
 		AccrueInterestEventProcess(c, log)
@@ -34,7 +35,7 @@ func (c *Cache) ProcessEvents(log *types.Log) {
 	}
 }
 
-func BorrowEventProcess(cache *Cache, log *types.Log) {
+func BorrowEventProcess(c state.MarketReader, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -49,10 +50,10 @@ func BorrowEventProcess(cache *Cache, log *types.Log) {
 		return
 	}
 
-	if !slices.Contains(cache.Markets.Ids(), id) {
+	if !slices.Contains(c.Ids(), id) {
 		return
 	}
-	cache.Markets.Update(id, func(m *market.Market) {
+	c.Update(id, func(m *market.Market) {
 		if p, ok := m.Positions[onBehalf]; ok {
 			if p.BorrowShares == nil {
 				p.BorrowShares = new(big.Int)
@@ -71,7 +72,7 @@ func BorrowEventProcess(cache *Cache, log *types.Log) {
 
 }
 
-func RepayEventProcess(cache *Cache, log *types.Log) {
+func RepayEventProcess(c state.MarketReader, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -84,11 +85,11 @@ func RepayEventProcess(cache *Cache, log *types.Log) {
 		fmt.Println("decode error:", err)
 		return
 	}
-	if !slices.Contains(cache.Markets.Ids(), id) {
+	if !slices.Contains(c.Ids(), id) {
 		return
 	}
 
-	cache.Markets.Update(id, func(m *market.Market) {
+	c.Update(id, func(m *market.Market) {
 		if p, ok := m.Positions[onBehalf]; ok {
 			p.BorrowShares.Sub(p.BorrowShares, &shares)
 			if p.BorrowShares.Sign() <= 0 {
@@ -99,7 +100,7 @@ func RepayEventProcess(cache *Cache, log *types.Log) {
 
 }
 
-func LiquidateEventProcess(cache *Cache, log *types.Log) {
+func LiquidateEventProcess(c state.MarketReader, log *types.Log) {
 	var (
 		id            [32]byte
 		caller        common.Address
@@ -117,11 +118,11 @@ func LiquidateEventProcess(cache *Cache, log *types.Log) {
 		return
 	}
 
-	if !slices.Contains(cache.Markets.Ids(), id) {
+	if !slices.Contains(c.Ids(), id) {
 		return
 	}
 
-	cache.Markets.Update(id, func(m *market.Market) {
+	c.Update(id, func(m *market.Market) {
 		if p, ok := m.Positions[borrower]; ok {
 			p.BorrowShares.Sub(p.BorrowShares, &repaidShares)
 			if p.BorrowShares.Sign() <= 0 {
@@ -133,7 +134,7 @@ func LiquidateEventProcess(cache *Cache, log *types.Log) {
 
 }
 
-func AccrueInterestEventProcess(c *Cache, log *types.Log) {
+func AccrueInterestEventProcess(c state.MarketReader, log *types.Log) {
 	var (
 		id             [32]byte
 		prevBorrowRate big.Int
@@ -145,12 +146,12 @@ func AccrueInterestEventProcess(c *Cache, log *types.Log) {
 		return
 	}
 
-	if !slices.Contains(c.Markets.Ids(), id) {
+	if !slices.Contains(c.Ids(), id) {
 		return
 	}
 
 	// TotalBorrowAssets augmente des intérêts accumulés
-	c.Markets.Update(id, func(m *market.Market) {
+	c.Update(id, func(m *market.Market) {
 
 		if m.Stats.TotalBorrowAssets == nil {
 			return
@@ -163,7 +164,7 @@ func AccrueInterestEventProcess(c *Cache, log *types.Log) {
 
 }
 
-func SupplyCollateralEventProcess(cache *Cache, log *types.Log) {
+func SupplyCollateralEventProcess(c state.MarketReader, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -174,11 +175,11 @@ func SupplyCollateralEventProcess(cache *Cache, log *types.Log) {
 		fmt.Println("decode error:", err)
 		return
 	}
-	if !slices.Contains(cache.Markets.Ids(), id) {
+	if !slices.Contains(c.Ids(), id) {
 		return
 	}
 
-	cache.Markets.Update(id, func(m *market.Market) {
+	c.Update(id, func(m *market.Market) {
 		if p, ok := m.Positions[onBehalf]; ok {
 			if p.CollateralAssets == nil {
 				p.CollateralAssets = &assets
