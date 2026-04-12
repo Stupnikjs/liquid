@@ -15,6 +15,7 @@ type Market struct {
 	Oracle    Oracle
 	LLTV      *big.Int
 	Stats     MarketStats
+ OdosPathId string 
 	Positions map[common.Address]*BorrowPosition
 }
 
