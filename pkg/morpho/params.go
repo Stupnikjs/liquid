@@ -3,6 +3,7 @@ package morpho
 import (
 	"math/big"
 
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -12,7 +13,7 @@ type ChainConfig struct {
 	WalletAddress        common.Address
 	LiquidatorAddress    common.Address
 	UniswapRouterAddress common.Address
-	Signer               *Signer
+	Signer               *config.Signer
 	Name                 string
 }
 

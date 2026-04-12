@@ -150,8 +150,8 @@ type MarketItem struct {
 	LoanAsset         Asset       `json:"loanAsset"`
 	CollateralAsset   *Asset      `json:"collateralAsset"` // Pointeur car peut être null
 	State             struct {
-		SupplyAssetsUsd float64 `json:"supplyAssetsUsd"`
-		BorrowAssetsUsd float64 `json:"borrowAssetsUsd"`
+		SupplyAssetsUsd json.Number `json:"supplyAssetsUsd"`
+		BorrowAssetsUsd json.Number `json:"borrowAssetsUsd"`
 	} `json:"state"`
 }
 

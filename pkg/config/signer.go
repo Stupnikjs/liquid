@@ -1,14 +1,16 @@
-package morpho
+package config
 
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/joho/godotenv"
 )
 
 type Signer struct {
@@ -17,6 +19,9 @@ type Signer struct {
 }
 
 func NewSigner() (*Signer, error) {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
 	keyHex := os.Getenv("LIQUIDATOR_PRIVATE_KEY")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR_PRIVATE_KEY not set")

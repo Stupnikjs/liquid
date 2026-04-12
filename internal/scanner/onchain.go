@@ -12,10 +12,9 @@ import (
 )
 
 type OnChainResult struct {
-	ID [32]byte
-
-	Stats  market.MarketStats
-	Oracle *big.Int
+	ID          [32]byte
+	Stats       market.MarketStats
+	OraclePrice *big.Int
 }
 
 func OnChainCalls(c *Cache) ([]w3types.RPCCaller, map[int][32]byte, []*OnChainResult) {
@@ -29,9 +28,9 @@ func OnChainCalls(c *Cache) ([]w3types.RPCCaller, map[int][32]byte, []*OnChainRe
 	for _, id := range ids {
 
 		res := &OnChainResult{
-			ID:     id,
-			Stats:  market.MarketStats{},
-			Oracle: new(big.Int),
+			ID:          id,
+			Stats:       market.MarketStats{},
+			OraclePrice: new(big.Int),
 		}
 
 		results = append(results, res)
@@ -49,17 +48,15 @@ func OnChainCalls(c *Cache) ([]w3types.RPCCaller, map[int][32]byte, []*OnChainRe
 				new(big.Int),
 			),
 		)
-		snap := c.Markets.GetSnapshot(id)
-		if snap != nil {
-			calls = append(calls,
-				eth.CallFunc(snap.Oracle.Address, config.OraclePriceFunc).
-					Returns(res.Oracle),
-			)
-		}
 
-		// oracle call
-
+		calls = append(calls,
+			eth.CallFunc(c.marketMap[id].Oracle, config.OraclePriceFunc).
+				Returns(res.OraclePrice),
+		)
 	}
+
+	// oracle call
+
 	return calls, callIndexToID, results
 }
 
@@ -77,81 +74,7 @@ func ApplyResults(c *Cache, results []*OnChainResult) {
 	for _, r := range results {
 		c.Markets.Update(r.ID, func(m *market.Market) {
 			m.Stats = r.Stats
-			m.Oracle.Price = r.Oracle
+			m.Oracle.Price = r.OraclePrice
 		})
 	}
 }
-
-/*
-
-func GetSlippageBps(
-	ctx context.Context,
-	conn *connector.Connector,
-	m morpho.MarketParams,
-	seizeAssets *big.Int,
-	oraclePrice *big.Int,
-) (int64, error) {
-
-	params := api.QuoteParams{
-		TokenIn:           m.CollateralToken,
-		TokenOut:          m.LoanToken,
-		AmountIn:          seizeAssets,
-		Fee:               big.NewInt(int64(m.PoolFee)),
-		SqrtPriceLimitX96: big.NewInt(0),
-	}
-
-	amountOut, err := QuoteUniswap(ctx, conn, params)
-	if err != nil {
-		return 0, err
-	}
-
-	expected := ComputeExpectedOut(seizeAssets, oraclePrice)
-
-	return ComputeSlippageBps(expected, amountOut)
-}
-
-func QuoteUniswap(
-	ctx context.Context,
-	conn *connector.Connector,
-	params api.QuoteParams,
-) (amountOut *big.Int, err error) {
-
-	var sqrtPriceAfter *big.Int
-	var ticksCrossed uint32
-	var gasEst *big.Int
-
-	err = conn.EthSingleCallCtx(ctx,
-		eth.CallFunc(config.BaseUniswapV3Router, config.FuncQuoteExactInputSingle, params).Returns(
-			&amountOut, &sqrtPriceAfter, &ticksCrossed, &gasEst,
-		),
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("uniswap quote failed: %w", err)
-	}
-
-	return amountOut, nil
-}
-
-func ComputeExpectedOut(
-	seizeAssets *big.Int,
-	oraclePrice *big.Int,
-) *big.Int {
-	out := new(big.Int).Mul(seizeAssets, oraclePrice)
-	return out.Div(out, utils.TenPowInt(36))
-}
-
-func ComputeSlippageBps(expected, actual *big.Int) (int64, error) {
-	if expected.Sign() == 0 {
-		return 0, fmt.Errorf("expectedOut is zero")
-	}
-
-	diff := new(big.Int).Sub(expected, actual)
-
-	// (diff / expected) * 10_000  (bps)
-	bps := new(big.Int).Mul(diff, big.NewInt(10_000))
-	bps.Div(bps, expected)
-
-	return bps.Int64(), nil
-}
-*/

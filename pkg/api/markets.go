@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/big"
-	"sort"
-	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
@@ -44,38 +42,49 @@ func (m MarketItem) ToConfig() MarketConfig {
 		},
 	}
 }
-
-func LogHotMarket(client *w3.Client, lastXmounth int) []MarketConfig {
-
+func FilterMarket(client *w3.Client) []MarketConfig {
 	ctx := context.Background()
 
 	var result MarketsResult
-	err := Query(ctx, MarketsQuery(), &result)
-	if err != nil {
+	if err := Query(ctx, MarketsQuery(), &result); err != nil {
 		fmt.Printf("graphql fetch: %s", err.Error())
+		return nil
 	}
 
-	markets := result.Markets.Items
-	sort.Slice(markets, func(i, j int) bool {
-		return markets[i].CreationTimestamp > markets[j].CreationTimestamp
-	})
-	end := []MarketItem{}
-	for _, m := range markets {
-		if m.State.BorrowAssetsUsd < 50000 {
+	const MinBorrowUsd = 15_000.0
+	var mark []MarketConfig
+	for _, m := range result.Markets.Items {
+		supplyUsd, _ := m.State.SupplyAssetsUsd.Float64()
+		borrowUsd, _ := m.State.BorrowAssetsUsd.Float64()
+
+		if supplyUsd == 0 {
 			continue
 		}
-		if m.CreationTimestamp > time.Now().AddDate(0, -1*lastXmounth, 0).Unix() {
-			end = append(end, m)
+
+		if borrowUsd < 10_000 || borrowUsd > 100_000_000 || borrowUsd/supplyUsd < 0.1 {
+			continue
 		}
-
-	}
-	sort.Slice(end, func(i, j int) bool {
-		return end[i].State.BorrowAssetsUsd > end[j].State.BorrowAssetsUsd
-	})
-
-	mark := []MarketConfig{}
-	for _, m := range end {
 		mark = append(mark, m.ToConfig())
 	}
+	/*
+		usdc := common.HexToAddress("0x833589fcd6edb6e08f4c7c32d4f71b54bda02913")
+		weth := common.HexToAddress("0x4200000000000000000000000000000000000006")
+
+		amountIn := big.NewInt(100 * 1e6) // 100 USDC
+
+
+		// aller : USDC → WETH
+		out1, err := QuoteSwap(client, usdc, weth, amountIn, 500)
+		fmt.Printf("USDC→WETH: %s err: %v\n", out1.AmountOut, err)
+
+		// retour : WETH → USDC avec ce qu'on a reçu
+		out2, err := QuoteSwap(client, weth, usdc, out1.AmountOut, 500)
+		fmt.Printf("WETH→USDC: %s err: %v\n", out2.AmountOut, err)
+
+		// slippage round trip
+		diff := new(big.Int).Sub(amountIn, out2.AmountOut)
+		fmt.Printf("round trip loss: %s USDC (sur %s)\n", diff, amountIn)
+	*/
 	return mark
+
 }
