@@ -34,6 +34,7 @@ type MarketSnapshot struct {
 	Oracle    Oracle
 	LLTV      *big.Int
 	Stats     MarketStats
+ Odos swap.Odos
 	Positions []BorrowPosition
 }
 
