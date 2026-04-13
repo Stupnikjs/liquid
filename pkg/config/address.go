@@ -17,4 +17,5 @@ var (
 	MainMorphoBlueAddr   = w3.A("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb")
 	MainWalletAddr       = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 	MainUniswapV3Router  = common.HexToAddress("0xE592427A0AEce92De3Edee1F18E0157C05861564")
+	OdosRouterAddr       = common.HexToAddress("0x19cEeAd7105607Cd444F5ad10dd51356436095a1")
 )

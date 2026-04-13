@@ -9,16 +9,16 @@ import (
 	"net/http"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/lmittmann/w3"
 )
 
 type Odos struct {
-PathId string
-Ts int64
+	PathId string
+	Ts     int64
 }
-
 
 type OdosQuoteRequest struct {
 	InputTokens          []OdosToken `json:"inputTokens"`
@@ -33,7 +33,7 @@ type OdosToken struct {
 }
 
 type OdosQuoteResponse struct {
- PathId      string   `json:"pathId"`
+	PathId      string   `json:"pathId"`
 	OutAmounts  []string `json:"outAmounts"`
 	PriceImpact float64  `json:"priceImpact"`
 }
@@ -49,13 +49,13 @@ type OdosAssembleResponse struct {
 	} `json:"transaction"`
 }
 
-func FindBestPool(client *w3.Client, tokenIn, tokenOut common.Address, amountIn *big.Int, oraclePrice *big.Int) (float64, float64) {
+func FindBestPool(client *w3.Client, param morpho.MarketParams, amountIn *big.Int, oraclePrice *big.Int) (float64, float64) {
 
 	// expectedOut = amountIn * oraclePrice / 1e36
 	var expectedOut *big.Int
 	expectedOut = new(big.Int).Mul(amountIn, oraclePrice)
 	expectedOut.Div(expectedOut, utils.TenPowInt(36))
-	amountOut, priceImpact, err := QuoteSwapOdos(tokenIn, tokenOut, amountIn)
+	amountOut, priceImpact, err := QuoteSwapOdos(param, amountIn)
 	if err != nil {
 		return 0, 100.0
 	}
@@ -71,14 +71,44 @@ func FindBestPool(client *w3.Client, tokenIn, tokenOut common.Address, amountIn 
 	return priceImpact, slip
 }
 
-func QuoteSwapOdos(tokenIn, tokenOut common.Address, amountIn *big.Int) (*big.Int, float64, error) {
+func QuoteSwapOdos(params morpho.MarketParams, amountIn *big.Int) (*big.Int, float64, error) {
+	result, err := GetSwapOdosResponse(params, amountIn)
+	if err != nil {
+		return nil, 0.0, err
+	}
+	amountOut, ok := new(big.Int).SetString(result.OutAmounts[0], 10)
+	if !ok {
+		return nil, 0, fmt.Errorf("failed to parse amountOut: %s", result.OutAmounts[0])
+	}
+
+	return amountOut, result.PriceImpact, nil
+}
+
+type OdosQuote struct {
+	PathId    string
+	AmountOut *big.Int
+}
+
+func Quote(params morpho.MarketParams, amountIn *big.Int) (OdosQuote, error) {
+	result, err := GetSwapOdosResponse(params, amountIn)
+	if err != nil {
+		return OdosQuote{}, err
+	}
+	amountOut, ok := new(big.Int).SetString(result.OutAmounts[0], 10)
+	if !ok {
+		return OdosQuote{}, fmt.Errorf("failed to parse amountOut: %s", result.OutAmounts[0])
+	}
+	return OdosQuote{PathId: result.PathId, AmountOut: amountOut}, nil
+}
+
+func GetSwapOdosResponse(params morpho.MarketParams, amountIn *big.Int) (OdosQuoteResponse, error) {
 	reqBody := OdosQuoteRequest{
 		InputTokens: []OdosToken{{
-			TokenAddress: tokenIn.Hex(),
+			TokenAddress: params.CollateralToken.Hex(),
 			Amount:       amountIn.String(),
 		}},
 		OutputTokens: []OdosToken{{
-			TokenAddress: tokenOut.Hex(),
+			TokenAddress: params.LoanToken.Hex(),
 			Amount:       "1", // proportion
 		}},
 		SlippageLimitPercent: 1.0,
@@ -87,30 +117,19 @@ func QuoteSwapOdos(tokenIn, tokenOut common.Address, amountIn *big.Int) (*big.In
 
 	body, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, 0, err
+		return OdosQuoteResponse{}, err
 	}
 
 	resp, err := http.Post("https://api.odos.xyz/sor/quote/v2", "application/json", bytes.NewReader(body))
 	if err != nil {
-		return nil, 0, err
+		return OdosQuoteResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	var result OdosQuoteResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, 0, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	return result, err
 
-	if len(result.OutAmounts) == 0 {
-		return nil, 0, fmt.Errorf("no output amounts from Odos")
-	}
-
-	amountOut, ok := new(big.Int).SetString(result.OutAmounts[0], 10)
-	if !ok {
-		return nil, 0, fmt.Errorf("failed to parse amountOut: %s", result.OutAmounts[0])
-	}
-
-	return amountOut, result.PriceImpact,result.PathId, nil
 }
 
 func AssembleOdos(pathId string, liquidatorAddr common.Address) ([]byte, error) {
