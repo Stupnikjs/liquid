@@ -2,12 +2,23 @@ package config
 
 import "github.com/ethereum/go-ethereum/common"
 
-type Config struct {
-	Signer             *Signer
-	LiquidatorContract struct {
+
+type Addresses struct {
+ LiquidatorContract struct {
 		Odos   common.Address
 		Direct common.Address
 	}
+ Wallet common.Address
+ Morpho common.Address 
+
+} 
+
+
+
+
+type Config struct {
+	Signer             *Signer
+	Addresses Addresses
 	Morpho        common.Address
 	ChainID       int
 	WalletAddress common.Address
