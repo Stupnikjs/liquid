@@ -24,7 +24,7 @@ type Runner struct {
 	Conn   *connector.Connector
 	Logger chan string
 	signer *config.Signer
- // Config avec signer 
+	// Config avec signer
 }
 
 func NewRunner(conn *connector.Connector, cache *Cache, signer *config.Signer) *Runner {
@@ -91,8 +91,7 @@ func (r *Runner) FilterMarketBySlippage(ctx context.Context) {
 
 		priceImpact, oracleSlipage := swap.FindBestPool(
 			r.Conn.ClientHTTP,
-			marketP.CollateralToken,
-			marketP.LoanToken,
+			marketP,
 			testAmount,
 			snap.Oracle.Price,
 		)
@@ -157,7 +156,6 @@ func (r *Runner) SimulateCandidatesRoutine(ctx context.Context) {
 			}
 			simCache := engine.NewSimCache()
 			candidates := engine.GetCandidates(r.Cache.Markets, simCache)
-			// simulated is sorted by profit
 			simulated := engine.SimulateCandidates(r.Conn, r.Cache.Markets, r.Cache.marketMap, candidates, r.Logger, simCache)
 			for _, l := range simulated {
 				if l.IsLiquidable {
@@ -193,13 +191,23 @@ func (r *Runner) FireLiquidationRoutine(ctx context.Context) {
 			return
 		case liquidable := <-r.Engine.LiquidateCh:
 			market := r.Cache.GetMorphoMarketFromId(liquidable.MarketID)
+			/*
+					data, err := config.FuncLiquidate.EncodeArgs(
+				params.ToMarketContractParams(),
+				liq.Pos.Address,
+				big.NewInt(0),
+				liq.RepayShares,
+				config.OdosRouterAddr,
+				odosCalldata,
+				) */
+
 			liquidateArgs := engine.LiquidateArgs{
-				MarketParams:  *market.ToMarketContractParams(),
-				Borrower:      liquidable.Pos.Address,
-				SeizedAssets:  liquidable.SeizeAssets,
-				RepaidShares:  liquidable.RepayShares,
-				OdosPathId:    "",
-				OdosAmountOut: big.NewInt(0),
+				MarketParams: *market.ToMarketContractParams(),
+				Borrower:     liquidable.Pos.Address,
+				SeizedAssets: liquidable.SeizeAssets,
+				RepaidShares: liquidable.RepayShares,
+				OdosRouter:   config.OdosRouterAddr,
+				OdosCallData: liquidable.OdosCallData,
 			}
 
 			engine.LiquidateCall(

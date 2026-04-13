@@ -14,29 +14,15 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
+	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
 
-type SimResult struct {
-	Position     market.BorrowPosition
-	MarketID     [32]byte
-	RepayShares  *big.Int
-	SeizeAssets  *big.Int
-	GasEstimate  uint64
-	EstProfit    *big.Int
-	IsLiquidable bool
-	SimErr       error
-}
-
 func GetCandidates(c state.MarketReader, simCache *SimCache) []*Liquidable {
 	ids := c.Ids()
-
-	type result struct {
-		candidates []*Liquidable
-	}
-
-	resultsCh := make(chan result, len(ids))
+	resultsCh := make(chan []*Liquidable, len(ids))
 	var wg sync.WaitGroup
 
 	for _, id := range ids {
@@ -44,7 +30,6 @@ func GetCandidates(c state.MarketReader, simCache *SimCache) []*Liquidable {
 		if snap == nil {
 			continue
 		}
-
 		wg.Add(1)
 		go func(snap *market.MarketSnapshot, id [32]byte) {
 			defer wg.Done()
@@ -55,7 +40,12 @@ func GetCandidates(c state.MarketReader, simCache *SimCache) []*Liquidable {
 					continue
 				}
 				cp := pos
-				hf := cp.HF(snap.Stats.TotalBorrowShares, snap.Stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
+				hf := cp.HF(
+					snap.Stats.TotalBorrowShares,
+					snap.Stats.TotalBorrowAssets,
+					snap.Oracle.Price,
+					snap.LLTV,
+				)
 				if hf == nil || hf.Sign() == 0 || hf.Cmp(utils.WAD) >= 0 {
 					continue
 				}
@@ -65,7 +55,7 @@ func GetCandidates(c state.MarketReader, simCache *SimCache) []*Liquidable {
 					HF:       hf,
 				})
 			}
-			resultsCh <- result{local}
+			resultsCh <- local
 		}(snap, id)
 	}
 
@@ -74,12 +64,19 @@ func GetCandidates(c state.MarketReader, simCache *SimCache) []*Liquidable {
 
 	var candidates []*Liquidable
 	for r := range resultsCh {
-		candidates = append(candidates, r.candidates...)
+		candidates = append(candidates, r...)
 	}
 	return candidates
 }
 
-func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, candidates []*Liquidable, logChan chan string, simCache *SimCache) []*Liquidable {
+func SimulateCandidates(
+	conn *connector.Connector,
+	c state.MarketReader,
+	marketMap map[[32]byte]morpho.MarketParams,
+	candidates []*Liquidable,
+	logChan chan string,
+	simCache *SimCache,
+) []*Liquidable {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var results []*Liquidable
@@ -94,12 +91,11 @@ func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketM
 
 			enriched := SimulatePreComputeTx(conn, c, marketMap, liq)
 			if enriched.SimErr != nil || enriched.EstProfit.Sign() <= 0 || !enriched.IsLiquidable {
-				logChan <- fmt.Sprintf("sim failed for %s: %v market %s", enriched.Pos.Address, enriched.SimErr, liq.MarketID)
-				// logChan <- Position details for debug
+				logChan <- fmt.Sprintf("sim failed for %s: %v market %x", enriched.Pos.Address, enriched.SimErr, liq.MarketID)
 				simCache.RecordFailure(enriched.Pos.Address)
 				return
 			}
-   // call for Odos.PathId in seperate routine
+
 			mu.Lock()
 			results = append(results, enriched)
 			mu.Unlock()
@@ -113,7 +109,12 @@ func SimulateCandidates(conn *connector.Connector, c state.MarketReader, marketM
 	return results
 }
 
-func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, liq *Liquidable) *Liquidable {
+func SimulatePreComputeTx(
+	conn *connector.Connector,
+	c state.MarketReader,
+	marketMap map[[32]byte]morpho.MarketParams,
+	liq *Liquidable,
+) *Liquidable {
 	out := *liq
 	snap := c.GetSnapshot(liq.MarketID)
 	if snap == nil {
@@ -123,7 +124,6 @@ func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marke
 
 	params := marketMap[liq.MarketID]
 
-	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
 		liq.Pos.BorrowShares,
 		snap.Stats.TotalBorrowAssets,
@@ -133,14 +133,28 @@ func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marke
 	out.RepayShares = repayShares
 	out.SeizeAssets = seizeAssets
 
-	// 2. Dry-run eth_call + EstimateGas en batch
+	// 1. Quote Odos
+	quote, err := swap.Quote(params, seizeAssets)
+	if err != nil {
+		out.SimErr = fmt.Errorf("odos quote: %w", err)
+		return &out
+	}
+
+	// 2. Assemble pour avoir le vrai calldata
+	odosCalldata, err := swap.AssembleOdos(quote.PathId, config.BaseLiquidatorAddrV2)
+	if err != nil {
+		out.SimErr = fmt.Errorf("odos assemble: %w", err)
+		return &out
+	}
+
+	// 3. Encode l'appel liquidate avec le calldata Odos
 	data, err := config.FuncLiquidate.EncodeArgs(
 		params.ToMarketContractParams(),
 		liq.Pos.Address,
 		big.NewInt(0),
 		repayShares,
-		config.BaseUniswapV3Router, // change for multichain
-		big.NewInt(int64(params.PoolFee)),
+		config.OdosRouterAddr,
+		odosCalldata,
 	)
 	if err != nil {
 		out.SimErr = fmt.Errorf("encode: %w", err)
@@ -148,11 +162,12 @@ func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marke
 	}
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr,        // change for multichain
-		To:    &config.BaseLiquidatorAddrV2, //
+		From:  config.BaseWalletAddr,
+		To:    &config.BaseLiquidatorAddrV2,
 		Input: data,
 	}
 
+	// 4. eth_call + estimateGas en batch
 	var gasVal uint64
 	var callResult []byte
 	if err := conn.EthCallCtx(context.Background(), []w3types.RPCCaller{
@@ -163,11 +178,49 @@ func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marke
 		return &out
 	}
 
-	// 3. Profit net
 	out.GasEstimate = gasVal
 	out.EstProfit = morpho.EstimateProfit(seizeAssets, repayShares, gasVal)
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
- 
+	out.OdosCallData = odosCalldata
 	return &out
+}
+
+func ExecuteLiquidation(
+	signer *config.Signer,
+	client *w3.Client,
+	ctx context.Context,
+	liq *Liquidable,
+	marketMap map[[32]byte]morpho.MarketParams,
+) error {
+	params := marketMap[liq.MarketID]
+
+	// re-Quote + re-Assemble — calldata frais garanti
+	quote, err := swap.Quote(params, liq.SeizeAssets)
+	if err != nil {
+		return fmt.Errorf("re-quote: %w", err)
+	}
+
+	odosCalldata, err := swap.AssembleOdos(quote.PathId, config.BaseLiquidatorAddrV2)
+	if err != nil {
+		return fmt.Errorf("re-assemble: %w", err)
+	}
+
+	data, err := config.FuncLiquidate.EncodeArgs(
+		params.ToMarketContractParams(),
+		liq.Pos.Address,
+		big.NewInt(0),
+		liq.RepayShares,
+		config.OdosRouterAddr,
+		odosCalldata,
+	)
+	if err != nil {
+		return fmt.Errorf("encode: %w", err)
+	}
+
+	_, err = SendSignedTx(signer, client, ctx, TxParams{
+		To:       &config.BaseLiquidatorAddrV2,
+		Calldata: data,
+	})
+	return err
 }

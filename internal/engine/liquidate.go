@@ -28,6 +28,7 @@ type Liquidable struct {
 	SimulatedAt  time.Time
 	SimErr       error
 	IsLiquidable bool
+	OdosCallData []byte
 }
 
 type LiquidationEngine struct {
@@ -43,12 +44,12 @@ func New() *LiquidationEngine {
 }
 
 type LiquidateArgs struct {
-	MarketParams  morpho.MarketContractParams
-	Borrower      common.Address
-	SeizedAssets  *big.Int
-	RepaidShares  *big.Int
-	OdosPathId    string
-	OdosAmountOut *big.Int
+	MarketParams morpho.MarketContractParams
+	Borrower     common.Address
+	SeizedAssets *big.Int
+	RepaidShares *big.Int
+	OdosRouter   common.Address
+	OdosCallData []byte
 }
 
 func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
