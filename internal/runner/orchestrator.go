@@ -20,20 +20,22 @@ import (
 
 type Runner struct {
 	Cache  *Cache
-	Engine *engine.LiquidationEngine
+	Engine *engine.Engine
 	Conn   *connector.Connector
 	Logger chan string
 	signer *config.Signer
 	// Config avec signer
 }
 
-func NewRunner(conn *connector.Connector, cache *Cache, signer *config.Signer) *Runner {
+func NewRunner(cache *Cache, conf config.Config) *Runner {
+
+	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
+	logger := logging.NewLogger(context.Background(), string(conf.ChainID))
 	return &Runner{
 		Cache:  cache,
-		Engine: engine.New(),
+		Engine: engine.NewEngine(conn, conf, logger),
 		Conn:   conn,
-		Logger: logging.NewLogger(context.Background(), "logg"),
-		signer: signer,
+		Logger: logger,
 	}
 }
 
