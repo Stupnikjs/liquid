@@ -18,7 +18,7 @@ type Signer struct {
 	signer types.Signer
 }
 
-func NewSigner() (*Signer, error) {
+func NewBaseSigner() (*Signer, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
