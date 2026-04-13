@@ -12,7 +12,6 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -52,7 +51,7 @@ type LiquidateArgs struct {
 	OdosCallData []byte
 }
 
-func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
+func (e *Engine) SendSignedTx(ctx context.Context, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
 	var gasEst uint64
@@ -64,7 +63,7 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 		Value: params.Value,
 	}
 
-	if err := client.CallCtx(ctx,
+	if err := e.conn.ClientHTTP.CallCtx(ctx,
 		eth.Nonce(config.BaseWalletAddr, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
 		eth.EstimateGas(&msg, nil).Returns(&gasEst),
@@ -82,13 +81,13 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 		GasFeeCap: new(big.Int).Add(gasPrice, big.NewInt(1e9)),
 	})
 
-	signedTx, err := signer.Sign(tx)
+	signedTx, err := e.conf.Signer.Sign(tx)
 	if err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: sign: %w", err)
 	}
 
 	var receipt common.Hash
-	if err := client.CallCtx(ctx, eth.SendTx(signedTx).Returns(&receipt)); err != nil {
+	if err := e.conn.ClientHTTP.CallCtx(ctx, eth.SendTx(signedTx).Returns(&receipt)); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
 	}
 
@@ -102,13 +101,13 @@ type TxParams struct {
 	Value    *big.Int // nil = 0
 }
 
-func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context, args LiquidateArgs) error {
+func (e *Engine) LiquidateCall(ctx context.Context, args LiquidateArgs) error {
 	calldata, err := config.FuncLiquidate.EncodeArgs(args)
 	if err != nil {
 		return fmt.Errorf("LiquidateCall: encode: %w", err)
 	}
 
-	_, err = SendSignedTx(signer, client, ctx, TxParams{
+	_, err = e.SendSignedTx(ctx, TxParams{
 		To:       &config.BaseLiquidatorAddrV2,
 		Calldata: calldata,
 	})

@@ -15,7 +15,6 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
-	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -186,9 +185,7 @@ func SimulatePreComputeTx(
 	return &out
 }
 
-func ExecuteLiquidation(
-	signer *config.Signer,
-	client *w3.Client,
+func (e *Engine) ExecuteLiquidation(
 	ctx context.Context,
 	liq *Liquidable,
 	marketMap map[[32]byte]morpho.MarketParams,
@@ -217,8 +214,7 @@ func ExecuteLiquidation(
 	if err != nil {
 		return fmt.Errorf("encode: %w", err)
 	}
-
-	_, err = SendSignedTx(signer, client, ctx, TxParams{
+	_, err = e.SendSignedTx(ctx, TxParams{
 		To:       &config.BaseLiquidatorAddrV2,
 		Calldata: data,
 	})

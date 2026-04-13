@@ -2,27 +2,20 @@ package config
 
 import "github.com/ethereum/go-ethereum/common"
 
-
 type Addresses struct {
- LiquidatorContract struct {
-		Odos   common.Address
-		Direct common.Address
-	}
- Wallet common.Address
- Morpho common.Address 
-
-} 
-
-
-
+	LiquidatorOdosContract common.Address
+	LiquidatorSwapContract common.Address
+	Odos                   common.Address
+	Wallet                 common.Address
+	Morpho                 common.Address
+}
 
 type Config struct {
-	Signer             *Signer
+	Signer    *Signer
 	Addresses Addresses
-	Morpho        common.Address
-	ChainID       int
-	WalletAddress common.Address
-	RPC           struct {
+	Morpho    common.Address
+	ChainID   int
+	RPC       struct {
 		HTTP []string
 		WS   []string
 	}
@@ -32,16 +25,15 @@ func LoadBaseConfig() Config {
 	signer, _ := NewBaseSigner()
 	return Config{
 		Signer: signer,
-		LiquidatorContract: struct {
-			Odos   common.Address
-			Direct common.Address
-		}{
-			Odos:   OdosRouterAddr,
-			Direct: BaseUniswapV3Router,
+		Addresses: Addresses{
+			Odos:                   OdosRouterAddr,
+			LiquidatorSwapContract: BaseUniswapV3Router,
+			LiquidatorOdosContract: BaseLiquidatorOdosContract,
+			Morpho:                 BaseMorphoBlueAddr,
+			Wallet:                 BaseWalletAddr,
 		},
-		Morpho:        BaseMorphoBlueAddr,
-		ChainID:       8453,
-		WalletAddress: BaseWalletAddr,
+		ChainID: 8453,
+
 		RPC: struct {
 			HTTP []string
 			WS   []string

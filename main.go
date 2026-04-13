@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/runner"
@@ -34,13 +33,8 @@ func RunBase() {
 		params = append(params, m.MarketParams)
 	}
 
-	BaseSigner, err := config.NewSigner()
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	cache := runner.NewCache(params)
-	runner := runner.NewRunner(conn, cache, BaseSigner)
+	runner := runner.NewRunner(conn, cache)
 	runner.Init(context.Background())
 	runner.Run(context.Background())
 }
