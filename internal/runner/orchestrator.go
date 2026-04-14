@@ -171,6 +171,19 @@ func (r *Runner) MarketRoutine(id [32]byte) {
     }
 }
 
+func distanceToInterval(distance float64) time.Duration {
+    switch {
+    case distance < 0.05:
+        return 1 * time.Second
+    case distance < 0.15:
+        return 5 * time.Second
+    case distance < 0.30:
+        return 15 * time.Second
+    default:
+        return 30 * time.Second
+    }
+}
+
 
 func (r *Runner) CleanMarketsRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, time.Minute, func() {
