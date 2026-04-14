@@ -53,6 +53,7 @@ func (r *Runner) Init(ctx context.Context) {
 	fmt.Println(len(r.Cache.Markets.Ids()))
 	r.FilterMarketBySlippage(ctx)
 	fmt.Println(len(r.Cache.Markets.Ids()))
+ r.CleanMarketRoutine(ctx)
 }
 
 func (r *Runner) Run(ctx context.Context) {
@@ -60,7 +61,7 @@ func (r *Runner) Run(ctx context.Context) {
 	go r.WatchPositionRoutine(ctx)
 	// Onchain rpc pool to update markets
 	go r.OnChainRefreshRoutineOnlyOracle(ctx)
-	go r.CleanMarketsRoutine(ctx)
+  
 	// Loging Ethcalls per min
 	go r.LogEthCallsPerMin(ctx)
 	go r.LogState(ctx)
