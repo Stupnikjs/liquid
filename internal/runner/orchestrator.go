@@ -122,6 +122,11 @@ func (r *Runner) WatchPositionRoutine(ctx context.Context) {
 	r.Conn.WatchPositions(ctx)
 }
 
+
+/* Refactor 
+
+Une routine par marché avec event pour refresh call par rapport a distance de la prochaine liquidation 
+*/ 
 func (r *Runner) OnChainRefreshRoutineOnlyOracle(ctx context.Context) {
 	utils.RunTicker(ctx, 2*time.Second, func() {
 		onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.marketMap, true)
