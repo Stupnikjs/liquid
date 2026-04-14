@@ -84,14 +84,14 @@ func PositionsQuery(marketID string, chainID uint32) string {
     }`, marketID, chainID)
 }
 
-func MarketsQuery() string {
+func MarketsQuery(chainid uint32) string {
 	// On récupère tout sur Base (8453) pour filtrer ensuite en Go
-	return `{
+	return fmt.Sprintf(`{
         markets(
             orderBy: SupplyAssetsUsd
             orderDirection: Desc
             first: 1000
-            where: { chainId_in: [8453] }
+            where: { chainId_in: [%d] }
         ) {
             items {
                 uniqueKey
@@ -114,7 +114,7 @@ func MarketsQuery() string {
                 }
             }
         }
-    }`
+    }`, chainid)
 }
 
 // ── TYPES ────────────────────────────────────────────────────────────────────

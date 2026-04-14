@@ -23,14 +23,19 @@ type Runner struct {
 	Engine *engine.Engine
 	Conn   *connector.Connector
 	Logger chan string
-	signer *config.Signer
+	Config config.Config
 	// Config avec signer
 }
 
 func NewRunner(cache *Cache, conf config.Config) *Runner {
-
+	var logfile string
+	if conf.ChainID == 8543 {
+		logfile = "base.log"
+	} else {
+		logfile = "main.log"
+	}
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
-	logger := logging.NewLogger(context.Background(), string(conf.ChainID))
+	logger := logging.NewLogger(context.Background(), logfile)
 	return &Runner{
 		Cache:  cache,
 		Engine: engine.NewEngine(conn, conf, logger),
@@ -97,6 +102,7 @@ func (r *Runner) FilterMarketBySlippage(ctx context.Context) {
 			testAmount,
 			snap.Oracle.Price,
 		)
+		fmt.Println(marketP.CollateralTokenStr, priceImpact)
 
 		if priceImpact > 2.0 || oracleSlipage > 3.0 {
 			r.Cache.Markets.Update(id, func(m *market.Market) {
@@ -109,7 +115,7 @@ func (r *Runner) FilterMarketBySlippage(ctx context.Context) {
 }
 
 func (r *Runner) ApiCallRoutine(ctx context.Context) {
-	r.Cache.ApiCall(r.Conn.ClientHTTP)
+	r.Cache.ApiCall(r.Conn.ClientHTTP, uint32(r.Config.ChainID))
 }
 
 func (r *Runner) WatchPositionRoutine(ctx context.Context) {
@@ -193,15 +199,6 @@ func (r *Runner) FireLiquidationRoutine(ctx context.Context) {
 			return
 		case liquidable := <-r.Engine.LiquidateCh:
 			market := r.Cache.GetMorphoMarketFromId(liquidable.MarketID)
-			/*
-					data, err := config.FuncLiquidate.EncodeArgs(
-				params.ToMarketContractParams(),
-				liq.Pos.Address,
-				big.NewInt(0),
-				liq.RepayShares,
-				config.OdosRouterAddr,
-				odosCalldata,
-				) */
 
 			liquidateArgs := engine.LiquidateArgs{
 				MarketParams: *market.ToMarketContractParams(),
@@ -212,10 +209,9 @@ func (r *Runner) FireLiquidationRoutine(ctx context.Context) {
 				OdosCallData: liquidable.OdosCallData,
 			}
 
-			engine.LiquidateCall(
-				r.signer,
-				r.Conn.ClientHTTP,
+			r.Engine.ExecuteLiquidation(
 				ctx,
+				liquidable,
 				liquidateArgs,
 			)
 		}

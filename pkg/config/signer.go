@@ -39,3 +39,7 @@ func NewBaseSigner() (*Signer, error) {
 func (s *Signer) Sign(tx *types.Transaction) (*types.Transaction, error) {
 	return types.SignTx(tx, s.signer, s.key)
 }
+
+func NewMainnetSigner() (*Signer, error) {
+	return nil, nil
+}

@@ -14,7 +14,7 @@ type Config struct {
 	Signer    *Signer
 	Addresses Addresses
 	Morpho    common.Address
-	ChainID   int
+	ChainID   uint32
 	RPC       struct {
 		HTTP []string
 		WS   []string
@@ -40,6 +40,26 @@ func LoadBaseConfig() Config {
 		}{
 			HTTP: BASE_HTTP_RPC,
 			WS:   BASE_WS_RPC,
+		},
+	}
+}
+
+func LoadMainnetConfig() Config {
+	signer, _ := NewMainnetSigner()
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:                 MainWalletAddr,
+			LiquidatorOdosContract: MainLiquidatorOdosAddr,
+			Odos:                   OdosRouterAddrV3,
+		},
+		ChainID: 1,
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: MAIN_HTTP_RPC,
+			WS:   MAIN_WS_RPC,
 		},
 	}
 }
