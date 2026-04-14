@@ -128,9 +128,27 @@ func (r *Runner) WatchPositionRoutine(ctx context.Context) {
 Une routine par marché avec event pour refresh call par rapport a distance de la prochaine liquidation 
 */ 
 func (r *Runner) OnChainRefreshRoutineOnlyOracle(ctx context.Context) {
-	utils.RunTicker(ctx, 2*time.Second, func() {
-		onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.marketMap, true)
-	})
+
+	for _, id := range r.Cache.Markets.Ids() {
+   go r.MarketRoutine(id)
+
+} 
+
+}
+
+func (r *Runner) MarketRoutine(id [32]byte){
+         // get distanceFromDist 
+         distance := GetDistanceFromLiquid()
+         DistanceCh <- distance
+         for {
+         distance := <- DistanceCh
+
+         }
+         // send distance in market channel 
+         // ticker that wait proportional time 
+         // call oracle and market stats 
+         
+
 }
 
 func (r *Runner) CleanMarketsRoutine(ctx context.Context) {
