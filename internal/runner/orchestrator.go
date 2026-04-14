@@ -136,22 +136,41 @@ func (r *Runner) OnChainRefreshRoutineOnlyOracle(ctx context.Context) {
 
 }
 
-func (r *Runner) MarketRoutine(id [32]byte){
-         // get distanceFromDist 
-         // percent hf from liq 
-         distance := GetDistanceFromLiquid()
-         DistanceCh <- distance
-         for {
-         distance := <- DistanceCh
+func (r *Runner) MarketRoutine(id [32]byte) {
+    // Initial distance calculation
+    distance := GetDistanceFromLiquid()
+    DistanceCh <- distance
 
-         }
-         // send distance in market channel 
-         
-         // ticker that wait proportional time 
-         // call oracle and market stats 
-         
+    // Compute initial interval from distance
+    interval := distanceToInterval(distance)
+    ticker := time.NewTicker(interval)
+    defer ticker.Stop()
 
+    for {
+        select {
+        case <-ticker.C:
+            // Call oracle & market stats at each tick
+            distance := GetDistanceFromLiquid()
+            DistanceCh <- distance
+
+            // Adapt ticker interval based on new distance
+            newInterval := distanceToInterval(distance)
+            if newInterval != interval {
+                ticker.Reset(newInterval)
+                interval = newInterval
+            }
+
+        case distance = <-DistanceCh:
+            // External distance update → re-adapt immediately
+            newInterval := distanceToInterval(distance)
+            if newInterval != interval {
+                ticker.Reset(newInterval)
+                interval = newInterval
+            }
+        }
+    }
 }
+
 
 func (r *Runner) CleanMarketsRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, time.Minute, func() {
