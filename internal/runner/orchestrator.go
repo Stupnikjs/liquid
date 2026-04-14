@@ -138,6 +138,7 @@ func (r *Runner) OnChainRefreshRoutineOnlyOracle(ctx context.Context) {
 
 func (r *Runner) MarketRoutine(id [32]byte){
          // get distanceFromDist 
+         // percent hf from liq 
          distance := GetDistanceFromLiquid()
          DistanceCh <- distance
          for {
@@ -145,6 +146,7 @@ func (r *Runner) MarketRoutine(id [32]byte){
 
          }
          // send distance in market channel 
+         
          // ticker that wait proportional time 
          // call oracle and market stats 
          
