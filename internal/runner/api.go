@@ -23,11 +23,11 @@ func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]market.Borro
 }
 
 // Wrapper for api call
-func (c *Cache) ApiCall(client *w3.Client) error {
+func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 
 	for id := range c.marketMap {
 
-		fetched, err := FetchBorrowersFromMarket(id, 8453)
+		fetched, err := FetchBorrowersFromMarket(id, uint32(chainId))
 		if err != nil {
 			return err
 		}

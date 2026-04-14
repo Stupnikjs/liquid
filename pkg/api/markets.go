@@ -23,11 +23,11 @@ type MarketConfig struct {
 	morpho.MarketParams
 }
 
-func (m MarketItem) ToConfig() MarketConfig {
+func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 	return MarketConfig{
 		morpho.MarketParams{
 			ID:                      [32]byte(common.HexToHash(m.UniqueKey)),
-			ChainID:                 8453,
+			ChainID:                 chainid,
 			LoanToken:               common.HexToAddress(m.LoanAsset.Address),
 			LoanTokenStr:            m.LoanAsset.Symbol,
 			CollateralToken:         common.HexToAddress(m.CollateralAsset.Address),
@@ -42,11 +42,11 @@ func (m MarketItem) ToConfig() MarketConfig {
 		},
 	}
 }
-func FilterMarket(client *w3.Client) []MarketConfig {
+func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 	ctx := context.Background()
 
 	var result MarketsResult
-	if err := Query(ctx, MarketsQuery(), &result); err != nil {
+	if err := Query(ctx, MarketsQuery(chainid), &result); err != nil {
 		fmt.Printf("graphql fetch: %s", err.Error())
 		return nil
 	}
@@ -61,30 +61,12 @@ func FilterMarket(client *w3.Client) []MarketConfig {
 			continue
 		}
 
-		if borrowUsd < 10_000 || borrowUsd > 100_000_000 || borrowUsd/supplyUsd < 0.1 {
+		if borrowUsd < 10_000 || borrowUsd > 1_000_000 || borrowUsd/supplyUsd < 0.1 {
 			continue
 		}
-		mark = append(mark, m.ToConfig())
+		mark = append(mark, m.ToConfig(chainid))
 	}
-	/*
-		usdc := common.HexToAddress("0x833589fcd6edb6e08f4c7c32d4f71b54bda02913")
-		weth := common.HexToAddress("0x4200000000000000000000000000000000000006")
 
-		amountIn := big.NewInt(100 * 1e6) // 100 USDC
-
-
-		// aller : USDC → WETH
-		out1, err := QuoteSwap(client, usdc, weth, amountIn, 500)
-		fmt.Printf("USDC→WETH: %s err: %v\n", out1.AmountOut, err)
-
-		// retour : WETH → USDC avec ce qu'on a reçu
-		out2, err := QuoteSwap(client, weth, usdc, out1.AmountOut, 500)
-		fmt.Printf("WETH→USDC: %s err: %v\n", out2.AmountOut, err)
-
-		// slippage round trip
-		diff := new(big.Int).Sub(amountIn, out2.AmountOut)
-		fmt.Printf("round trip loss: %s USDC (sur %s)\n", diff, amountIn)
-	*/
 	return mark
 
 }

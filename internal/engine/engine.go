@@ -10,11 +10,13 @@ import (
 )
 
 type Engine struct {
-	conn      *connector.Connector
-	conf      config.Config
-	marketMap map[[32]byte]morpho.MarketParams
-	simCache  *SimCache
-	logChan   chan string
+	conn        *connector.Connector
+	conf        config.Config
+	marketMap   map[[32]byte]morpho.MarketParams
+	simCache    *SimCache
+	logChan     chan string
+	RebuildCh   chan bool
+	LiquidateCh chan *Liquidable
 }
 
 type SimCache struct {
@@ -28,9 +30,11 @@ func NewSimCache() *SimCache {
 
 func NewEngine(conn *connector.Connector, conf config.Config, logger chan string) *Engine {
 	return &Engine{
-		conn:    conn,
-		conf:    conf,
-		logChan: logger,
+		conn:        conn,
+		conf:        conf,
+		logChan:     logger,
+		RebuildCh:   make(chan bool, 1),
+		LiquidateCh: make(chan *Liquidable, 1),
 	}
 }
 

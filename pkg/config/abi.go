@@ -44,7 +44,7 @@ var (
 		address borrower,
 		uint256 seizedAssets,
 		uint256 repaidShares,
-		bytes calldata odosCalldata
+		bytes odosCalldata
 	)`, "")
 
 	// Chainlink v2
