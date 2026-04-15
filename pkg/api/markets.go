@@ -111,6 +111,9 @@ func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition
 
 	for _, item := range items {
   borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
+  if borrowAssetUsd.Cmp(1000) < 1 {
+continue 
+} 
 		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
 		collateral := utils.ParseBigInt(item.State.Collateral.String())
 
