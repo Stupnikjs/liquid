@@ -45,6 +45,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			return
 		case <-ticker.C:
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.marketMap[id], id)
+			fmt.Println(len(r.Cache.Markets.Ids()))
 			distance = state.GetDistanceFromLiquid(r.Cache.Markets, id)
 			fmt.Println("dist: ", distance)
 			fmt.Println("oracle: ", snap.Oracle.Price)

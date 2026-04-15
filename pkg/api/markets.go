@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
@@ -67,7 +68,7 @@ func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 		if borrowUsd < 10_000 || borrowUsd > 100_000 || borrowUsd/supplyUsd < 0.1 {
 			continue
 		}
-  
+
 		mark = append(mark, m.ToConfig(chainid))
 	}
 
@@ -79,30 +80,46 @@ func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]market.BorrowPosition, error) {
 	ctx := context.Background()
 	marketID := "0x" + hex.EncodeToString(marketId[:])
+
+	fmt.Println("fetching market:", marketID) // ← ajoute ça
+
 	var result PositionsResult
 	err := Query(ctx, PositionsQuery(marketID, uint32(chainId)), &result)
 	if err != nil {
 		return nil, fmt.Errorf("graphql fetch: %w", err)
 	}
-	return ParsePositions(marketId, result), nil
+
+	fmt.Println("items returned:", len(result.MarketPositions.Items)) // ← et ça
+
+	positions := ParsePositions(marketId, result)
+	fmt.Println("positions parsed:", len(positions))
+	return positions, nil
 }
 
 // Wrapper for api call
 func ApiCall(client *w3.Client, marketR state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, chainId uint32) error {
+	var wg sync.WaitGroup
+	errs := make(chan error, len(marketMap))
+
 	for id := range marketMap {
-
-		fetched, err := FetchBorrowersFromMarket(id, uint32(chainId))
-		if err != nil {
-			return err
-		}
-		for _, p := range fetched {
-			marketR.Update(id, func(m *market.Market) {
-				m.Positions[p.Address] = &p
-			})
-		}
+		wg.Add(1)
+		go func(id [32]byte) {
+			defer wg.Done()
+			fetched, err := FetchBorrowersFromMarket(id, chainId)
+			if err != nil {
+				errs <- err
+				return
+			}
+			for _, p := range fetched {
+				marketR.Update(id, func(m *market.Market) {
+					m.Positions[p.Address] = &p
+				})
+			}
+		}(id)
 	}
-
-	return nil
+	wg.Wait()
+	close(errs)
+	return <-errs // retourne la première erreur s'il y en a une
 }
 
 func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition {
@@ -110,10 +127,12 @@ func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition
 	positions := make([]market.BorrowPosition, 0, len(items))
 
 	for _, item := range items {
-  borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
-  if borrowAssetUsd.Cmp(1000) < 1 {
-continue 
-} 
+		/*
+			borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
+
+				if borrowAssetUsd.Cmp(utils.TenPowInt(3)) < 0 {
+					continue
+				}*/
 		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
 		collateral := utils.ParseBigInt(item.State.Collateral.String())
 

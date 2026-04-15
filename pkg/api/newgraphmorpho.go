@@ -80,7 +80,6 @@ func PositionsQuery(marketID string, chainID uint32) string {
                 state { 
 borrowShares borrowAssetsUsd collateral }
             }
-            pageInfo { countTotal }
         }
     }`, marketID, chainID)
 }
@@ -127,9 +126,9 @@ type PositionsResult struct {
 				Address string `json:"address"`
 			} `json:"user"`
 			State struct {
-				BorrowShares json.Number `json:"borrowShares"`
-    BorrowAssetUsd json.Number `json:"borrowAssetsUsd"`
-				Collateral   json.Number `json:"collateral"`
+				BorrowShares    json.Number `json:"borrowShares"`
+				BorrowAssetsUsd json.Number `json:"borrowAssetsUsd"`
+				Collateral      json.Number `json:"collateral"`
 			} `json:"state"`
 		} `json:"items"`
 		PageInfo struct {

@@ -46,7 +46,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.ApiCallRoutine(ctx)
 	r.OnChainRefreshAll()
 	r.FilterMarketBySlippage(ctx)
-	fmt.Println(len(r.Cache.Markets.Ids()))
+	fmt.Println("len market after init: ", len(r.Cache.Markets.Ids()))
 
 }
 

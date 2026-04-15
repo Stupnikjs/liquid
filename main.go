@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/runner"
@@ -15,7 +16,7 @@ import (
  */
 
 func main() {
-	Wrapper(config.LoadMainnetConfig())
+	Wrapper(config.LoadBaseConfig())
 }
 
 func Wrapper(conf config.Config) {
@@ -23,7 +24,7 @@ func Wrapper(conf config.Config) {
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
 	// market from less than 10mounth
 	markets := api.FilterMarket(conn.ClientHTTP, conf.ChainID)
-
+	fmt.Println("len market before init: ", len(markets))
 	params := []morpho.MarketParams{}
 	for _, m := range markets {
 		params = append(params, m.MarketParams)
