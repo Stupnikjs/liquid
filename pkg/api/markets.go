@@ -2,9 +2,12 @@ package api
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -61,7 +64,7 @@ func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 			continue
 		}
 
-		if borrowUsd < 10_000 || borrowUsd > 1_000_000 || borrowUsd/supplyUsd < 0.1 {
+		if borrowUsd < 10_000 || borrowUsd > 100_000 || borrowUsd/supplyUsd < 0.1 {
 			continue
 		}
 		mark = append(mark, m.ToConfig(chainid))
@@ -69,4 +72,56 @@ func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 
 	return mark
 
+}
+
+// Call all pos from market with id
+func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]market.BorrowPosition, error) {
+	ctx := context.Background()
+	marketID := "0x" + hex.EncodeToString(marketId[:])
+	var result PositionsResult
+	err := Query(ctx, PositionsQuery(marketID, uint32(chainId)), &result)
+	if err != nil {
+		return nil, fmt.Errorf("graphql fetch: %w", err)
+	}
+	return ParsePositions(marketId, result), nil
+}
+
+// Wrapper for api call
+func ApiCall(client *w3.Client, marketR state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, chainId uint32) error {
+	for id := range marketMap {
+
+		fetched, err := FetchBorrowersFromMarket(id, uint32(chainId))
+		if err != nil {
+			return err
+		}
+		for _, p := range fetched {
+			marketR.Update(id, func(m *market.Market) {
+				m.Positions[p.Address] = &p
+			})
+		}
+	}
+
+	return nil
+}
+
+func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition {
+	items := result.MarketPositions.Items // ✅ plus de .Data
+	positions := make([]market.BorrowPosition, 0, len(items))
+
+	for _, item := range items {
+		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
+		collateral := utils.ParseBigInt(item.State.Collateral.String())
+
+		if borrowShares.Sign() == 0 && collateral.Sign() == 0 {
+			continue
+		}
+
+		positions = append(positions, market.BorrowPosition{
+			MarketID:         id,
+			Address:          common.HexToAddress(item.User.Address),
+			BorrowShares:     borrowShares,
+			CollateralAssets: collateral,
+		})
+	}
+	return positions
 }
