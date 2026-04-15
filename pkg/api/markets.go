@@ -67,6 +67,7 @@ func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 		if borrowUsd < 10_000 || borrowUsd > 100_000 || borrowUsd/supplyUsd < 0.1 {
 			continue
 		}
+  
 		mark = append(mark, m.ToConfig(chainid))
 	}
 
@@ -109,6 +110,7 @@ func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition
 	positions := make([]market.BorrowPosition, 0, len(items))
 
 	for _, item := range items {
+  borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
 		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
 		collateral := utils.ParseBigInt(item.State.Collateral.String())
 
