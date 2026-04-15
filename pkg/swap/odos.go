@@ -91,7 +91,7 @@ type OdosQuote struct {
 
 func Quote(params morpho.MarketParams, amountIn *big.Int) (OdosQuote, error) {
 	result, err := GetSwapOdosResponse(params, amountIn)
-	if err != nil {
+	if err != nil || len(result.OutAmounts) == 0 {
 		return OdosQuote{}, err
 	}
 	amountOut, ok := new(big.Int).SetString(result.OutAmounts[0], 10)
@@ -112,7 +112,7 @@ func GetSwapOdosResponse(params morpho.MarketParams, amountIn *big.Int) (OdosQuo
 			Amount:       "1", // proportion
 		}},
 		SlippageLimitPercent: 1.0,
-		ChainId:              8453, // Base
+		ChainId:              int(params.ChainID),
 	}
 
 	body, err := json.Marshal(reqBody)
@@ -128,6 +128,10 @@ func GetSwapOdosResponse(params morpho.MarketParams, amountIn *big.Int) (OdosQuo
 
 	var result OdosQuoteResponse
 	err = json.NewDecoder(resp.Body).Decode(&result)
+	if len(result.OutAmounts) == 0 {
+		return OdosQuoteResponse{}, fmt.Errorf("odos returned empty OutAmounts for %s", params.CollateralToken.Hex())
+	}
+
 	return result, err
 
 }
