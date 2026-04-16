@@ -39,13 +39,14 @@ func NewRunner(cache *Cache, conf config.Config) *Runner {
 		Engine: engine.NewEngine(conn, conf, logger),
 		Conn:   conn,
 		Logger: logger,
+		Config: conf,
 	}
 }
 
 func (r *Runner) Init(ctx context.Context) {
 	r.ApiCallRoutine(ctx)
-	r.OnChainRefreshAll()
-	r.FilterMarketBySlippage(ctx)
+	// r.OnChainRefreshAll()
+	// r.FilterMarketBySlippage(ctx)
 	fmt.Println("len market after init: ", len(r.Cache.Markets.Ids()))
 
 }
