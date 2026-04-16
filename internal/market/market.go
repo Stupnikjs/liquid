@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -34,7 +33,6 @@ type MarketSnapshot struct {
 	Oracle    Oracle
 	LLTV      *big.Int
 	Stats     MarketStats
-	Odos      swap.Odos
 	Positions []BorrowPosition
 }
 

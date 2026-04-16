@@ -1,2 +1,798 @@
-[2026-04-16T13:37:54+02:00] 0 ETH_CALLS 
+[2026-04-16T22:24:46+02:00] 72 ETH_CALLS 
+
+[2026-04-16T22:25:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:26:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:27:46+02:00] ═══════════════════════════════════════════
+  MONITORING 36 MARKETS
+═══════════════════════════════════════════
+
+  rETH / EURC
+  ─────────────────────────────────────────
+  price           2317.134811
+  borrow             92371.93 EURC
+  positions                51 tracked
+  at risk                none
+
+  cbETH / WETH
+  ─────────────────────────────────────────
+  price              1.127826
+  borrow                 5.41 WETH
+  positions               964 tracked
+  at risk                none
+
+  wsuperOETHb / WETH
+  ─────────────────────────────────────────
+  price              1.095873
+  borrow               191.30 WETH
+  positions               431 tracked
+  at risk                none
+
+  uniBTC / USDC
+  ─────────────────────────────────────────
+  price          75185.913550
+  borrow            437293.15 USDC
+  positions                32 tracked
+  at risk                none
+
+  AERO / USDC
+  ─────────────────────────────────────────
+  price              0.407227
+  borrow             52705.66 USDC
+  positions               306 tracked
+  at risk                none
+
+  wstETH / eUSD
+  ─────────────────────────────────────────
+  price           2896.869776
+  borrow             23771.43 eUSD
+  positions               196 tracked
+  at risk                none
+
+  cbXRP / USDC
+  ─────────────────────────────────────────
+  price              1.461110
+  borrow            279562.86 USDC
+  positions                51 tracked
+  at risk                none
+
+  sjEUR / USDC
+  ─────────────────────────────────────────
+  price              1.293052
+  borrow             39772.70 USDC
+  positions                23 tracked
+  at risk                none
+
+  deSPXA / USDC
+  ─────────────────────────────────────────
+  price            705.356817
+  borrow             21849.08 USDC
+  positions                 8 tracked
+  at risk                none
+
+  YFI / USDC
+  ─────────────────────────────────────────
+  price           2727.640040
+  borrow             21128.48 USDC
+  positions                11 tracked
+  at risk                none
+
+  KTA / USDC
+  ─────────────────────────────────────────
+  price              0.180881
+  borrow             12534.49 USDC
+  positions                37 tracked
+  at risk                none
+
+  VVV / FXUSD
+  ─────────────────────────────────────────
+  price              8.628940
+  borrow            114067.35 FXUSD
+  positions                19 tracked
+  at risk                none
+
+  WETH / VCHF
+  ─────────────────────────────────────────
+  price           1836.835724
+  borrow             26538.12 VCHF
+  positions                 7 tracked
+  at risk                none
+
+  LBTC / USDC
+  ─────────────────────────────────────────
+  price          75452.887245
+  borrow             35413.17 USDC
+  positions               169 tracked
+  at risk                none
+
+  wstETH / MAI
+  ─────────────────────────────────────────
+  price           2896.869776
+  borrow             25962.10 MAI
+  positions                41 tracked
+  at risk                none
+
+  mBASIS / USDC
+  ─────────────────────────────────────────
+  price              1.183100
+  borrow             20595.76 USDC
+  positions               365 tracked
+  at risk                none
+
+  PT-USDai-18JUN2026-(ARB) / USDC
+  ─────────────────────────────────────────
+  price              0.965946
+  borrow             16570.72 USDC
+  positions                 5 tracked
+  at risk                none
+
+  LBTC / cbBTC
+  ─────────────────────────────────────────
+  price              1.003661
+  borrow                 3.64 cbBTC
+  positions               151 tracked
+  at risk                none
+
+  wstETH / WETH
+  ─────────────────────────────────────────
+  price              1.232029
+  borrow               193.28 WETH
+  positions               556 tracked
+  at risk                none
+
+  cbETH / EURC
+  ─────────────────────────────────────────
+  price           2249.496655
+  borrow            276521.78 EURC
+  positions               222 tracked
+  at risk                none
+
+  superOETHb / USDC
+  ─────────────────────────────────────────
+  price           2351.558871
+  borrow            216792.74 USDC
+  positions               102 tracked
+  at risk                none
+
+  WETH / XSGD
+  ─────────────────────────────────────────
+  price           2987.773675
+  borrow             65010.04 XSGD
+  positions                 6 tracked
+  at risk                none
+
+  HERMES / USDC
+  ─────────────────────────────────────────
+  price        1000000000000000000000.000000
+  borrow            100000.00 USDC
+  positions                 1 tracked
+  at risk                none
+
+  wrsETH / WETH
+  ─────────────────────────────────────────
+  price              1.069497
+  borrow                34.43 WETH
+  positions               440 tracked
+  at risk                none
+
+  rETH / WETH
+  ─────────────────────────────────────────
+  price              1.161376
+  borrow                30.92 WETH
+  positions               419 tracked
+  at risk                none
+
+  stkWELL / USDC
+  ─────────────────────────────────────────
+  price              0.004413
+  borrow             63667.08 USDC
+  positions               312 tracked
+  at risk                none
+
+  satUSD / USDC
+  ─────────────────────────────────────────
+  price              0.995226
+  borrow             60932.20 USDC
+  positions                39 tracked
+  at risk                none
+
+  bsdETH / eUSD
+  ─────────────────────────────────────────
+  price           2515.950232
+  borrow             28907.68 eUSD
+  positions               198 tracked
+  at risk                none
+
+  cbLTC / USDC
+  ─────────────────────────────────────────
+  price             56.329502
+  borrow            436588.03 USDC
+  positions               468 tracked
+  at risk                none
+
+  cbBTC / FXUSD
+  ─────────────────────────────────────────
+  price          75175.920919
+  borrow            107547.91 FXUSD
+  positions                20 tracked
+  at risk                none
+
+  TOSHI / USDC
+  ─────────────────────────────────────────
+  price              0.000191
+  borrow             82617.58 USDC
+  positions                88 tracked
+  at risk                none
+
+  WMTX / USDC
+  ─────────────────────────────────────────
+  price              0.072161
+  borrow             19193.74 USDC
+  positions                41 tracked
+  at risk                none
+
+  yoETH / WETH
+  ─────────────────────────────────────────
+  price              1.082934
+  borrow               128.27 WETH
+  positions               597 tracked
+  at risk                none
+
+  cbETH / VCHF
+  ─────────────────────────────────────────
+  price           2070.986057
+  borrow             69341.01 VCHF
+  positions                 9 tracked
+  at risk                none
+
+  weETH / USDC
+  ─────────────────────────────────────────
+  price           2569.476918
+  borrow             48029.11 USDC
+  positions               480 tracked
+  at risk                none
+
+  RLP / USDC
+  ─────────────────────────────────────────
+  price              1.287324
+  borrow             14631.74 USDC
+  positions               141 tracked
+  at risk                none
+
+═══════════════════════════════════════════
+
+[2026-04-16T22:28:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:29:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:30:46+02:00] 72 ETH_CALLS 
+
+[2026-04-16T22:31:46+02:00] ═══════════════════════════════════════════
+  MONITORING 36 MARKETS
+═══════════════════════════════════════════
+
+  cbLTC / USDC
+  ─────────────────────────────────────────
+  price             56.329502
+  borrow            436588.03 USDC
+  positions               468 tracked
+  at risk                none
+
+  cbBTC / FXUSD
+  ─────────────────────────────────────────
+  price          75175.920919
+  borrow            107547.91 FXUSD
+  positions                20 tracked
+  at risk                none
+
+  TOSHI / USDC
+  ─────────────────────────────────────────
+  price              0.000191
+  borrow             82617.58 USDC
+  positions                88 tracked
+  at risk                none
+
+  WMTX / USDC
+  ─────────────────────────────────────────
+  price              0.072063
+  borrow             19193.74 USDC
+  positions                41 tracked
+  at risk                none
+
+  yoETH / WETH
+  ─────────────────────────────────────────
+  price              1.082934
+  borrow               128.27 WETH
+  positions               597 tracked
+  at risk                none
+
+  cbETH / VCHF
+  ─────────────────────────────────────────
+  price           2070.986057
+  borrow             69341.01 VCHF
+  positions                 9 tracked
+  at risk                none
+
+  weETH / USDC
+  ─────────────────────────────────────────
+  price           2569.476918
+  borrow             48029.11 USDC
+  positions               480 tracked
+  at risk                none
+
+  RLP / USDC
+  ─────────────────────────────────────────
+  price              1.287324
+  borrow             14631.74 USDC
+  positions               141 tracked
+  at risk                none
+
+  rETH / EURC
+  ─────────────────────────────────────────
+  price           2317.134811
+  borrow             92371.93 EURC
+  positions                51 tracked
+  at risk                none
+
+  cbETH / WETH
+  ─────────────────────────────────────────
+  price              1.127826
+  borrow                 5.41 WETH
+  positions               964 tracked
+  at risk                none
+
+  wsuperOETHb / WETH
+  ─────────────────────────────────────────
+  price              1.095873
+  borrow               191.30 WETH
+  positions               431 tracked
+  at risk                none
+
+  uniBTC / USDC
+  ─────────────────────────────────────────
+  price          75185.913550
+  borrow            437293.15 USDC
+  positions                32 tracked
+  at risk                none
+
+  AERO / USDC
+  ─────────────────────────────────────────
+  price              0.407227
+  borrow             52705.66 USDC
+  positions               306 tracked
+  at risk                none
+
+  wstETH / eUSD
+  ─────────────────────────────────────────
+  price           2896.869776
+  borrow             23771.43 eUSD
+  positions               196 tracked
+  at risk                none
+
+  cbXRP / USDC
+  ─────────────────────────────────────────
+  price              1.461110
+  borrow            279562.86 USDC
+  positions                51 tracked
+  at risk                none
+
+  sjEUR / USDC
+  ─────────────────────────────────────────
+  price              1.293052
+  borrow             39772.70 USDC
+  positions                23 tracked
+  at risk                none
+
+  deSPXA / USDC
+  ─────────────────────────────────────────
+  price            705.356817
+  borrow             21849.08 USDC
+  positions                 8 tracked
+  at risk                none
+
+  YFI / USDC
+  ─────────────────────────────────────────
+  price           2727.640040
+  borrow             21128.48 USDC
+  positions                11 tracked
+  at risk                none
+
+  KTA / USDC
+  ─────────────────────────────────────────
+  price              0.180881
+  borrow             12534.49 USDC
+  positions                37 tracked
+  at risk                none
+
+  VVV / FXUSD
+  ─────────────────────────────────────────
+  price              8.628940
+  borrow            114067.35 FXUSD
+  positions                19 tracked
+  at risk                none
+
+  WETH / VCHF
+  ─────────────────────────────────────────
+  price           1836.835724
+  borrow             26538.12 VCHF
+  positions                 7 tracked
+  at risk                none
+
+  LBTC / USDC
+  ─────────────────────────────────────────
+  price          75452.887245
+  borrow             35413.19 USDC
+  positions               169 tracked
+  at risk                none
+
+  wstETH / MAI
+  ─────────────────────────────────────────
+  price           2896.869776
+  borrow             25962.10 MAI
+  positions                41 tracked
+  at risk                none
+
+  mBASIS / USDC
+  ─────────────────────────────────────────
+  price              1.183100
+  borrow             20595.76 USDC
+  positions               365 tracked
+  at risk                none
+
+  PT-USDai-18JUN2026-(ARB) / USDC
+  ─────────────────────────────────────────
+  price              0.965948
+  borrow             16570.72 USDC
+  positions                 5 tracked
+  at risk                none
+
+  LBTC / cbBTC
+  ─────────────────────────────────────────
+  price              1.003661
+  borrow                 3.64 cbBTC
+  positions               151 tracked
+  at risk                none
+
+  wstETH / WETH
+  ─────────────────────────────────────────
+  price              1.232029
+  borrow               193.28 WETH
+  positions               556 tracked
+  at risk                none
+
+  cbETH / EURC
+  ─────────────────────────────────────────
+  price           2249.496655
+  borrow            276521.78 EURC
+  positions               222 tracked
+  at risk                none
+
+  superOETHb / USDC
+  ─────────────────────────────────────────
+  price           2351.558871
+  borrow            216792.74 USDC
+  positions               102 tracked
+  at risk                none
+
+  WETH / XSGD
+  ─────────────────────────────────────────
+  price           2987.773675
+  borrow             65010.04 XSGD
+  positions                 6 tracked
+  at risk                none
+
+  HERMES / USDC
+  ─────────────────────────────────────────
+  price        1000000000000000000000.000000
+  borrow            100000.00 USDC
+  positions                 1 tracked
+  at risk                none
+
+  wrsETH / WETH
+  ─────────────────────────────────────────
+  price              1.069497
+  borrow                34.43 WETH
+  positions               440 tracked
+  at risk                none
+
+  rETH / WETH
+  ─────────────────────────────────────────
+  price              1.161376
+  borrow                30.92 WETH
+  positions               419 tracked
+  at risk                none
+
+  stkWELL / USDC
+  ─────────────────────────────────────────
+  price              0.004445
+  borrow             63667.08 USDC
+  positions               312 tracked
+  at risk                none
+
+  satUSD / USDC
+  ─────────────────────────────────────────
+  price              0.995226
+  borrow             60932.20 USDC
+  positions                39 tracked
+  at risk                none
+
+  bsdETH / eUSD
+  ─────────────────────────────────────────
+  price           2515.950232
+  borrow             28907.68 eUSD
+  positions               198 tracked
+  at risk                none
+
+═══════════════════════════════════════════
+
+[2026-04-16T22:32:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:33:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:34:46+02:00] 72 ETH_CALLS 
+
+[2026-04-16T22:35:46+02:00] ═══════════════════════════════════════════
+  MONITORING 36 MARKETS
+═══════════════════════════════════════════
+
+  RLP / USDC
+  ─────────────────────────────────────────
+  price              1.287324
+  borrow             14631.74 USDC
+  positions               141 tracked
+  at risk                none
+
+  rETH / EURC
+  ─────────────────────────────────────────
+  price           2313.168099
+  borrow             92371.93 EURC
+  positions                51 tracked
+  at risk                none
+
+  cbETH / WETH
+  ─────────────────────────────────────────
+  price              1.127826
+  borrow                 5.41 WETH
+  positions               964 tracked
+  at risk                none
+
+  wsuperOETHb / WETH
+  ─────────────────────────────────────────
+  price              1.095873
+  borrow               191.30 WETH
+  positions               431 tracked
+  at risk                none
+
+  uniBTC / USDC
+  ─────────────────────────────────────────
+  price          75098.110792
+  borrow            437293.15 USDC
+  positions                32 tracked
+  at risk                none
+
+  AERO / USDC
+  ─────────────────────────────────────────
+  price              0.409607
+  borrow             52705.66 USDC
+  positions               306 tracked
+  at risk                none
+
+  wstETH / eUSD
+  ─────────────────────────────────────────
+  price           2891.910613
+  borrow             23771.43 eUSD
+  positions               196 tracked
+  at risk                none
+
+  cbXRP / USDC
+  ─────────────────────────────────────────
+  price              1.452374
+  borrow            279563.73 USDC
+  positions                51 tracked
+  at risk                none
+
+  sjEUR / USDC
+  ─────────────────────────────────────────
+  price              1.293052
+  borrow             39772.70 USDC
+  positions                23 tracked
+  at risk                none
+
+  deSPXA / USDC
+  ─────────────────────────────────────────
+  price            705.356817
+  borrow             21849.15 USDC
+  positions                 8 tracked
+  at risk                none
+
+  YFI / USDC
+  ─────────────────────────────────────────
+  price           2727.640040
+  borrow             21128.48 USDC
+  positions                11 tracked
+  at risk                none
+
+  KTA / USDC
+  ─────────────────────────────────────────
+  price              0.179333
+  borrow             12534.49 USDC
+  positions                37 tracked
+  at risk                none
+
+  VVV / FXUSD
+  ─────────────────────────────────────────
+  price              8.628940
+  borrow            114067.35 FXUSD
+  positions                19 tracked
+  at risk                none
+
+  WETH / VCHF
+  ─────────────────────────────────────────
+  price           1833.691238
+  borrow             26538.12 VCHF
+  positions                 7 tracked
+  at risk                none
+
+  LBTC / USDC
+  ─────────────────────────────────────────
+  price          75364.772713
+  borrow             35413.20 USDC
+  positions               169 tracked
+  at risk                none
+
+  wstETH / MAI
+  ─────────────────────────────────────────
+  price           2891.910613
+  borrow             25962.10 MAI
+  positions                41 tracked
+  at risk                none
+
+  mBASIS / USDC
+  ─────────────────────────────────────────
+  price              1.183100
+  borrow             20595.76 USDC
+  positions               365 tracked
+  at risk                none
+
+  PT-USDai-18JUN2026-(ARB) / USDC
+  ─────────────────────────────────────────
+  price              0.965949
+  borrow             16570.76 USDC
+  positions                 5 tracked
+  at risk                none
+
+  LBTC / cbBTC
+  ─────────────────────────────────────────
+  price              1.003661
+  borrow                 3.64 cbBTC
+  positions               151 tracked
+  at risk                none
+
+  wstETH / WETH
+  ─────────────────────────────────────────
+  price              1.232029
+  borrow               193.28 WETH
+  positions               556 tracked
+  at risk                none
+
+  cbETH / EURC
+  ─────────────────────────────────────────
+  price           2245.645733
+  borrow            276521.78 EURC
+  positions               222 tracked
+  at risk                none
+
+  superOETHb / USDC
+  ─────────────────────────────────────────
+  price           2347.533229
+  borrow            216792.74 USDC
+  positions               102 tracked
+  at risk                none
+
+  WETH / XSGD
+  ─────────────────────────────────────────
+  price           2982.658893
+  borrow             65010.04 XSGD
+  positions                 6 tracked
+  at risk                none
+
+  HERMES / USDC
+  ─────────────────────────────────────────
+  price        1000000000000000000000.000000
+  borrow            100000.00 USDC
+  positions                 1 tracked
+  at risk                none
+
+  wrsETH / WETH
+  ─────────────────────────────────────────
+  price              1.069497
+  borrow                34.43 WETH
+  positions               440 tracked
+  at risk                none
+
+  rETH / WETH
+  ─────────────────────────────────────────
+  price              1.161376
+  borrow                30.92 WETH
+  positions               419 tracked
+  at risk                none
+
+  stkWELL / USDC
+  ─────────────────────────────────────────
+  price              0.004415
+  borrow             63667.08 USDC
+  positions               312 tracked
+  at risk                none
+
+  satUSD / USDC
+  ─────────────────────────────────────────
+  price              0.995226
+  borrow             60932.20 USDC
+  positions                39 tracked
+  at risk                none
+
+  bsdETH / eUSD
+  ─────────────────────────────────────────
+  price           2511.643167
+  borrow             28907.68 eUSD
+  positions               198 tracked
+  at risk                none
+
+  cbLTC / USDC
+  ─────────────────────────────────────────
+  price             56.329502
+  borrow            436589.37 USDC
+  positions               468 tracked
+  at risk                none
+
+  cbBTC / FXUSD
+  ─────────────────────────────────────────
+  price          75175.920919
+  borrow            107547.91 FXUSD
+  positions                20 tracked
+  at risk                none
+
+  TOSHI / USDC
+  ─────────────────────────────────────────
+  price              0.000191
+  borrow             82617.58 USDC
+  positions                88 tracked
+  at risk                none
+
+  WMTX / USDC
+  ─────────────────────────────────────────
+  price              0.072163
+  borrow             19193.74 USDC
+  positions                41 tracked
+  at risk                none
+
+  yoETH / WETH
+  ─────────────────────────────────────────
+  price              1.082934
+  borrow               128.27 WETH
+  positions               597 tracked
+  at risk                none
+
+  cbETH / VCHF
+  ─────────────────────────────────────────
+  price           2067.440728
+  borrow             69341.01 VCHF
+  positions                 9 tracked
+  at risk                none
+
+  weETH / USDC
+  ─────────────────────────────────────────
+  price           2565.078220
+  borrow             48029.23 USDC
+  positions               480 tracked
+  at risk                none
+
+═══════════════════════════════════════════
+
+[2026-04-16T22:36:46+02:00] 0 ETH_CALLS 
+
+[2026-04-16T22:37:46+02:00] 72 ETH_CALLS 
+
+[2026-04-16T22:38:46+02:00] 0 ETH_CALLS 
 

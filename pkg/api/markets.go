@@ -56,8 +56,8 @@ func QueryMarkets(client *w3.Client, chainid uint32) (MarketsResult, error) {
 }
 
 type MarketFilters struct {
-	minUsdMarket float64
-	maxUsdMarket float64
+	MinUsdMarket float64
+	MaxUsdMarket float64
 }
 
 func FilterMarket(result MarketsResult, filters MarketFilters, chainid uint32) []morpho.MarketParams {
@@ -71,7 +71,7 @@ func FilterMarket(result MarketsResult, filters MarketFilters, chainid uint32) [
 			continue
 		}
 
-		if borrowUsd < filters.minUsdMarket || borrowUsd > filters.maxUsdMarket {
+		if borrowUsd < filters.MinUsdMarket || borrowUsd > filters.MaxUsdMarket {
 			continue
 		}
 

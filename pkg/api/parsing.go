@@ -3,10 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 func PositionsQuery(marketID string, chainID uint32) string {
@@ -103,33 +99,4 @@ type Asset struct {
 	Address  string `json:"address"`
 	Symbol   string `json:"symbol"`
 	Decimals int    `json:"decimals"`
-}
-
-func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition {
-	fmt.Println("len items: ", len(result.MarketPositions.Items))
-	items := result.MarketPositions.Items // ✅ plus de .Data
-	positions := make([]market.BorrowPosition, 0, len(items))
-
-	for _, item := range items {
-
-		borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
-
-		if borrowAssetUsd.Cmp(utils.TenPowInt(2)) < 0 {
-			continue
-		}
-		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
-		collateral := utils.ParseBigInt(item.State.Collateral.String())
-
-		if borrowShares.Sign() == 0 && collateral.Sign() == 0 {
-			continue
-		}
-
-		positions = append(positions, market.BorrowPosition{
-			MarketID:         id,
-			Address:          common.HexToAddress(item.User.Address),
-			BorrowShares:     borrowShares,
-			CollateralAssets: collateral,
-		})
-	}
-	return positions
 }

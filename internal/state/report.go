@@ -14,7 +14,10 @@ import (
 
 func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.MarketParams) string {
 	var sb strings.Builder
-	fmt.Fprintf(&sb, " ---- FOLLOWING %d MARKETS ---- \n", len(marketReader.Ids()))
+	fmt.Fprintf(&sb, "═══════════════════════════════════════════\n")
+	fmt.Fprintf(&sb, "  MONITORING %d MARKETS\n", len(marketReader.Ids()))
+	fmt.Fprintf(&sb, "═══════════════════════════════════════════\n")
+
 	for _, id := range marketReader.Ids() {
 		snap := marketReader.GetSnapshot(id)
 		if snap == nil {
@@ -22,51 +25,51 @@ func MarketReport(marketReader MarketReader, marketMap map[[32]byte]morpho.Marke
 		}
 		mParams := marketMap[id]
 		stats := snap.Stats
-
 		if stats.TotalBorrowAssets == nil || stats.TotalBorrowShares == nil || snap.LLTV == nil || snap.Oracle.Price == nil {
 			continue
 		}
+
 		exposant := 36 + mParams.LoanTokenDecimals - mParams.CollateralTokenDecimals
 		price := utils.BigIntToFloat(snap.Oracle.Price) / math.Pow10(int(exposant))
 		borrowAssets := utils.BigIntToFloat(stats.TotalBorrowAssets) / math.Pow10(int(mParams.LoanTokenDecimals))
-		borrowShares := utils.BigIntWADToFloat(stats.TotalBorrowShares)
-		fmt.Fprintf(&sb, "\n┌─ Market %s/%s\n", mParams.CollateralTokenStr, mParams.LoanTokenStr)
-		fmt.Fprintf(&sb, "│  price:         %.6f\n", price)
-		fmt.Fprintf(&sb, "│  borrow assets: %.2f\n", borrowAssets)
-		fmt.Fprintf(&sb, "│  borrow shares: %.2f\n", borrowShares)
-		fmt.Fprintf(&sb, "│  positions less than 10pct from liquidation: %d\n", len(snap.Positions))
+
+		fmt.Fprintf(&sb, "\n  %s / %s\n", mParams.CollateralTokenStr, mParams.LoanTokenStr)
+		fmt.Fprintf(&sb, "  ─────────────────────────────────────────\n")
+		fmt.Fprintf(&sb, "  price        %14.6f\n", price)
+		fmt.Fprintf(&sb, "  borrow       %14.2f %s\n", borrowAssets, mParams.LoanTokenStr)
+		fmt.Fprintf(&sb, "  positions    %14d tracked\n", len(snap.Positions))
 
 		type riskyPos struct {
 			Pos market.BorrowPosition
 			hf  *big.Int
 		}
-		riskyPosArr := []riskyPos{}
+		var risky []riskyPos
 		for _, p := range snap.Positions {
-			/* sort by hf */
-
 			hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
-			if hf.Cmp(utils.WAD1DOT05) < 0 && hf.Cmp(big.NewInt(0)) > 0 {
-				riskyPosArr = append(riskyPosArr, riskyPos{
-					Pos: p,
-					hf:  hf,
-				})
+			if hf != nil && hf.Sign() > 0 && hf.Cmp(utils.WAD1DOT05) < 0 && hf.Cmp(utils.HALF_WAD) > 0 {
+				risky = append(risky, riskyPos{Pos: p, hf: hf})
 			}
-
 		}
-		sort.Slice(riskyPosArr, func(i, j int) bool {
-			return riskyPosArr[i].hf.Cmp(riskyPosArr[j].hf) < 0
+		sort.Slice(risky, func(i, j int) bool {
+			return risky[i].hf.Cmp(risky[j].hf) < 0
 		})
-		if len(riskyPosArr) > 2 {
-			for _, r := range riskyPosArr[:2] {
-				fmt.Fprintf(&sb, "|  borrower addr:%s hf:%.6f market: \n", r.Pos.Address, utils.BigIntToFloat(r.hf)/1e18)
-			}
+
+		if len(risky) == 0 {
+			fmt.Fprintf(&sb, "  at risk      %14s\n", "none")
 		} else {
-			for _, r := range riskyPosArr {
-				fmt.Fprintf(&sb, "|  borrower addr:%s hf:%.6f colassets:%.6f \n", r.Pos.Address, utils.BigIntToFloat(r.hf)/1e18, r.Pos.CollateralAssets)
+			fmt.Fprintf(&sb, "  at risk      %14d positions (HF < 1.05)\n", len(risky))
+			limit := 2
+			if len(risky) < limit {
+				limit = len(risky)
+			}
+			for _, r := range risky[:limit] {
+				hf := utils.BigIntToFloat(r.hf) / 1e18
+				col := r.Pos.CollateralAssets
+				fmt.Fprintf(&sb, "  ⚠  %s  HF %.4f  col %.4f\n", r.Pos.Address, hf, col)
 			}
 		}
-
 	}
-	return sb.String()
 
+	fmt.Fprintf(&sb, "\n═══════════════════════════════════════════\n")
+	return sb.String()
 }
