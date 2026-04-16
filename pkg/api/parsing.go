@@ -111,12 +111,12 @@ func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition
 	positions := make([]market.BorrowPosition, 0, len(items))
 
 	for _, item := range items {
-		/*
-			borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
 
-				if borrowAssetUsd.Cmp(utils.TenPowInt(3)) < 0 {
-					continue
-				}*/
+		borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
+
+		if borrowAssetUsd.Cmp(utils.TenPowInt(2)) < 0 {
+			continue
+		}
 		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
 		collateral := utils.ParseBigInt(item.State.Collateral.String())
 
@@ -131,6 +131,5 @@ func ParsePositions(id [32]byte, result PositionsResult) []market.BorrowPosition
 			CollateralAssets: collateral,
 		})
 	}
-	fmt.Println("position out of parse pos: ", len(positions))
 	return positions
 }
