@@ -1,7 +1,10 @@
 package runner
 
 import (
+	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
@@ -10,7 +13,13 @@ type Cache struct {
 	marketMap map[[32]byte]morpho.MarketParams
 }
 
-func NewCache(markets []morpho.MarketParams) *Cache {
+func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketFilters) *Cache {
+	result, err := api.QueryMarkets(conn.ClientHTTP, conf.ChainID)
+	if err != nil {
+		return nil
+	}
+	markets := api.FilterMarket(result, filters, conf.ChainID)
+
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
 	store := market.NewStore(markets)
 	for _, mk := range markets {

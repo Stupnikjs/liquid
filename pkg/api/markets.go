@@ -2,12 +2,9 @@ package api
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
-	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -45,18 +42,27 @@ func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 		},
 	}
 }
-func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
+
+func QueryMarkets(client *w3.Client, chainid uint32) (MarketsResult, error) {
 
 	ctx := context.Background()
 
 	var result MarketsResult
 	if err := Query(ctx, MarketsQuery(chainid), &result); err != nil {
 		fmt.Printf("graphql fetch: %s", err.Error())
-		return nil
+		return MarketsResult{}, nil
 	}
+	return result, nil
+}
 
-	const MinBorrowUsd = 15_000.0
-	var mark []MarketConfig
+type MarketFilters struct {
+	minUsdMarket float64
+	maxUsdMarket float64
+}
+
+func FilterMarket(result MarketsResult, filters MarketFilters, chainid uint32) []morpho.MarketParams {
+
+	var mark []morpho.MarketParams
 	for _, m := range result.Markets.Items {
 		supplyUsd, _ := m.State.SupplyAssetsUsd.Float64()
 		borrowUsd, _ := m.State.BorrowAssetsUsd.Float64()
@@ -65,48 +71,13 @@ func FilterMarket(client *w3.Client, chainid uint32) []MarketConfig {
 			continue
 		}
 
-		if borrowUsd < 10_000 || borrowUsd > 100_000 || borrowUsd/supplyUsd < 0.1 {
+		if borrowUsd < filters.minUsdMarket || borrowUsd > filters.maxUsdMarket {
 			continue
 		}
 
-		mark = append(mark, m.ToConfig(chainid))
+		mark = append(mark, m.ToConfig(chainid).MarketParams)
 	}
 
 	return mark
-
-}
-
-// Call all pos from market with id
-func FetchBorrowersFromMarket(marketId [32]byte, chainId uint32) ([]market.BorrowPosition, error) {
-
-	ctx := context.Background()
-	marketID := "0x" + hex.EncodeToString(marketId[:])
-	fmt.Println(marketID)
-	var result PositionsResult
-	err := Query(ctx, PositionsQuery(marketID, uint32(chainId)), &result)
-	if err != nil {
-		return nil, fmt.Errorf("graphql fetch: %w", err)
-	}
-
-	positions := ParsePositions(marketId, result)
-	fmt.Println("pos fetched : ", len(positions))
-	return positions, nil
-}
-
-// Wrapper for api call
-func ApiCall(client *w3.Client, marketR state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, chainId uint32) error {
-
-	for id := range marketMap {
-		fmt.Println(id)
-		fetched, _ := FetchBorrowersFromMarket(id, chainId)
-		fmt.Println("fetched", len(fetched))
-		for _, p := range fetched {
-			marketR.Update(id, func(m *market.Market) {
-				m.Positions[p.Address] = &p
-			})
-		}
-
-	}
-	return nil
 
 }
