@@ -26,12 +26,14 @@ func Wrapper(conf config.Config) {
 	markets := api.FilterMarket(conn.ClientHTTP, conf.ChainID)
 	fmt.Println("len market before init: ", len(markets))
 	params := []morpho.MarketParams{}
-	for _, m := range markets {
+	for _, m := range markets[:1] {
 		params = append(params, m.MarketParams)
 	}
-
+	pos, _ := api.FetchBorrowersFromMarket(markets[0].ID, conf.ChainID)
+	fmt.Println(len(pos))
 	cache := runner.NewCache(params)
-	runner := runner.NewRunner(cache, conf)
-	runner.Init(context.Background())
-	runner.Run(context.Background())
+	runn := runner.NewRunner(cache, conf)
+	runn.Init(context.Background())
+	runn.Run(context.Background())
+
 }
