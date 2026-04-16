@@ -9,7 +9,6 @@ import (
 
 func GetDistanceFromLiquid(mReader MarketReader, id [32]byte) float64 {
 	snap := mReader.GetSnapshot(id)
-	fmt.Println("snap: ", snap)
 	if snap == nil {
 		return 1.0 // no data yet, assume safe
 	}
@@ -23,12 +22,10 @@ func GetDistanceFromLiquid(mReader MarketReader, id [32]byte) float64 {
 	}
 	for _, p := range snap.Positions {
 		hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
-		fmt.Println("hf : ", hf)
 		// skip zombie positions (likely bad data or dust)
 		if hf.Cmp(utils.HALF_WAD) <= 0 {
 			continue
 		}
-
 		if minHf == nil || hf.Cmp(minHf) < 0 {
 			minHf = hf
 		}

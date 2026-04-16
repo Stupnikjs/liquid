@@ -8,16 +8,10 @@ import (
 )
 
 func (r *Runner) Run(ctx context.Context) {
-
 	go r.WatchPositionRoutine(ctx)
-	// Onchain rpc pool to update markets
 	go r.OnChainRefreshRoutine(ctx)
-	// Loging Ethcalls per min
 	go r.LogEthCallsPerMin(ctx)
 	go r.LogState(ctx)
-	go r.SimulateCandidatesRoutine(ctx)
-	go r.RebuildRoutine(ctx)
-	go r.FireLiquidationRoutine(ctx)
 	go r.EventLoop(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
