@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
@@ -40,14 +39,12 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			snap := r.Cache.Markets.GetSnapshot(id)
-			fmt.Println(snap)
+
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
 			distance = state.GetDistanceFromLiquid(r.Cache.Markets, id)
 			newInterval := distanceToInterval(distance)
 			if newInterval != interval {
 				ticker.Reset(newInterval)
-				r.Cache.CheckSlipage(r.Conn)
 				interval = newInterval
 			}
 		}

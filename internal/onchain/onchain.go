@@ -66,8 +66,10 @@ func OnChainRefresh(conn *connector.Connector, c state.MarketReader, mParam morp
 func ApplyResults(c state.MarketReader, results *OnChainResult) {
 
 	c.Update(results.ID, func(m *market.Market) {
-		m.Stats = results.Stats
+		m.Stats.TotalBorrowAssets = results.Stats.TotalBorrowAssets
+		m.Stats.TotalBorrowShares = results.Stats.TotalBorrowShares
 		m.Oracle.Price = results.OraclePrice
+
 	})
 
 }
