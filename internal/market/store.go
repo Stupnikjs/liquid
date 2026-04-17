@@ -74,7 +74,6 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 
 	market.Mu.RLock()
 	defer market.Mu.RUnlock()
-
 	if market.Canceled ||
 		market.Oracle.Price == nil ||
 		market.LLTV == nil ||
@@ -99,6 +98,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 	}
 
 	for _, p := range market.Positions {
+
 		snap.Positions = append(snap.Positions, *p)
 	}
 
@@ -120,7 +120,7 @@ func (s *MarketStore) GetPositions(id [32]byte) []BorrowPosition {
 	if market.Canceled ||
 		market.LLTV == nil ||
 		market.Stats.TotalBorrowAssets == nil ||
-		market.Stats.TotalBorrowShares == nil || market.Stats.MaxCollateralPos == nil {
+		market.Stats.TotalBorrowShares == nil {
 		return nil
 	}
 

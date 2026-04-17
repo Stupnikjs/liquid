@@ -22,7 +22,7 @@ type Runner struct {
 
 func NewRunner(cache *market.Cache, conf config.Config) *Runner {
 	var logfile string
-	if conf.ChainID == 8543 {
+	if conf.ChainID == 8453 {
 		logfile = "base.log"
 	} else {
 		logfile = "main.log"
@@ -43,7 +43,6 @@ func (r *Runner) Init(ctx context.Context) {
 		fmt.Println(err)
 	}
 	r.OnChainRefreshAll()
-	r.Cache.CheckSlipage(r.Conn)
 }
 
 func (r *Runner) OnChainRefreshAll() {

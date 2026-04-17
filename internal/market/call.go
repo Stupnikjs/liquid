@@ -1,14 +1,11 @@
 package market
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )
@@ -36,18 +33,20 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 			maxPos := big.NewInt(0)
 			positions := ApiItemToPos(fetched, id)
 			for _, p := range positions {
-				if p.CollateralAssets.Cmp(maxPos) > 0 {
-					maxPos = p.CollateralAssets
+				cp := *p
+				cp.CollateralAssets = new(big.Int).Set(p.CollateralAssets) // deep copy
+
+				if cp.CollateralAssets.Cmp(maxPos) > 0 {
+					maxPos.Set(cp.CollateralAssets)
 				}
+				addr := p.Address // capture explicite
 				c.Markets.Update(id, func(m *Market) {
-					cp := p
-					m.Positions[p.Address] = cp
+					m.Positions[addr] = &cp
 				})
 
 			}
-
 			c.Markets.Update(id, func(m *Market) {
-				m.Stats.MaxCollateralPos = maxPos
+				m.Stats.MaxCollateralPos = new(big.Int).Set(maxPos)
 			})
 
 		}(id)
@@ -60,6 +59,7 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 func ApiItemToPos(result api.PositionsResult, marketId [32]byte) []*BorrowPosition {
 	var positions []*BorrowPosition
 	for _, p := range result.MarketPositions.Items {
+
 		pos := &BorrowPosition{
 			BorrowShares:     utils.ParseBigInt(p.State.BorrowShares.String()),
 			CollateralAssets: utils.ParseBigInt(p.State.Collateral.String()),
@@ -69,27 +69,4 @@ func ApiItemToPos(result api.PositionsResult, marketId [32]byte) []*BorrowPositi
 		positions = append(positions, pos)
 	}
 	return positions
-}
-
-func (c *Cache) CheckSlipage(conn *connector.Connector) {
-
-	c.Markets.Range(func(id [32]byte) {
-		morphoMarket := c.MarketMap[id]
-		snap := c.Markets.GetSnapshot(id)
-		fmt.Println(snap)
-		if snap == nil {
-			return
-		}
-
-		/* dabord tester la MaxCollateralPos puis /2 puis /2 pour tester des positions inferieures  stocker MaxAmountInt */
-		out, err := swap.BestQuote(conn, morphoMarket.CollateralToken, morphoMarket.LoanToken, snap.Stats.MaxCollateralPos)
-
-		if out == nil {
-			return
-		}
-		maxPosFloat, _ := snap.Stats.MaxCollateralPos.Float64()
-		outFloat, _ := out.AmountOut.Float64()
-		slippage := (1 - outFloat/maxPosFloat) * 100
-		fmt.Println(morphoMarket.CollateralTokenStr, morphoMarket.LoanTokenStr, slippage, err)
-	})
 }
