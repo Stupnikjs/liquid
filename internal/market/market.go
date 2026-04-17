@@ -5,9 +5,23 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
+
+type Cache struct {
+	Markets   *MarketStore
+	MarketMap map[[32]byte]morpho.MarketParams
+}
+
+type MarketStore struct {
+	mu      sync.RWMutex
+	markets map[[32]byte]*Market
+}
 
 type Market struct {
 	Mu        sync.RWMutex
@@ -24,8 +38,8 @@ type Oracle struct {
 }
 
 type MarketStats struct {
-	TotalBorrowAssets, TotalBorrowShares, BorrowRate *big.Int
-	LastUpdate                                       int64
+	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos *big.Int
+	LastUpdate                                                         int64
 }
 
 type MarketSnapshot struct {
@@ -34,6 +48,34 @@ type MarketSnapshot struct {
 	LLTV      *big.Int
 	Stats     MarketStats
 	Positions []BorrowPosition
+}
+
+func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketFilters) *Cache {
+	result, err := api.QueryMarkets(conn.ClientHTTP, conf.ChainID)
+	if err != nil {
+		return nil
+	}
+
+	markets := api.FilterMarket(result, filters, conf.ChainID)
+
+	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
+	store := NewStore(markets)
+	for _, mk := range markets {
+		marketMap[mk.ID] = mk
+		store.Update(mk.ID, func(m *Market) {
+			m.LLTV = mk.LLTV
+			m.Oracle.Address = mk.Oracle
+		})
+	}
+
+	return &Cache{
+		Markets:   store,
+		MarketMap: marketMap, // immutable
+	}
+}
+
+func (c *Cache) GetMorphoMarketFromId(id [32]byte) morpho.MarketParams {
+	return c.MarketMap[id]
 }
 
 // AccruedBorrowAssets retourne totalBorrowAssets mis à jour jusqu'à `now`

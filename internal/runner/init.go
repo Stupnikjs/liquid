@@ -50,5 +50,5 @@ func (r *Runner) OnChainRefreshAll() {
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
 		}(id)
 	}
-	wg.Wait() // Init blocks until all markets have data
+	wg.Wait()
 }
