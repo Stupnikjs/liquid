@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -37,8 +38,12 @@ func NewRunner(cache *market.Cache, conf config.Config) *Runner {
 }
 
 func (r *Runner) Init(ctx context.Context) {
-	r.ApiCallRoutine(ctx)
+	err := r.ApiCallRoutine(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
 	r.OnChainRefreshAll()
+	r.Cache.CheckSlipage(r.Conn)
 }
 
 func (r *Runner) OnChainRefreshAll() {

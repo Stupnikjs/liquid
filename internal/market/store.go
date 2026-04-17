@@ -104,3 +104,31 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 
 	return snap
 }
+
+func (s *MarketStore) GetPositions(id [32]byte) []BorrowPosition {
+	s.mu.RLock()
+	market := s.markets[id]
+	s.mu.RUnlock()
+
+	if market == nil {
+		return nil
+	}
+
+	market.Mu.RLock()
+	defer market.Mu.RUnlock()
+
+	if market.Canceled ||
+		market.LLTV == nil ||
+		market.Stats.TotalBorrowAssets == nil ||
+		market.Stats.TotalBorrowShares == nil || market.Stats.MaxCollateralPos == nil {
+		return nil
+	}
+
+	Positions := make([]BorrowPosition, 0, len(market.Positions))
+
+	for _, p := range market.Positions {
+		Positions = append(Positions, *p)
+	}
+
+	return Positions
+}
