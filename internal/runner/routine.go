@@ -14,7 +14,6 @@ import (
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 	for _, id := range r.Cache.Markets.Ids() {
 		go r.MarketRoutine(ctx, id)
-
 	}
 
 }
@@ -41,14 +40,14 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			snap := r.Cache.Markets.GetSnapshot(id)
+			fmt.Println(snap)
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
-			fmt.Println(len(r.Cache.Markets.Ids()))
 			distance = state.GetDistanceFromLiquid(r.Cache.Markets, id)
-			fmt.Println("dist: ", distance)
-			fmt.Println("oracle: ", snap.Oracle.Price)
 			newInterval := distanceToInterval(distance)
 			if newInterval != interval {
 				ticker.Reset(newInterval)
+				r.Cache.CheckSlipage(r.Conn)
 				interval = newInterval
 			}
 		}
@@ -63,7 +62,7 @@ func (r *Runner) LogState(ctx context.Context) {
 }
 
 func (r *Runner) ApiCallRoutine(ctx context.Context) {
-	market.ApiCall(r.Conn.ClientHTTP, r.Cache.Markets, r.Cache.MarketMap, uint32(r.Config.ChainID))
+	r.Cache.ApiCall(r.Conn.ClientHTTP, uint32(r.Config.ChainID))
 }
 
 func (r *Runner) WatchPositionRoutine(ctx context.Context) {

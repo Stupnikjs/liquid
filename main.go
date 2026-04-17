@@ -11,8 +11,8 @@ import (
 )
 
 /*
-
- */
+Snap shot s'initialize pas
+*/
 
 func main() {
 	var baseFilter api.MarketFilters

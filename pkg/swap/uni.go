@@ -28,13 +28,13 @@ func BestQuote(conn *connector.Connector, tokenIn, tokenOut common.Address, amou
 		TokenIn           common.Address
 		TokenOut          common.Address
 		AmountIn          *big.Int
-		Fee               uint32
+		Fee               *big.Int
 		SqrtPriceLimitX96 *big.Int
 	}
 	type QuoteOutput struct {
 		AmountOut               *big.Int
 		SqrtPriceX96After       *big.Int
-		InitializedTicksCrossed uint32
+		InitializedTicksCrossed *big.Int
 		GasEstimate             *big.Int
 	}
 
@@ -47,7 +47,7 @@ func BestQuote(conn *connector.Connector, tokenIn, tokenOut common.Address, amou
 			TokenIn:           tokenIn,
 			TokenOut:          tokenOut,
 			AmountIn:          amountIn,
-			Fee:               fee,
+			Fee:               big.NewInt(int64(fee)),
 			SqrtPriceLimitX96: big.NewInt(0),
 		}).Returns(outputs[i])
 	}

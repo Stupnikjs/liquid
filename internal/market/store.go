@@ -8,11 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type MarketStore struct {
-	mu      sync.RWMutex
-	markets map[[32]byte]*Market
-}
-
 func NewStore(markets []morpho.MarketParams) *MarketStore {
 	marketsMap := make(map[[32]byte]*Market, len(markets))
 	for _, m := range markets {
@@ -84,7 +79,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 		market.Oracle.Price == nil ||
 		market.LLTV == nil ||
 		market.Stats.TotalBorrowAssets == nil ||
-		market.Stats.TotalBorrowShares == nil {
+		market.Stats.TotalBorrowShares == nil || market.Stats.MaxCollateralPos == nil {
 		return nil
 	}
 
@@ -98,6 +93,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 		Stats: MarketStats{
 			TotalBorrowAssets: new(big.Int).Set(market.Stats.TotalBorrowAssets),
 			TotalBorrowShares: new(big.Int).Set(market.Stats.TotalBorrowShares),
+			MaxCollateralPos:  new(big.Int).Set(market.Stats.MaxCollateralPos),
 		},
 		Positions: make([]BorrowPosition, 0, len(market.Positions)),
 	}

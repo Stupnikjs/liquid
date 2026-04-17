@@ -30,8 +30,6 @@ type MarketParams struct {
 	PoolFee                 int32    // 4 ← change int→int32, suffisant pour un fee
 	LoanTokenDecimals       uint16   // 2
 	CollateralTokenDecimals uint16   // 2
-	Correlated              bool     // 1
-	CexOnly                 bool
 	// 3 padding
 }
 type MarketContractParams struct {
@@ -50,26 +48,4 @@ func (m *MarketParams) ToMarketContractParams() *MarketContractParams {
 		Irm:             IRM,
 		Lltv:            m.LLTV,
 	}
-}
-
-func NotCexOnlyMarket(params []MarketParams) []MarketParams {
-	arr := []MarketParams{}
-	for _, m := range params {
-		if m.CexOnly {
-			continue
-		}
-		arr = append(arr, m)
-	}
-	return arr
-}
-
-func NotCexOnlyIds(params []MarketParams) [][32]byte {
-	var arr [][32]byte
-	for _, m := range params {
-		if m.CexOnly {
-			continue
-		}
-		arr = append(arr, m.ID)
-	}
-	return arr
 }

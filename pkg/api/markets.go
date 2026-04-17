@@ -37,8 +37,6 @@ func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 			LoanTokenDecimals:       uint16(m.LoanAsset.Decimals),
 			CollateralTokenDecimals: uint16(m.CollateralAsset.Decimals),
 			PoolFee:                 0,
-			Correlated:              false,
-			CexOnly:                 false,
 		},
 	}
 }
