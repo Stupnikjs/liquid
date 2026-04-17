@@ -14,6 +14,9 @@ import (
 	"github.com/lmittmann/w3"
 )
 
+/*
+Storing market positions and muting it with mutex
+*/
 type Cache struct {
 	Markets   *MarketStore
 	MarketMap map[[32]byte]morpho.MarketParams
