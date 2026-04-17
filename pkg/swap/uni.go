@@ -11,6 +11,8 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+
+// tester chaque marché pour trouvé le maxamount avec slipage < 1%
 var (
 	uniQuoterV2 = common.HexToAddress("0x3d4e44Eb1374240CE5F1B136588e5fA50aA5e7C8") // Base
 )
