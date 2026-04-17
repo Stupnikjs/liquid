@@ -61,8 +61,8 @@ func (r *Runner) LogState(ctx context.Context) {
 	})
 }
 
-func (r *Runner) ApiCallRoutine(ctx context.Context) {
-	r.Cache.ApiCall(r.Conn.ClientHTTP, uint32(r.Config.ChainID))
+func (r *Runner) ApiCallRoutine(ctx context.Context) error {
+	return r.Cache.ApiCall(r.Conn.ClientHTTP, uint32(r.Config.ChainID))
 }
 
 func (r *Runner) WatchPositionRoutine(ctx context.Context) {

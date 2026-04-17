@@ -34,20 +34,21 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 				return
 			}
 			maxPos := big.NewInt(0)
-			for _, p := range ApiItemToPos(fetched, id) {
+			positions := ApiItemToPos(fetched, id)
+			for _, p := range positions {
 				if p.CollateralAssets.Cmp(maxPos) > 0 {
 					maxPos = p.CollateralAssets
 				}
 				c.Markets.Update(id, func(m *Market) {
-					m.Positions[p.Address] = p
+					cp := p
+					m.Positions[p.Address] = cp
 				})
 
 			}
-			if maxPos.Sign() != 0 {
-				c.Markets.Update(id, func(m *Market) {
-					m.Stats.MaxCollateralPos = maxPos
-				})
-			}
+
+			c.Markets.Update(id, func(m *Market) {
+				m.Stats.MaxCollateralPos = maxPos
+			})
 
 		}(id)
 	}
@@ -79,6 +80,8 @@ func (c *Cache) CheckSlipage(conn *connector.Connector) {
 		if snap == nil {
 			return
 		}
+
+		/* dabord tester la MaxCollateralPos puis /2 puis /2 pour tester des positions inferieures  stocker MaxAmountInt */
 		out, err := swap.BestQuote(conn, morphoMarket.CollateralToken, morphoMarket.LoanToken, snap.Stats.MaxCollateralPos)
 
 		if out == nil {
