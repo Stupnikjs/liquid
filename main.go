@@ -18,7 +18,7 @@ func main() {
 	var baseFilter api.MarketFilters
 
 	baseFilter = api.MarketFilters{
-		MaxUsdMarket: 500_000,
+		MaxUsdMarket: 10_000_000_000,
 		MinUsdMarket: 10_000,
 	}
 
