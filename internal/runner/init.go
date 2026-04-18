@@ -10,6 +10,7 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 )
 
 type Runner struct {
@@ -43,6 +44,13 @@ func (r *Runner) Init(ctx context.Context) {
 		fmt.Println(err)
 	}
 	r.OnChainRefreshAll()
+	r.Cache.Markets.Range(func(id [32]byte) {
+		snap := r.Cache.Markets.GetSnapshot(id)
+		morphoM := r.Cache.MarketMap[id]
+		amountIn, bestFee, bestSlippage := swap.FindBestPool(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		fmt.Printf("Pair %s/%s amountIn: %d best slip %f, best fee %d \n", morphoM.CollateralTokenStr, morphoM.LoanTokenStr, amountIn, bestSlippage, bestFee)
+
+	})
 }
 
 func (r *Runner) OnChainRefreshAll() {
