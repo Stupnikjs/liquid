@@ -47,9 +47,19 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		morphoM := r.Cache.MarketMap[id]
-		amountIn, bestFee, bestSlippage := swap.FindBestPool(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-		fmt.Printf("Pair %s/%s amountIn: %d best slip %f, best fee %d \n", morphoM.CollateralTokenStr, morphoM.LoanTokenStr, amountIn, bestSlippage, bestFee)
+		amountIn, result, bestSlippage := swap.FindBestPool(
+			r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price,
+		)
 
+		if amountIn == nil {
+			fmt.Printf("Pair %s/%s — no liquid pool\n", morphoM.CollateralTokenStr, morphoM.LoanTokenStr)
+			return
+		}
+
+		fmt.Printf("Pair %s/%s | source: %s | fee: %d | stable: %v | slip: %.6f%% | amountIn: %s\n",
+			morphoM.CollateralTokenStr, morphoM.LoanTokenStr,
+			result.Source, result.Fee, result.Stable,
+			bestSlippage, amountIn.String())
 	})
 }
 
