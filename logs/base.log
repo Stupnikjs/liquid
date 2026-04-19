@@ -1,0 +1,244 @@
+[2026-04-19T15:42:51+02:00] 532 ETH_CALLS 
+
+[2026-04-19T15:43:51+02:00] 374 ETH_CALLS 
+
+[2026-04-19T15:44:51+02:00] 372 ETH_CALLS 
+
+[2026-04-19T15:45:51+02:00] ═══════════════════════════════════════════
+  MONITORING 14 MARKETS
+═══════════════════════════════════════════
+
+  cbETH / WETH
+  ─────────────────────────────────────────
+  price              1.127982
+  borrow               635.54 WETH
+  positions               772 tracked
+  at risk                   6 positions (HF < 1.05)
+  ⚠  0x24547D75feA1F6FB0a3660d3099B3fAfe9108290  HF 1.0074  col %!f(big.Int=10161772368737)
+  ⚠  0x5B497e5f7eb9EbeE00AfD389fc058B72B16AF9BB  HF 1.0342  col %!f(big.Int=11808231182519)
+
+  cbBTC / WETH
+  ─────────────────────────────────────────
+  price             32.487759
+  borrow               209.13 WETH
+  positions               334 tracked
+  at risk                   1 positions (HF < 1.05)
+  ⚠  0x3D096a20ad387CcC785eC8FC12b41dA8DbC66e32  HF 1.0483  col %!f(big.Int=16)
+
+  TOSHI / USDC
+  ─────────────────────────────────────────
+  price              0.000180
+  borrow             82763.51 USDC
+  positions                84 tracked
+  at risk                none
+
+  cbXRP / USDC
+  ─────────────────────────────────────────
+  price              1.438309
+  borrow            282147.76 USDC
+  positions                47 tracked
+  at risk                none
+
+  deSPXA / USDC
+  ─────────────────────────────────────────
+  price            709.686968
+  borrow             21859.29 USDC
+  positions                 9 tracked
+  at risk                none
+
+  wstETH / USDC
+  ─────────────────────────────────────────
+  price           2877.398817
+  borrow           1159832.64 USDC
+  positions               874 tracked
+  at risk                none
+
+  cbBTC / EURC
+  ─────────────────────────────────────────
+  price          64660.978885
+  borrow           4738889.00 EURC
+  positions               353 tracked
+  at risk                none
+
+  WETH / EURC
+  ─────────────────────────────────────────
+  price           1990.318240
+  borrow            552239.12 EURC
+  positions               487 tracked
+  at risk                none
+
+  wstETH / WETH
+  ─────────────────────────────────────────
+  price              1.232284
+  borrow              5020.36 WETH
+  positions               995 tracked
+  at risk                  88 positions (HF < 1.05)
+  ⚠  0x39bBBAf0d50e8EB7F7C13F3a5D5d589020Acf1C1  HF 1.0034  col %!f(big.Int=20000000000)
+  ⚠  0x2329b09C6E5EBD3Cc3096916778a9EAE8E5D61A6  HF 1.0211  col %!f(big.Int=53876012386140204)
+
+  weETH / WETH
+  ─────────────────────────────────────────
+  price              1.092871
+  borrow               215.22 WETH
+  positions               999 tracked
+  at risk                  54 positions (HF < 1.05)
+  ⚠  0x082784c86D4D6E9cA0E19e93da1F78B116bd8307  HF 1.0088  col %!f(big.Int=15400000000000000)
+  ⚠  0x647197A6F7D505808f5f265Bf9Ab31c0ED59AdBa  HF 1.0101  col %!f(big.Int=17147009616369824)
+
+  rETH / WETH
+  ─────────────────────────────────────────
+  price              1.159251
+  borrow                30.92 WETH
+  positions               419 tracked
+  at risk                   6 positions (HF < 1.05)
+  ⚠  0xF3F4c8342e220434c96e5f6Ffe054bd29EF72049  HF 1.0219  col %!f(big.Int=172367619445981)
+  ⚠  0x898C3F3034ed743009C7a63a45C2291F6FE75505  HF 1.0298  col %!f(big.Int=1142316405947)
+
+  cbETH / USDC
+  ─────────────────────────────────────────
+  price           2640.849984
+  borrow           1679083.78 USDC
+  positions               961 tracked
+  at risk                none
+
+  USR / USDC
+  ─────────────────────────────────────────
+  price              1.000202
+  borrow           1245119.10 USDC
+  positions               352 tracked
+  at risk                none
+
+  wstETH / EURC
+  ─────────────────────────────────────────
+  price           2445.193038
+  borrow           1259107.51 EURC
+  positions               134 tracked
+  at risk                none
+
+═══════════════════════════════════════════
+
+[2026-04-19T15:46:51+02:00] 372 ETH_CALLS 
+
+[2026-04-19T15:47:51+02:00] 374 ETH_CALLS 
+
+[2026-04-19T15:48:51+02:00] 392 ETH_CALLS 
+
+[2026-04-19T15:49:51+02:00] ═══════════════════════════════════════════
+  MONITORING 14 MARKETS
+═══════════════════════════════════════════
+
+  cbETH / USDC
+  ─────────────────────────────────────────
+  price           2640.849984
+  borrow           1679083.78 USDC
+  positions               961 tracked
+  at risk                none
+
+  USR / USDC
+  ─────────────────────────────────────────
+  price              1.000207
+  borrow           1245119.10 USDC
+  positions               352 tracked
+  at risk                none
+
+  wstETH / EURC
+  ─────────────────────────────────────────
+  price           2445.193038
+  borrow           1259107.51 EURC
+  positions               134 tracked
+  at risk                none
+
+  cbETH / WETH
+  ─────────────────────────────────────────
+  price              1.127982
+  borrow               635.54 WETH
+  positions               772 tracked
+  at risk                   6 positions (HF < 1.05)
+  ⚠  0x24547D75feA1F6FB0a3660d3099B3fAfe9108290  HF 1.0074  col %!f(big.Int=10161772368737)
+  ⚠  0x5B497e5f7eb9EbeE00AfD389fc058B72B16AF9BB  HF 1.0342  col %!f(big.Int=11808231182519)
+
+  cbBTC / WETH
+  ─────────────────────────────────────────
+  price             32.452876
+  borrow               209.13 WETH
+  positions               334 tracked
+  at risk                   1 positions (HF < 1.05)
+  ⚠  0x3D096a20ad387CcC785eC8FC12b41dA8DbC66e32  HF 1.0472  col %!f(big.Int=16)
+
+  TOSHI / USDC
+  ─────────────────────────────────────────
+  price              0.000180
+  borrow             82763.51 USDC
+  positions                84 tracked
+  at risk                none
+
+  cbXRP / USDC
+  ─────────────────────────────────────────
+  price              1.438309
+  borrow            282147.76 USDC
+  positions                47 tracked
+  at risk                none
+
+  deSPXA / USDC
+  ─────────────────────────────────────────
+  price            709.686968
+  borrow             21859.29 USDC
+  positions                 9 tracked
+  at risk                none
+
+  wstETH / USDC
+  ─────────────────────────────────────────
+  price           2877.398817
+  borrow           1159832.64 USDC
+  positions               874 tracked
+  at risk                none
+
+  cbBTC / EURC
+  ─────────────────────────────────────────
+  price          64591.550952
+  borrow           4738889.00 EURC
+  positions               353 tracked
+  at risk                none
+
+  WETH / EURC
+  ─────────────────────────────────────────
+  price           1990.318240
+  borrow            552239.12 EURC
+  positions               487 tracked
+  at risk                none
+
+  wstETH / WETH
+  ─────────────────────────────────────────
+  price              1.232284
+  borrow              5020.36 WETH
+  positions               995 tracked
+  at risk                  88 positions (HF < 1.05)
+  ⚠  0x39bBBAf0d50e8EB7F7C13F3a5D5d589020Acf1C1  HF 1.0034  col %!f(big.Int=20000000000)
+  ⚠  0x2329b09C6E5EBD3Cc3096916778a9EAE8E5D61A6  HF 1.0211  col %!f(big.Int=53876012386140204)
+
+  weETH / WETH
+  ─────────────────────────────────────────
+  price              1.092871
+  borrow               215.22 WETH
+  positions               999 tracked
+  at risk                  54 positions (HF < 1.05)
+  ⚠  0x082784c86D4D6E9cA0E19e93da1F78B116bd8307  HF 1.0088  col %!f(big.Int=15400000000000000)
+  ⚠  0x647197A6F7D505808f5f265Bf9Ab31c0ED59AdBa  HF 1.0101  col %!f(big.Int=17147009616369824)
+
+  rETH / WETH
+  ─────────────────────────────────────────
+  price              1.159251
+  borrow                30.92 WETH
+  positions               419 tracked
+  at risk                   6 positions (HF < 1.05)
+  ⚠  0xF3F4c8342e220434c96e5f6Ffe054bd29EF72049  HF 1.0219  col %!f(big.Int=172367619445981)
+  ⚠  0x898C3F3034ed743009C7a63a45C2291F6FE75505  HF 1.0298  col %!f(big.Int=1142316405947)
+
+═══════════════════════════════════════════
+
+[2026-04-19T15:50:51+02:00] 374 ETH_CALLS 
+
+[2026-04-19T15:51:51+02:00] 372 ETH_CALLS 
+
+[2026-04-19T15:52:51+02:00] 392 ETH_CALLS 
+

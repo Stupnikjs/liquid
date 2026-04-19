@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -38,23 +39,53 @@ func NewRunner(cache *market.Cache, conf config.Config) *Runner {
 	}
 }
 
+func formatAmount(amount *big.Int, decimals uint8) string {
+	if amount == nil {
+		return "0"
+	}
+	divisor := new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil))
+	amountF := new(big.Float).SetInt(amount)
+	result := new(big.Float).Quo(amountF, divisor)
+	return result.Text('f', 4)
+}
+
 func (r *Runner) Init(ctx context.Context) {
 	err := r.ApiCallRoutine(ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
 	r.OnChainRefreshAll()
+	// CHECK Liquidity on markets with uniswap
+
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		morphoM := r.Cache.MarketMap[id]
-		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos)
+		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if err != nil {
-			fmt.Printf("Error occurred while fetching best quote for pair %s/%s: %v\n", morphoM.CollateralTokenStr, morphoM.LoanTokenStr, err)
+			r.Cache.Markets.Update(id, func(m *market.Market) {
+				m.Canceled = true
+			})
 			return
 		}
-		fmt.Printf("Pair %s/%s | source: uniswap | %d\n",
-			morphoM.CollateralTokenStr, morphoM.LoanTokenStr, result)
+		fmt.Printf("Pair %s/%s | source: uniswap | slippage: %f%% | amountIn: %s %s\n",
+			morphoM.CollateralTokenStr,
+			morphoM.LoanTokenStr,
+			result.Slippage,
+			formatAmount(result.AmountIn, uint8(morphoM.CollateralTokenDecimals)),
+			morphoM.CollateralTokenStr,
+		)
+		r.Cache.Markets.Update(id, func(m *market.Market) {
+			m.Stats.MaxUniSwappable = result.AmountIn
+		})
+
 	})
+	r.Cache.Markets.Range(func(id [32]byte) {
+		err := r.Cache.Markets.CleanNonSwap(id)
+		if err != nil {
+			r.Logger <- fmt.Sprintf("Error cleaning non-swap positions for market %s: %v", id, err)
+		}
+	})
+	fmt.Println(len(r.Cache.Markets.Ids()))
 }
 
 func (r *Runner) OnChainRefreshAll() {
