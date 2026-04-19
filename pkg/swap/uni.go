@@ -10,7 +10,7 @@ import (
 	"github.com/lmittmann/w3/module/eth"
 )
 
-// Struct qui correspond exactement au QuoteExactInputSingleParams du contrat
+// Struct qui correspond exactement au QuoteExactInputSingleParams du contra
 type QuoteExactInputSingleParams struct {
 	TokenIn           common.Address
 	TokenOut          common.Address
