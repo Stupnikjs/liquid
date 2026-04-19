@@ -1,6 +1,7 @@
 package market
 
 import (
+	"fmt"
 	"math/big"
 	"sync"
 
@@ -82,6 +83,10 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 		return nil
 	}
 
+	if market.Stats.MaxUniSwappable == nil {
+		market.Stats.MaxUniSwappable = big.NewInt(0)
+	}
+
 	snap := &MarketSnapshot{
 		ID: id,
 		Oracle: Oracle{
@@ -93,6 +98,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 			TotalBorrowAssets: new(big.Int).Set(market.Stats.TotalBorrowAssets),
 			TotalBorrowShares: new(big.Int).Set(market.Stats.TotalBorrowShares),
 			MaxCollateralPos:  new(big.Int).Set(market.Stats.MaxCollateralPos),
+			MaxUniSwappable:   new(big.Int).Set(market.Stats.MaxUniSwappable),
 		},
 		Positions: make([]BorrowPosition, 0, len(market.Positions)),
 	}
@@ -131,4 +137,48 @@ func (s *MarketStore) GetPositions(id [32]byte) []BorrowPosition {
 	}
 
 	return Positions
+}
+
+func (s *MarketStore) CleanNonSwap(id [32]byte) error {
+	s.mu.RLock()
+	market := s.markets[id]
+	s.mu.RUnlock()
+
+	if market == nil {
+		return nil
+	}
+
+	// 1. collecter les adresses à supprimer sans lock d'écriture
+	market.Mu.RLock()
+	if market.Canceled ||
+		market.LLTV == nil ||
+		market.Stats.TotalBorrowAssets == nil ||
+		market.Stats.TotalBorrowShares == nil ||
+		market.Stats.MaxCollateralPos == nil ||
+		market.Stats.MaxUniSwappable == nil {
+		market.Mu.RUnlock()
+		return fmt.Errorf("market stats uncomplete")
+	}
+
+	toDelete := make([]common.Address, 0)
+	for addr, p := range market.Positions {
+		if p.CollateralAssets.Cmp(market.Stats.MaxUniSwappable) > 0 {
+			toDelete = append(toDelete, addr)
+		}
+	}
+	market.Mu.RUnlock()
+
+	// 2. supprimer en dehors de la boucle avec le bon lock
+	if len(toDelete) > 0 {
+		if len(toDelete) > 0 {
+			s.Update(id, func(m *Market) {
+				for _, addr := range toDelete {
+					delete(m.Positions, addr)
+				}
+			})
+		}
+
+	}
+
+	return nil
 }

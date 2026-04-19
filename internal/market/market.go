@@ -38,8 +38,8 @@ type Oracle struct {
 }
 
 type MarketStats struct {
-	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos *big.Int
-	LastUpdate                                                         int64
+	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos, MaxUniSwappable *big.Int
+	LastUpdate                                                                          int64
 }
 
 type MarketSnapshot struct {
