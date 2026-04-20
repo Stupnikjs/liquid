@@ -2,22 +2,24 @@ package runner
 
 import (
 	"context"
-	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 )
 
 func (r *Runner) Run(ctx context.Context) {
-	go r.WatchPositionRoutine(ctx)
+
+	go r.SubscribePositionRoutine(ctx)
+	// rpc calls per market => market routines
 	go r.OnChainRefreshRoutine(ctx)
+	// rpc call per minutes
 	go r.LogEthCallsPerMin(ctx)
-	go r.LogState(ctx)
-	go r.EventLoop(ctx)
+	// log markets info
+	go r.EventListener(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
 }
 
-func (r *Runner) EventLoop(ctx context.Context) {
+func (r *Runner) EventListener(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -29,20 +31,5 @@ func (r *Runner) EventLoop(ctx context.Context) {
 			}
 			onchain.ProcessEvents(r.Cache.Markets, event)
 		}
-	}
-}
-
-func distanceToInterval(distance float64) time.Duration {
-	switch {
-	// 1%
-	case distance < 0.01:
-		return 1 * time.Second
-
-	case distance < 0.03:
-		return 10 * time.Second
-	case distance < 0.05:
-		return 100 * time.Second
-	default:
-		return 200 * time.Second
 	}
 }

@@ -15,10 +15,11 @@ import (
 )
 
 type Runner struct {
-	Cache  *market.Cache
-	Conn   *connector.Connector
-	Logger chan string
-	Config config.Config
+	Cache       *market.Cache
+	Conn        *connector.Connector
+	Logger      chan string
+	Config      config.Config
+	LiquidateCh chan market.BorrowPosition
 	// Config avec signer
 }
 
@@ -32,10 +33,11 @@ func NewRunner(cache *market.Cache, conf config.Config) *Runner {
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
 	logger := logging.NewLogger(context.Background(), logfile)
 	return &Runner{
-		Cache:  cache,
-		Conn:   conn,
-		Logger: logger,
-		Config: conf,
+		Cache:       cache,
+		Conn:        conn,
+		Logger:      logger,
+		Config:      conf,
+		LiquidateCh: make(chan market.BorrowPosition, 1),
 	}
 }
 
@@ -56,7 +58,6 @@ func (r *Runner) Init(ctx context.Context) {
 	}
 	r.OnChainRefreshAll()
 	// CHECK Liquidity on markets with uniswap
-
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		morphoM := r.Cache.MarketMap[id]
