@@ -5,7 +5,6 @@ import "github.com/ethereum/go-ethereum/common"
 type Addresses struct {
 	LiquidatorOdosContract common.Address
 	LiquidatorSwapContract common.Address
-	Odos                   common.Address
 	Wallet                 common.Address
 	Morpho                 common.Address
 }
@@ -26,9 +25,8 @@ func LoadBaseConfig() Config {
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
-			Odos:                   OdosRouterAddr,
 			LiquidatorSwapContract: BaseUniswapV3Router,
-			LiquidatorOdosContract: BaseLiquidatorOdosContract,
+			LiquidatorOdosContract: BaseLiquidatorAddr,
 			Morpho:                 BaseMorphoBlueAddr,
 			Wallet:                 BaseWalletAddr,
 		},
@@ -51,7 +49,6 @@ func LoadMainnetConfig() Config {
 		Addresses: Addresses{
 			Wallet:                 MainWalletAddr,
 			LiquidatorOdosContract: MainLiquidatorOdosAddr,
-			Odos:                   OdosRouterAddrV3,
 		},
 		ChainID: 1,
 		RPC: struct {
