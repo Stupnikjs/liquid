@@ -38,7 +38,6 @@ var (
 
 type Liquidable struct {
 	Pos          *market.BorrowPosition
-	MarketID     [32]byte
 	HF           *big.Int
 	RepayShares  *big.Int
 	SeizeAssets  *big.Int
@@ -47,18 +46,6 @@ type Liquidable struct {
 	SimulatedAt  time.Time
 	SimErr       error
 	IsLiquidable bool
-}
-
-type LiquidationEngine struct {
-	RebuildCh   chan bool
-	LiquidateCh chan *Liquidable
-}
-
-func New() *LiquidationEngine {
-	return &LiquidationEngine{
-		RebuildCh:   make(chan bool, 1),
-		LiquidateCh: make(chan *Liquidable, 1),
-	}
 }
 
 type LiquidateArgs struct {
@@ -133,15 +120,15 @@ func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context
 	return err
 }
 
-func SimulatePreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, liq *Liquidable) *Liquidable {
+func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, liq *Liquidable) *Liquidable {
 	out := *liq
-	snap := c.GetSnapshot(liq.MarketID)
+	snap := c.GetSnapshot(liq.Pos.MarketID)
 	if snap == nil {
 		out.SimErr = fmt.Errorf("snap nil")
 		return &out
 	}
 
-	params := marketMap[liq.MarketID]
+	params := marketMap[liq.Pos.MarketID]
 
 	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(

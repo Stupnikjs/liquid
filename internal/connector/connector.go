@@ -58,7 +58,7 @@ func (c *Connector) getWSClient() *w3.Client {
 	return c.ClientWS
 }
 
-func (c *Connector) WatchPositions(ctx context.Context) {
+func (c *Connector) SubscribeToEventPos(ctx context.Context) {
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{config.MorphoMain},
 		Topics: [][]common.Hash{{

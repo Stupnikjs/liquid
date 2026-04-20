@@ -2,6 +2,7 @@ package morpho
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/ethereum/go-ethereum/common"
@@ -48,4 +49,8 @@ func (m *MarketParams) ToMarketContractParams() *MarketContractParams {
 		Irm:             IRM,
 		Lltv:            m.LLTV,
 	}
+}
+
+func (m *MarketParams) IsETHCorrelated() bool {
+	return strings.Contains(m.CollateralTokenStr, "ETH") && strings.Contains(m.LoanTokenStr, "ETH")
 }
