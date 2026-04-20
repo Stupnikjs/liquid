@@ -72,12 +72,67 @@ func Quote(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice
 		}
 
 		// divise par 2 et réessaie
-		current.Div(current, big.NewInt(2))
+		current.Div(current, big.NewInt(4))
 		fmt.Printf("slippage trop élevé, on réessaie avec amountIn: %s\n", current.String())
 	}
 
 	return nil, fmt.Errorf("no acceptable slippage found for %s -> %s",
 		marketp.CollateralTokenStr, marketp.LoanTokenStr)
+}
+
+func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+	maxSlippage := MaxSlippage(marketp.LLTV)
+
+	var tryAmount func(amount *big.Int) (*QuoteResult, error)
+	tryAmount = func(amount *big.Int) (*QuoteResult, error) {
+		var best *QuoteResult
+		for _, fee := range UniswapFees {
+			result, err := quoteSingle(client, marketp, amount, oraclePrice, fee)
+			if err != nil || result == nil {
+				continue
+			}
+			if result.Slippage <= maxSlippage {
+				if best == nil || result.AmountOut.Cmp(best.AmountOut) > 0 {
+					best = result
+				}
+			}
+		}
+		return best, nil
+	}
+
+	// Binary search between 0 and amountIn
+	lo := big.NewInt(1)
+	hi := new(big.Int).Set(amountIn)
+	var best *QuoteResult
+
+	// ~12 iterations = log2(4096) covers any realistic range
+	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
+		mid := new(big.Int).Add(lo, hi)
+		mid.Rsh(mid, 1) // mid = (lo + hi) / 2
+
+		result, err := tryAmount(mid)
+		if err != nil {
+			return nil, err
+		}
+
+		if result != nil {
+			// mid works — try larger
+			best = result
+			lo = new(big.Int).Add(mid, big.NewInt(1))
+			fmt.Printf("Pair %s/%s | amount: %s | slippage: %f%%\n",
+				marketp.CollateralTokenStr, marketp.LoanTokenStr, mid.String(), result.Slippage)
+		} else {
+			// mid too large — try smaller
+			hi = new(big.Int).Sub(mid, big.NewInt(1))
+			fmt.Printf("slippage trop élevé, on réduit: %s\n", mid.String())
+		}
+	}
+
+	if best == nil {
+		return nil, fmt.Errorf("no acceptable slippage found for %s -> %s",
+			marketp.CollateralTokenStr, marketp.LoanTokenStr)
+	}
+	return best, nil
 }
 
 func quoteSingle(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice *big.Int, fee uint32) (*QuoteResult, error) {

@@ -14,7 +14,7 @@ type MarketInfo struct {
 	morpho.MarketParams
 	PerctToFirstLiq float64 // 1 - min hf * 100
 	Liquidables     []HfPos
-	snap            market.MarketSnapshot
+	Snap            market.MarketSnapshot
 }
 
 type HfPos struct {
@@ -39,8 +39,17 @@ func CheckMarket(mReader MarketReader, params morpho.MarketParams) MarketInfo {
 		fmt.Println("no pos in snapshot")
 		return info
 	}
+	if snap.Stats.MaxUniSwappable == nil {
+		return info
+	}
 	liquidablesPos := []HfPos{}
 	for _, p := range snap.Positions {
+		if p.CollateralAssets == nil || p.CollateralAssets.Sign() == 0 {
+			continue
+		}
+		if p.CollateralAssets.Cmp(snap.Stats.MaxUniSwappable) > 0 {
+			continue
+		}
 		hf := p.HF(stats.TotalBorrowShares, stats.TotalBorrowAssets, snap.Oracle.Price, snap.LLTV)
 		if hf.Cmp(utils.HALF_WAD) <= 0 {
 			continue

@@ -85,6 +85,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 
 	if market.Stats.MaxUniSwappable == nil {
 		market.Stats.MaxUniSwappable = big.NewInt(0)
+
 	}
 
 	snap := &MarketSnapshot{
@@ -99,12 +100,12 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 			TotalBorrowShares: new(big.Int).Set(market.Stats.TotalBorrowShares),
 			MaxCollateralPos:  new(big.Int).Set(market.Stats.MaxCollateralPos),
 			MaxUniSwappable:   new(big.Int).Set(market.Stats.MaxUniSwappable),
+			SwapFee:           market.Stats.SwapFee,
 		},
 		Positions: make([]BorrowPosition, 0, len(market.Positions)),
 	}
 
 	for _, p := range market.Positions {
-
 		snap.Positions = append(snap.Positions, *p)
 	}
 

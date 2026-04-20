@@ -61,7 +61,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		morphoM := r.Cache.MarketMap[id]
-		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if err != nil {
 			r.Cache.Markets.Update(id, func(m *market.Market) {
 				m.Canceled = true
@@ -77,6 +77,7 @@ func (r *Runner) Init(ctx context.Context) {
 		)
 		r.Cache.Markets.Update(id, func(m *market.Market) {
 			m.Stats.MaxUniSwappable = result.AmountIn
+			m.Stats.SwapFee = result.Fee
 		})
 
 	})

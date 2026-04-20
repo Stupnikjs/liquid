@@ -3,6 +3,7 @@ package state
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"strings"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
@@ -12,12 +13,13 @@ import (
 func MarketReport(info MarketInfo) string {
 	var sb strings.Builder
 
-	snap := info.snap
+	snap := info.Snap
 	mParams := info.MarketParams
 	stats := snap.Stats
 
 	exposant := 36 + mParams.LoanTokenDecimals - mParams.CollateralTokenDecimals
-	price := utils.BigIntToFloat(snap.Oracle.Price) / math.Pow10(int(exposant))
+	bigPrice := new(big.Int).Div(snap.Oracle.Price, utils.TenPowInt(uint(exposant)))
+	price := utils.BigIntToFloat(bigPrice)
 	borrowAssets := utils.BigIntToFloat(stats.TotalBorrowAssets) / math.Pow10(int(mParams.LoanTokenDecimals))
 
 	fmt.Fprintf(&sb, "═══════════════════════════════════════════\n")

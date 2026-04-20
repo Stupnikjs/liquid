@@ -57,6 +57,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			return
 		case <-ticker.C:
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
+			// HF CHECKS HERE
 			info = state.CheckMarket(r.Cache.Markets, morphoM)
 			if len(info.Liquidables) > 0 {
 				for _, l := range info.Liquidables {
@@ -67,6 +68,10 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			newInterval := distanceToInterval(info.PerctToFirstLiq)
 			if info.IsETHCorrelated() {
 				newInterval = distanceToInterval(info.PerctToFirstLiq * 100)
+			}
+			// BUILDING REPORT
+			if info.Snap.Oracle.Price == nil {
+				break
 			}
 			r.Logger <- state.MarketReport(info)
 			if newInterval != interval {
