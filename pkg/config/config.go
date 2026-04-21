@@ -1,6 +1,12 @@
 package config
 
-import "github.com/ethereum/go-ethereum/common"
+import (
+	"log"
+	"os"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/joho/godotenv"
+)
 
 type Addresses struct {
 	LiquidatorContract common.Address
@@ -21,6 +27,9 @@ type Config struct {
 }
 
 func LoadBaseConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
 	signer, _ := NewBaseSigner()
 	return Config{
 		Signer: signer,
@@ -36,13 +45,16 @@ func LoadBaseConfig() Config {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: BASE_HTTP_RPC,
-			WS:   BASE_WS_RPC,
+			HTTP: []string{os.Getenv("BASE_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("BASE_WS_RPC_ALCH")},
 		},
 	}
 }
 
 func LoadMainnetConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
 	signer, _ := NewMainnetSigner()
 	return Config{
 		Signer: signer,
@@ -63,6 +75,9 @@ func LoadMainnetConfig() Config {
 }
 
 func LoadArbitrumConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
 	signer, _ := NewArbitrumSigner()
 	return Config{
 		Signer: signer,
@@ -76,8 +91,8 @@ func LoadArbitrumConfig() Config {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: ARB_HTTP_RPC,
-			WS:   ARB_WS_RPC,
+			HTTP: []string{os.Getenv("ARB_HTTP_RPC_ALCH"), os.Getenv("ARB_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("ARB_WS_RPC_ALCH"), os.Getenv("ARB_WS_RPC_ALCH")},
 		},
 	}
 }

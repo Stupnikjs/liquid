@@ -22,17 +22,17 @@ func main() {
 		MinUsdMarket: 10_000,
 	}
 
-	Wrapper(config.LoadBaseConfig(), baseFilter)
-	Wrapper(config.LoadArbitrumConfig(), baseFilter)
+	// go Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+	Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
 }
 
-func Wrapper(conf config.Config, filters api.MarketFilters) {
+func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
 
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
 	// market from less than 10mounth
 
 	cache := market.NewCache(conn, conf, filters)
-	runn := runner.NewRunner(cache, conf)
+	runn := runner.NewRunner(cache, conf, logfile)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
 

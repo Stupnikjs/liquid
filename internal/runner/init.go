@@ -23,13 +23,7 @@ type Runner struct {
 	// Config avec signer
 }
 
-func NewRunner(cache *market.Cache, conf config.Config) *Runner {
-	var logfile string
-	if conf.ChainID == 8453 {
-		logfile = "base.log"
-	} else {
-		logfile = "main.log"
-	}
+func NewRunner(cache *market.Cache, conf config.Config, logfile string) *Runner {
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
 	logger := logging.NewLogger(context.Background(), logfile)
 	return &Runner{
