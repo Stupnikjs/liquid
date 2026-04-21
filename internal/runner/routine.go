@@ -6,8 +6,8 @@ import (
 	"math/big"
 	"time"
 
+	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/liquidate"
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 )

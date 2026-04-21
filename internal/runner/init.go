@@ -6,32 +6,32 @@ import (
 	"math/big"
 	"sync"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/logging"
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 )
 
 type Runner struct {
-	Cache       *market.Cache
+	Cache       *cache.Cache
 	Conn        *connector.Connector
 	Logger      chan string
 	Config      config.Config
-	LiquidateCh chan market.BorrowPosition
+	LiquidateCh chan cache.BorrowPosition
 	// Config avec signer
 }
 
-func NewRunner(cache *market.Cache, conf config.Config, logfile string) *Runner {
+func NewRunner(initedCache *cache.Cache, conf config.Config, logfile string) *Runner {
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
 	logger := logging.NewLogger(context.Background(), logfile)
 	return &Runner{
-		Cache:       cache,
+		Cache:       initedCache,
 		Conn:        conn,
 		Logger:      logger,
 		Config:      conf,
-		LiquidateCh: make(chan market.BorrowPosition, 1),
+		LiquidateCh: make(chan cache.BorrowPosition, 1),
 	}
 }
 
@@ -60,7 +60,7 @@ func (r *Runner) Init(ctx context.Context) {
 		morphoM := r.Cache.MarketMap[id]
 		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if err != nil {
-			r.Cache.Markets.Update(id, func(m *market.Market) {
+			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Canceled = true
 			})
 			return
@@ -72,18 +72,13 @@ func (r *Runner) Init(ctx context.Context) {
 			formatAmount(result.AmountIn, uint8(morphoM.CollateralTokenDecimals)),
 			morphoM.CollateralTokenStr,
 		)
-		r.Cache.Markets.Update(id, func(m *market.Market) {
+		r.Cache.Markets.Update(id, func(m *cache.Market) {
 			m.Stats.MaxUniSwappable = result.AmountIn
 			m.Stats.SwapFee = result.Fee
 		})
 
 	})
-	r.Cache.Markets.Range(func(id [32]byte) {
-		err := r.Cache.Markets.CleanNonSwap(id)
-		if err != nil {
-			r.Logger <- fmt.Sprintf("Error cleaning non-swap positions for market %s: %v", id, err)
-		}
-	})
+
 	fmt.Println(len(r.Cache.Markets.Ids()))
 }
 

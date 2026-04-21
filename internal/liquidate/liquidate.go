@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
@@ -37,7 +37,7 @@ var (
 )
 
 type Liquidable struct {
-	Pos          *market.BorrowPosition
+	Pos          *cache.BorrowPosition
 	HF           *big.Int
 	RepayShares  *big.Int
 	SeizeAssets  *big.Int

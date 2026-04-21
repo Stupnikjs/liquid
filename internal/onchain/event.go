@@ -6,7 +6,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
+
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 
@@ -53,8 +54,9 @@ func BorrowEventProcess(c state.MarketReader, log *types.Log) {
 	if !slices.Contains(c.Ids(), id) {
 		return
 	}
-	c.Update(id, func(m *market.Market) {
-		if p, ok := m.Positions[onBehalf]; ok {
+	c.Update(id, func(m *cache.Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p != nil {
 			if p.BorrowShares == nil {
 				p.BorrowShares = new(big.Int)
 				fmt.Println("borrowed:", p.Address)
@@ -62,11 +64,14 @@ func BorrowEventProcess(c state.MarketReader, log *types.Log) {
 			p.BorrowShares.Add(p.BorrowShares, &shares)
 
 		} else {
-			m.Positions[onBehalf] = &market.BorrowPosition{
+			toInsert := &cache.BorrowPosition{
 				MarketID:     id,
 				Address:      onBehalf,
 				BorrowShares: new(big.Int).Set(&shares),
 			}
+			toInsert.CachedHF = toInsert.HF(m.Stats.TotalBorrowShares, m.Stats.TotalBorrowAssets, m.Oracle.Price, m.LLTV)
+			m.InsertPositionUnsafe(toInsert)
+
 		}
 	})
 
@@ -89,13 +94,16 @@ func RepayEventProcess(c state.MarketReader, log *types.Log) {
 		return
 	}
 
-	c.Update(id, func(m *market.Market) {
-		if p, ok := m.Positions[onBehalf]; ok {
-			p.BorrowShares.Sub(p.BorrowShares, &shares)
-			if p.BorrowShares.Sign() <= 0 {
-				delete(m.Positions, p.Address)
-			}
+	c.Update(id, func(m *cache.Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p == nil {
+			return
 		}
+		p.BorrowShares.Sub(p.BorrowShares, &shares)
+		if p.BorrowShares.Sign() <= 0 {
+			m.RemovePosition(onBehalf)
+		}
+
 	})
 
 }
@@ -122,14 +130,18 @@ func LiquidateEventProcess(c state.MarketReader, log *types.Log) {
 		return
 	}
 
-	c.Update(id, func(m *market.Market) {
-		if p, ok := m.Positions[borrower]; ok {
-			p.BorrowShares.Sub(p.BorrowShares, &repaidShares)
-			if p.BorrowShares.Sign() <= 0 {
-				fmt.Println("borrow liquidated :", p.Address)
-				delete(m.Positions, borrower)
-			}
+	c.Update(id, func(m *cache.Market) {
+		p := m.GetBorrowPosition(borrower)
+		if p == nil {
+			return
 		}
+
+		p.BorrowShares.Sub(p.BorrowShares, &repaidShares)
+		if p.BorrowShares.Sign() <= 0 {
+			fmt.Println("borrow liquidated :", p.Address)
+			m.RemovePosition(borrower)
+		}
+
 	})
 
 }
@@ -151,7 +163,7 @@ func AccrueInterestEventProcess(c state.MarketReader, log *types.Log) {
 	}
 
 	// TotalBorrowAssets augmente des intérêts accumulés
-	c.Update(id, func(m *market.Market) {
+	c.Update(id, func(m *cache.Market) {
 
 		if m.Stats.TotalBorrowAssets == nil {
 			return
@@ -159,7 +171,7 @@ func AccrueInterestEventProcess(c state.MarketReader, log *types.Log) {
 		m.Stats.TotalBorrowAssets = new(big.Int).Add(m.Stats.TotalBorrowAssets, &interest)
 		m.Stats.BorrowRate = &prevBorrowRate
 		m.Stats.LastUpdate = time.Now().Unix()
-
+		// m.RecomputeAllHFUnsafe()
 	})
 
 }
@@ -179,8 +191,17 @@ func SupplyCollateralEventProcess(c state.MarketReader, log *types.Log) {
 		return
 	}
 
-	c.Update(id, func(m *market.Market) {
-		if p, ok := m.Positions[onBehalf]; ok {
+	c.Update(id, func(m *cache.Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p == nil {
+			toInsert := &cache.BorrowPosition{
+				MarketID:         id,
+				Address:          onBehalf,
+				CollateralAssets: new(big.Int).Set(&assets),
+			}
+			// to avoid deadlock
+			m.InsertPositionUnsafe(toInsert)
+		} else {
 			if p.CollateralAssets == nil {
 				p.CollateralAssets = &assets
 			} else {

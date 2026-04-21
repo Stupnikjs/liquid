@@ -1,7 +1,8 @@
-package market
+package cache
 
 import (
 	"math/big"
+	"sort"
 	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
@@ -32,19 +33,26 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 			}
 			maxPos := big.NewInt(0)
 			positions := ApiItemToPos(fetched, id)
-			for _, p := range positions {
-				cp := *p
-				cp.CollateralAssets = new(big.Int).Set(p.CollateralAssets) // deep copy
-
-				if cp.CollateralAssets.Cmp(maxPos) > 0 {
-					maxPos.Set(cp.CollateralAssets)
+			sort.Slice(positions, func(i, j int) bool {
+				pi := positions[i].CollateralAssets
+				pj := positions[j].CollateralAssets
+				// nil traité comme zéro → rejeté en fin
+				if pi == nil && pj == nil {
+					return false
 				}
-				addr := p.Address // capture explicite
-				c.Markets.Update(id, func(m *Market) {
-					m.Positions[addr] = &cp
-				})
+				if pi == nil {
+					return false
+				}
+				if pj == nil {
+					return true
+				}
+				return pi.Cmp(pj) < 0
+			})
+			// maybe sorting by collateral here
+			c.Markets.Update(id, func(m *Market) {
+				m.Positions = positions
+			})
 
-			}
 			c.Markets.Update(id, func(m *Market) {
 				m.Stats.MaxCollateralPos = new(big.Int).Set(maxPos)
 			})
@@ -67,6 +75,29 @@ func ApiItemToPos(result api.PositionsResult, marketId [32]byte) []*BorrowPositi
 			Address:          common.HexToAddress(p.User.Address),
 		}
 		positions = append(positions, pos)
+	}
+	return positions
+}
+
+func ParsePositions(id [32]byte, result api.PositionsResult) []BorrowPosition {
+	items := result.MarketPositions.Items // ✅ plus de .Data
+	positions := make([]BorrowPosition, 0, len(items))
+	for _, item := range items {
+		borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
+		if borrowAssetUsd.Cmp(utils.TenPowInt(2)) < 0 {
+			continue
+		}
+		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
+		collateral := utils.ParseBigInt(item.State.Collateral.String())
+		if borrowShares.Sign() == 0 && collateral.Sign() == 0 {
+			continue
+		}
+		positions = append(positions, BorrowPosition{
+			MarketID:         id,
+			Address:          common.HexToAddress(item.User.Address),
+			BorrowShares:     borrowShares,
+			CollateralAssets: collateral,
+		})
 	}
 	return positions
 }
