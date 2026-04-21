@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"math/big"
 	"sync"
 	"time"
@@ -58,7 +59,7 @@ func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketF
 	}
 
 	markets := api.FilterMarket(result, filters, conf.ChainID)
-
+	fmt.Println("here", len(markets))
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
 	store := NewStore(markets)
 	for _, mk := range markets {
