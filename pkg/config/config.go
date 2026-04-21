@@ -45,8 +45,8 @@ func LoadBaseConfig() Config {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: []string{os.Getenv("BASE_HTTP_RPC_ALCH")},
-			WS:   []string{os.Getenv("BASE_WS_RPC_ALCH")},
+			HTTP: []string{os.Getenv("BASE_HTTP_RPC_ALCH"), os.Getenv("BASE_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("BASE_WS_RPC_ALCH"), os.Getenv("BASE_WS_RPC_ALCH")},
 		},
 	}
 }
@@ -93,6 +93,29 @@ func LoadArbitrumConfig() Config {
 		}{
 			HTTP: []string{os.Getenv("ARB_HTTP_RPC_ALCH"), os.Getenv("ARB_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("ARB_WS_RPC_ALCH"), os.Getenv("ARB_WS_RPC_ALCH")},
+		},
+	}
+}
+
+func LoadOptimismConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	signer, _ := NewOptimismSigner()
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:             ArbitrumWalletAddress,
+			SwapRouter:         ArbitrumUniswapV3Router,
+			LiquidatorContract: ArbitrumLiquidatorAddr,
+		},
+		ChainID: 10,
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: []string{os.Getenv("OP_HTTP_RPC_ALCH"), os.Getenv("OP_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("OP_WS_RPC_ALCH"), os.Getenv("OP_WS_RPC_ALCH")},
 		},
 	}
 }

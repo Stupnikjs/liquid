@@ -43,3 +43,7 @@ func NewMainnetSigner() (*Signer, error) {
 func NewArbitrumSigner() (*Signer, error) {
 	return nil, nil
 }
+
+func NewOptimismSigner() (*Signer, error) {
+	return nil, nil
+}
