@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
+	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
@@ -14,15 +14,16 @@ type MarketInfo struct {
 	morpho.MarketParams
 	PerctToFirstLiq float64 // 1 - min hf * 100
 	Liquidables     []HfPos
-	Snap            market.MarketSnapshot
+	Snap            cache.MarketSnapshot
 }
 
 type HfPos struct {
-	Pos market.BorrowPosition
+	Pos cache.BorrowPosition
 	Hf  *big.Int
 }
 
 // this is the only func that calc hf to trigger liquidation
+// easier with sorted pos by hf
 func CheckMarket(mReader MarketReader, params morpho.MarketParams) MarketInfo {
 	info := MarketInfo{}
 	info.PerctToFirstLiq = 100

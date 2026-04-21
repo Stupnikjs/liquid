@@ -1,4 +1,4 @@
-package market
+package cache
 
 import (
 	"math/big"
@@ -29,7 +29,7 @@ type Market struct {
 	Oracle    Oracle
 	LLTV      *big.Int
 	Stats     MarketStats
-	Positions map[common.Address]*BorrowPosition
+	Positions []*BorrowPosition // Borrow positions sorted by HF asc
 }
 
 type Oracle struct {

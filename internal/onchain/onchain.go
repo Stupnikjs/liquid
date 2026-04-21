@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
-	"github.com/Stupnikjs/morpho-sepolia/internal/market"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"

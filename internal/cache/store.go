@@ -1,16 +1,14 @@
-package market
+package cache
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 // changer map par array avec HF triée
- 
+
 func NewStore(markets []morpho.MarketParams) *MarketStore {
 	marketsMap := make(map[[32]byte]*Market, len(markets))
 	for i, m := range markets {
@@ -19,7 +17,8 @@ func NewStore(markets []morpho.MarketParams) *MarketStore {
 			break
 		}
 		market := &Market{
-			Positions: make(map[common.Address]*BorrowPosition),
+			// might inizialize array
+			Positions: make([]*BorrowPosition, 0),
 		}
 		marketsMap[m.ID] = market
 	}
@@ -37,11 +36,6 @@ func (s *MarketStore) Range(fn func(id [32]byte)) {
 	}
 }
 
-
-func SomeFieldIsNil() bool {
-
-
-}
 func (s *MarketStore) Ids() [][32]byte {
 	s.mu.RLock()
 	ids := make([][32]byte, 0, len(s.markets))
@@ -141,56 +135,11 @@ func (s *MarketStore) GetPositions(id [32]byte) []BorrowPosition {
 		market.Stats.TotalBorrowShares == nil {
 		return nil
 	}
-
+	// FASTER MAYBE
 	Positions := make([]BorrowPosition, 0, len(market.Positions))
-
 	for _, p := range market.Positions {
 		Positions = append(Positions, *p)
 	}
 
 	return Positions
-}
-
-func (s *MarketStore) CleanNonSwap(id [32]byte) error {
-	s.mu.RLock()
-	market := s.markets[id]
-	s.mu.RUnlock()
-
-	if market == nil {
-		return nil
-	}
-
-	// 1. collecter les adresses à supprimer sans lock d'écriture
-	market.Mu.RLock()
-	if market.Canceled ||
-		market.LLTV == nil ||
-		market.Stats.TotalBorrowAssets == nil ||
-		market.Stats.TotalBorrowShares == nil ||
-		market.Stats.MaxCollateralPos == nil ||
-		market.Stats.MaxUniSwappable == nil {
-		market.Mu.RUnlock()
-		return fmt.Errorf("market stats uncomplete")
-	}
-
-	toDelete := make([]common.Address, 0)
-	for addr, p := range market.Positions {
-		if p.CollateralAssets.Cmp(market.Stats.MaxUniSwappable) > 0 {
-			toDelete = append(toDelete, addr)
-		}
-	}
-	market.Mu.RUnlock()
-
-	// 2. supprimer en dehors de la boucle avec le bon lock
-	if len(toDelete) > 0 {
-		if len(toDelete) > 0 {
-			s.Update(id, func(m *Market) {
-				for _, addr := range toDelete {
-					delete(m.Positions, addr)
-				}
-			})
-		}
-
-	}
-
-	return nil
 }
