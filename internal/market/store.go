@@ -35,6 +35,11 @@ func (s *MarketStore) Range(fn func(id [32]byte)) {
 	}
 }
 
+
+func SomeFieldIsNil() bool {
+
+
+}
 func (s *MarketStore) Ids() [][32]byte {
 	s.mu.RLock()
 	ids := make([][32]byte, 0, len(s.markets))
