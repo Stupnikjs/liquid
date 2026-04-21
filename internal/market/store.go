@@ -9,6 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// changer map par array avec HF triée
+ 
 func NewStore(markets []morpho.MarketParams) *MarketStore {
 	marketsMap := make(map[[32]byte]*Market, len(markets))
 	for i, m := range markets {
