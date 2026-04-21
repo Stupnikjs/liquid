@@ -80,6 +80,7 @@ func Quote(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice
 		marketp.CollateralTokenStr, marketp.LoanTokenStr)
 }
 
+// to Fix
 func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
 

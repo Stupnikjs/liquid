@@ -24,4 +24,14 @@ var (
 	MainWalletAddr         = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 	MainLiquidatorOdosAddr = common.HexToAddress("")
 	MainUniswapV3Router    = common.HexToAddress("0xE592427A0AEce92De3Edee1F18E0157C05861564")
+
+	// Arbitrum Addresses
+	ArbitrumLiquidatorAddr  = common.HexToAddress("")
+	ArbitrumUniswapV3Router = common.HexToAddress("")
+	ArbitrumWalletAddress   = common.HexToAddress("")
+
+	// Optimism Addresses
+	OptimismLiquidatorAddr  = common.HexToAddress("")
+	OptimismUniswapV3Router = common.HexToAddress("")
+	OptimismWalletAddress   = common.HexToAddress("")
 )

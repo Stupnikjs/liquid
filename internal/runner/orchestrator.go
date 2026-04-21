@@ -15,6 +15,7 @@ func (r *Runner) Run(ctx context.Context) {
 	go r.LogEthCallsPerMin(ctx)
 	// log markets info
 	go r.EventListener(ctx)
+	go r.LiquidationRoutine(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
 }
