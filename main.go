@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/market"
@@ -22,8 +23,21 @@ func main() {
 		MinUsdMarket: 10_000,
 	}
 
-	// go Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
-	Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+	}()
+
+	go func() {
+		defer wg.Done()
+		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+	}()
+
+	wg.Wait()
 }
 
 func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {

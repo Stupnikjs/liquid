@@ -59,7 +59,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ticker.C:
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
 			// HF CHECKS HERE
-			fmt.Println(r.Cache.Markets.GetSnapshot(id))
+			fmt.Println(r.Cache.Markets.GetSnapshot(id).Oracle.Price == nil)
 			info = state.CheckMarket(r.Cache.Markets, morphoM)
 			if len(info.Liquidables) > 0 {
 				for _, l := range info.Liquidables {
