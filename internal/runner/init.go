@@ -60,8 +60,11 @@ func (r *Runner) Init(ctx context.Context) {
 	// CHECK Liquidity on markets with uniswap
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
+		if snap == nil {
+			return
+		}
 		morphoM := r.Cache.MarketMap[id]
-		result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if err != nil {
 			r.Cache.Markets.Update(id, func(m *market.Market) {
 				m.Canceled = true

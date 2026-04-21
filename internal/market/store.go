@@ -11,7 +11,11 @@ import (
 
 func NewStore(markets []morpho.MarketParams) *MarketStore {
 	marketsMap := make(map[[32]byte]*Market, len(markets))
-	for _, m := range markets {
+	for i, m := range markets {
+		// remove for deployment
+		if i > 10 {
+			break
+		}
 		market := &Market{
 			Positions: make(map[common.Address]*BorrowPosition),
 		}

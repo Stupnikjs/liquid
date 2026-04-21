@@ -21,12 +21,13 @@ func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 
 func distanceToInterval(distance float64) time.Duration {
 	switch {
-	// 1%
+	// 1% if ETH pair < 0.0001
 	case distance < 0.01:
 		return 2 * time.Second
-
+	// 1% if ETH pair < 0.0003
 	case distance < 0.03:
 		return 10 * time.Second
+	// 1% if ETH pair < 0.0005
 	case distance < 0.05:
 		return 100 * time.Second
 	default:

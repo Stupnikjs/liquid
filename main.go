@@ -23,6 +23,7 @@ func main() {
 	}
 
 	Wrapper(config.LoadBaseConfig(), baseFilter)
+	Wrapper(config.LoadArbitrumConfig(), baseFilter)
 }
 
 func Wrapper(conf config.Config, filters api.MarketFilters) {

@@ -21,6 +21,15 @@ var (
 		"wss://eth-mainnet.g.alchemy.com/v2/ZABfTOT9vAxtJL1gFs5uC",
 	}
 
+	ARB_HTTP_RPC = []string{
+		"",
+		"",
+	}
+
+	ARB_WS_RPC = []string{
+		"",
+	}
+
 	INFURAMAIN = "https://mainnet.infura.io/v3/e587127983764e6284261ebf6b4aaedf"
 	BASEDRPC   = "https://lb.drpc.live/base/AhuxMhCqfkI8pF_0y4Fpi89GWcIMFIwR8ZsatuZZzRRv"
 	PubRPC     = "https://ethereum-rpc.publicnode.com"

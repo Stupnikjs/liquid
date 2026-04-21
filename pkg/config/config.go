@@ -3,10 +3,10 @@ package config
 import "github.com/ethereum/go-ethereum/common"
 
 type Addresses struct {
-	LiquidatorOdosContract common.Address
-	LiquidatorSwapContract common.Address
-	Wallet                 common.Address
-	Morpho                 common.Address
+	LiquidatorContract common.Address
+	SwapRouter         common.Address
+	Wallet             common.Address
+	Morpho             common.Address
 }
 
 type Config struct {
@@ -25,10 +25,10 @@ func LoadBaseConfig() Config {
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
-			LiquidatorSwapContract: BaseUniswapV3Router,
-			LiquidatorOdosContract: BaseLiquidatorAddr,
-			Morpho:                 BaseMorphoBlueAddr,
-			Wallet:                 BaseWalletAddr,
+			SwapRouter:         BaseUniswapV3Router,
+			LiquidatorContract: BaseLiquidatorAddr,
+			Morpho:             BaseMorphoBlueAddr,
+			Wallet:             BaseWalletAddr,
 		},
 		ChainID: 8453,
 
@@ -47,8 +47,9 @@ func LoadMainnetConfig() Config {
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
-			Wallet:                 MainWalletAddr,
-			LiquidatorOdosContract: MainLiquidatorOdosAddr,
+			Wallet:             MainWalletAddr,
+			LiquidatorContract: MainLiquidatorOdosAddr,
+			SwapRouter:         MainUniswapV3Router,
 		},
 		ChainID: 1,
 		RPC: struct {
@@ -57,6 +58,26 @@ func LoadMainnetConfig() Config {
 		}{
 			HTTP: MAIN_HTTP_RPC,
 			WS:   MAIN_WS_RPC,
+		},
+	}
+}
+
+func LoadArbitrumConfig() Config {
+	signer, _ := NewArbitrumSigner()
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:             ArbitrumWalletAddress,
+			SwapRouter:         ArbitrumUniswapV3Router,
+			LiquidatorContract: ArbitrumLiquidatorAddr,
+		},
+		ChainID: 42161,
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: ARB_HTTP_RPC,
+			WS:   ARB_WS_RPC,
 		},
 	}
 }

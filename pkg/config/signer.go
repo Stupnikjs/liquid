@@ -22,9 +22,9 @@ func NewBaseSigner() (*Signer, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	keyHex := os.Getenv("LIQUIDATOR_PRIVATE_KEY")
+	keyHex := os.Getenv("LIQUIDATOR_BASE_PRIVATE_KEY")
 	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR_PRIVATE_KEY not set")
+		return nil, fmt.Errorf("LIQUIDATOR__BASE_PRIVATE_KEY not set")
 	}
 	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
 	if err != nil {
@@ -41,5 +41,9 @@ func (s *Signer) Sign(tx *types.Transaction) (*types.Transaction, error) {
 }
 
 func NewMainnetSigner() (*Signer, error) {
+	return nil, nil
+}
+
+func NewArbitrumSigner() (*Signer, error) {
 	return nil, nil
 }
