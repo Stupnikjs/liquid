@@ -9,6 +9,7 @@ var (
 	MorphoMain = common.HexToAddress("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb")
 
 	// Base Addresses
+	BaseUniswapQuoterV2Addr    = common.HexToAddress("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a")
 	BaseUniswapV3Router        = common.HexToAddress("0x2626664c2603336E57B271c5C0b26F421741e481")
 	BaseMorphoBlueAddr         = w3.A("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb") // Morpho Blue mainnet
 	BaseLiquidatorAddr         = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
@@ -26,9 +27,10 @@ var (
 	MainUniswapV3Router    = common.HexToAddress("0xE592427A0AEce92De3Edee1F18E0157C05861564")
 
 	// Arbitrum Addresses
-	ArbitrumLiquidatorAddr  = common.HexToAddress("")
-	ArbitrumUniswapV3Router = common.HexToAddress("")
-	ArbitrumWalletAddress   = common.HexToAddress("")
+	ArbitrumUniswapQuoterV2Addr = common.HexToAddress("0x61fFE014bA17989E743c5F6cB21bF9697530B21e")
+	ArbitrumLiquidatorAddr      = common.HexToAddress("")
+	ArbitrumUniswapV3Router     = common.HexToAddress("0xe592427a0aece92de3edee1f18e0157c05861564")
+	ArbitrumWalletAddress       = common.HexToAddress("")
 
 	// Optimism Addresses
 	OptimismLiquidatorAddr  = common.HexToAddress("")

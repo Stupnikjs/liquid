@@ -29,8 +29,6 @@ type QuoteResult struct {
 }
 
 var (
-	UniswapQuoterV2Addr = common.HexToAddress("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a")
-
 	FuncQuoteExactInputSingleV2 = w3.MustNewFunc(
 		`quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96) params)`,
 		`uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate`,
@@ -48,13 +46,14 @@ func MaxSlippage(lltv *big.Int) float64 {
 	return bonus - gas            // ex: 5.4% max
 }
 
-func Quote(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+func Quote(client *w3.Client, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
 	var best *QuoteResult
+	fmt.Println(marketp)
 	current := new(big.Int).Set(amountIn)
 	maxSlippage := MaxSlippage(marketp.LLTV)
 	for current.Sign() > 0 {
 		for _, fee := range UniswapFees {
-			result, err := quoteSingle(client, marketp, current, oraclePrice, fee)
+			result, err := quoteSingle(client, marketp, uniswapQuoterAddr, current, oraclePrice, fee)
 			if err != nil || result == nil {
 				continue
 			}
@@ -81,14 +80,14 @@ func Quote(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice
 }
 
 // to Fix
-func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
 
 	var tryAmount func(amount *big.Int) (*QuoteResult, error)
 	tryAmount = func(amount *big.Int) (*QuoteResult, error) {
 		var best *QuoteResult
 		for _, fee := range UniswapFees {
-			result, err := quoteSingle(client, marketp, amount, oraclePrice, fee)
+			result, err := quoteSingle(client, marketp, uniswapQuoterAddr, amount, oraclePrice, fee)
 			if err != nil || result == nil {
 				continue
 			}
@@ -136,7 +135,7 @@ func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, amountIn,
 	return best, nil
 }
 
-func quoteSingle(client *w3.Client, marketp morpho.MarketParams, amountIn, oraclePrice *big.Int, fee uint32) (*QuoteResult, error) {
+func quoteSingle(client *w3.Client, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int, fee uint32) (*QuoteResult, error) {
 	params := QuoteExactInputSingleParams{
 		TokenIn:           marketp.CollateralToken,
 		TokenOut:          marketp.LoanToken,
@@ -153,7 +152,7 @@ func quoteSingle(client *w3.Client, marketp morpho.MarketParams, amountIn, oracl
 	)
 
 	if err := client.CallCtx(context.Background(),
-		eth.CallFunc(UniswapQuoterV2Addr, FuncQuoteExactInputSingleV2, params).Returns(
+		eth.CallFunc(uniswapQuoterAddr, FuncQuoteExactInputSingleV2, params).Returns(
 			&amountOut,
 			&sqrtPriceX96After,
 			&initializedTicksCrossed,

@@ -46,20 +46,25 @@ func formatAmount(amount *big.Int, decimals uint8) string {
 }
 
 func (r *Runner) Init(ctx context.Context) {
+	fmt.Println("INITING __ ")
 	err := r.ApiCallRoutine(ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
 	r.OnChainRefreshAll()
+	fmt.Println("all pos", r.Cache.Markets.AllPosLen())
 	// CHECK Liquidity on markets with uniswap
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
+			fmt.Println("SNAP IS NIL __ OK ")
 			return
 		}
+		fmt.Println("SNAP ISNT NIL __ OK ")
 		morphoM := r.Cache.MarketMap[id]
-		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if err != nil {
+			fmt.Println("QUOTE __ IS NIL ", err)
 			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Canceled = true
 			})

@@ -2,8 +2,6 @@ package runner
 
 import (
 	"context"
-
-	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 )
 
 func (r *Runner) Run(ctx context.Context) {
@@ -18,19 +16,4 @@ func (r *Runner) Run(ctx context.Context) {
 	go r.LiquidationRoutine(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
-}
-
-func (r *Runner) EventListener(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-
-		case event, ok := <-r.Conn.PositionCh:
-			if !ok {
-				return
-			}
-			onchain.ProcessEvents(r.Cache.Markets, event)
-		}
-	}
 }

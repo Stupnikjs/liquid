@@ -1,9 +1,11 @@
 package cache
 
 import (
+	"fmt"
 	"math/big"
 	"sync"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
@@ -27,6 +29,16 @@ func NewStore(markets []morpho.MarketParams) *MarketStore {
 		mu:      sync.RWMutex{},
 		markets: marketsMap,
 	}
+}
+func (s *MarketStore) AllPosLen() int {
+	s.mu.RLock()
+	sum := 0
+	for _, m := range s.markets {
+		sum += len(m.Positions)
+	}
+	s.mu.RUnlock()
+	return sum
+
 }
 
 func (s *MarketStore) Range(fn func(id [32]byte)) {
@@ -80,6 +92,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 
 	market.Mu.RLock()
 	defer market.Mu.RUnlock()
+	fmt.Println(market.Oracle.Price, market.LLTV, market.Stats.TotalBorrowAssets, market.Stats.TotalBorrowShares, market.Stats.MaxCollateralPos)
 	if market.Canceled ||
 		market.Oracle.Price == nil ||
 		market.LLTV == nil ||
@@ -109,7 +122,7 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 		},
 		Positions: make([]BorrowPosition, 0, len(market.Positions)),
 	}
-
+	// anyway to avoid loop
 	for _, p := range market.Positions {
 		snap.Positions = append(snap.Positions, *p)
 	}
@@ -117,29 +130,24 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 	return snap
 }
 
-func (s *MarketStore) GetPositions(id [32]byte) []BorrowPosition {
-	s.mu.RLock()
-	market := s.markets[id]
-	s.mu.RUnlock()
-
-	if market == nil {
-		return nil
+func (s *MarketSnapshot) GetFirstHF() *big.Int {
+	if len(s.Positions) == 0 {
+		return big.NewInt(0)
 	}
+	return s.Positions[0].CachedHF
+}
 
-	market.Mu.RLock()
-	defer market.Mu.RUnlock()
-
-	if market.Canceled ||
-		market.LLTV == nil ||
-		market.Stats.TotalBorrowAssets == nil ||
-		market.Stats.TotalBorrowShares == nil {
-		return nil
-	}
-	// FASTER MAYBE
-	Positions := make([]BorrowPosition, 0, len(market.Positions))
-	for _, p := range market.Positions {
-		Positions = append(Positions, *p)
-	}
-
-	return Positions
+func (s *MarketSnapshot) Log(p morpho.MarketParams) string {
+	return fmt.Sprintf(
+		"[%x] %s/%s oracle=%s totalBorrow=%s totalShares=%s positions=%d firstHF=%s lltv=%s",
+		s.ID[:4],
+		p.CollateralTokenStr,
+		p.LoanTokenStr,
+		utils.FormatWAD(s.Oracle.Price),
+		utils.FormatDecimals(s.Stats.TotalBorrowAssets, int(p.LoanTokenDecimals)),
+		utils.FormatDecimals(s.Stats.TotalBorrowShares, int(p.LoanTokenDecimals)),
+		len(s.Positions),
+		utils.FormatWAD(s.GetFirstHF()),
+		utils.FormatWAD(s.LLTV),
+	)
 }

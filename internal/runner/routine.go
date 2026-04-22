@@ -9,7 +9,7 @@ import (
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/liquidate"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
-	"github.com/Stupnikjs/morpho-sepolia/internal/state"
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
 
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
@@ -35,6 +35,12 @@ func distanceToInterval(distance float64) time.Duration {
 	}
 }
 
+func getDiffFloat(hf *big.Int) float64 {
+	diff := new(big.Int).Sub(hf, utils.WAD) // distance to 1
+	diffFloat, _ := new(big.Float).SetInt(diff).Float64()
+	return diffFloat / 1e18
+}
+
 func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	// Wait for initial data
 	var snap *market.MarketSnapshot
@@ -46,9 +52,12 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			snap = r.Cache.Markets.GetSnapshot(id)
 		}
 	}
-	morphoM := r.Cache.MarketMap[id]
-	info := state.CheckMarket(r.Cache.Markets, morphoM)
-	interval := distanceToInterval(info.PerctToFirstLiq)
+	firstHF := snap.GetFirstHF()
+	if firstHF == nil {
+		firstHF = utils.TenPowInt(19)
+	}
+	diff := getDiffFloat(firstHF)
+	interval := distanceToInterval(diff)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -58,28 +67,43 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			return
 		case <-ticker.C:
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
-			// HF CHECKS HERE
-			fmt.Println(r.Cache.Markets.GetSnapshot(id).Oracle.Price == nil)
-			info = state.CheckMarket(r.Cache.Markets, morphoM)
-			if len(info.Liquidables) > 0 {
-				for _, l := range info.Liquidables {
-					r.LiquidateCh <- l.Pos
+			r.Cache.Markets.Update(id, func(m *market.Market) {
+				m.RecomputeActiveHF()
+			})
+			snap = r.Cache.Markets.GetSnapshot(id)
+			snap.Log(r.Cache.GetMorphoMarketFromId(id))
+			firstHF = snap.GetFirstHF()
+			if firstHF == nil {
+				firstHF = utils.TenPowInt(19)
+			}
+			diff := getDiffFloat(firstHF)
+			if diff < 0 {
+				for _, pos := range snap.Positions {
+					if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
+						r.LiquidateCh <- pos
+					}
 				}
-
 			}
-			newInterval := distanceToInterval(info.PerctToFirstLiq)
-			if info.IsETHCorrelated() {
-				newInterval = distanceToInterval(info.PerctToFirstLiq * 100)
-			}
-			// BUILDING REPORT
-			if info.Snap.Oracle.Price == nil {
-				break
-			}
-			r.Logger <- state.MarketReport(info)
+			newInterval := distanceToInterval(diff)
 			if newInterval != interval {
 				ticker.Reset(newInterval)
 				interval = newInterval
 			}
+		}
+	}
+}
+
+func (r *Runner) EventListener(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case event, ok := <-r.Conn.PositionCh:
+			if !ok {
+				return
+			}
+			onchain.ProcessEvents(r.Cache.Markets, event)
 		}
 	}
 }

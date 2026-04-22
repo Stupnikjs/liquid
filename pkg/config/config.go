@@ -10,7 +10,8 @@ import (
 
 type Addresses struct {
 	LiquidatorContract common.Address
-	SwapRouter         common.Address
+	UniSwapRouter      common.Address
+	UniSwapQuoter      common.Address
 	Wallet             common.Address
 	Morpho             common.Address
 }
@@ -34,7 +35,8 @@ func LoadBaseConfig() Config {
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
-			SwapRouter:         BaseUniswapV3Router,
+			UniSwapRouter:      BaseUniswapV3Router,
+			UniSwapQuoter:      BaseUniswapQuoterV2Addr,
 			LiquidatorContract: BaseLiquidatorAddr,
 			Morpho:             BaseMorphoBlueAddr,
 			Wallet:             BaseWalletAddr,
@@ -61,7 +63,8 @@ func LoadMainnetConfig() Config {
 		Addresses: Addresses{
 			Wallet:             MainWalletAddr,
 			LiquidatorContract: MainLiquidatorOdosAddr,
-			SwapRouter:         MainUniswapV3Router,
+			UniSwapRouter:      MainUniswapV3Router,
+			UniSwapQuoter:      MainUniswapV3Router, // change
 		},
 		ChainID: 1,
 		RPC: struct {
@@ -83,7 +86,9 @@ func LoadArbitrumConfig() Config {
 		Signer: signer,
 		Addresses: Addresses{
 			Wallet:             ArbitrumWalletAddress,
-			SwapRouter:         ArbitrumUniswapV3Router,
+			UniSwapRouter:      ArbitrumUniswapV3Router,
+			Morpho:             BaseMorphoBlueAddr,
+			UniSwapQuoter:      ArbitrumUniswapQuoterV2Addr,
 			LiquidatorContract: ArbitrumLiquidatorAddr,
 		},
 		ChainID: 42161,
@@ -104,9 +109,11 @@ func LoadOptimismConfig() Config {
 	signer, _ := NewOptimismSigner()
 	return Config{
 		Signer: signer,
+		// Change here
 		Addresses: Addresses{
 			Wallet:             ArbitrumWalletAddress,
-			SwapRouter:         ArbitrumUniswapV3Router,
+			UniSwapRouter:      ArbitrumUniswapV3Router,
+			UniSwapQuoter:      ArbitrumUniswapQuoterV2Addr,
 			LiquidatorContract: ArbitrumLiquidatorAddr,
 		},
 		ChainID: 10,

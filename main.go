@@ -26,12 +26,13 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
+	/*
+		go func() {
+			defer wg.Done()
+			Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+		}()
 
-	go func() {
-		defer wg.Done()
-		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
-	}()
-
+	*/
 	go func() {
 		defer wg.Done()
 		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")

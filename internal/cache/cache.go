@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 	"time"
@@ -25,12 +24,13 @@ type MarketStore struct {
 }
 
 type Market struct {
-	Mu        sync.RWMutex
-	Canceled  bool
-	Oracle    Oracle
-	LLTV      *big.Int
-	Stats     MarketStats
-	Positions []*BorrowPosition // Borrow positions sorted by HF asc
+	Mu          sync.RWMutex
+	Canceled    bool
+	Oracle      Oracle
+	LLTV        *big.Int
+	Stats       MarketStats
+	ActiveIndex int               // index of last pos with tracked HF
+	Positions   []*BorrowPosition // Borrow positions sorted by HF asc
 }
 
 type Oracle struct {
@@ -59,7 +59,6 @@ func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketF
 	}
 
 	markets := api.FilterMarket(result, filters, conf.ChainID)
-	fmt.Println("here", len(markets))
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
 	store := NewStore(markets)
 	for _, mk := range markets {
