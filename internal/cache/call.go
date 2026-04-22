@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -21,7 +22,7 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-
+			fmt.Println(chainId)
 			fetched, err := api.FetchBorrowersFromMarket(id, chainId)
 			if err != nil {
 				mu.Lock()
@@ -31,7 +32,6 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 				mu.Unlock()
 				return
 			}
-			maxPos := big.NewInt(0)
 			positions := ApiItemToPos(fetched, id)
 			sort.Slice(positions, func(i, j int) bool {
 				pi := positions[i].CollateralAssets
@@ -46,15 +46,18 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 				if pj == nil {
 					return true
 				}
-				return pi.Cmp(pj) < 0
+				return pi.Cmp(pj) > 0
 			})
+			if len(positions) == 0 {
+				return
+			}
 			// maybe sorting by collateral here
 			c.Markets.Update(id, func(m *Market) {
 				m.Positions = positions
 			})
 
 			c.Markets.Update(id, func(m *Market) {
-				m.Stats.MaxCollateralPos = new(big.Int).Set(maxPos)
+				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
 			})
 
 		}(id)

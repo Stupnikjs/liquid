@@ -69,7 +69,6 @@ func BorrowEventProcess(c state.MarketReader, log *types.Log) {
 				Address:      onBehalf,
 				BorrowShares: new(big.Int).Set(&shares),
 			}
-			toInsert.CachedHF = toInsert.HF(m.Stats.TotalBorrowShares, m.Stats.TotalBorrowAssets, m.Oracle.Price, m.LLTV)
 			m.InsertPositionUnsafe(toInsert)
 
 		}
@@ -207,6 +206,7 @@ func SupplyCollateralEventProcess(c state.MarketReader, log *types.Log) {
 			} else {
 				p.CollateralAssets.Add(p.CollateralAssets, &assets)
 			}
+			// update position in sorted list
 		}
 	})
 

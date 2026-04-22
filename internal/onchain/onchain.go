@@ -2,6 +2,7 @@ package onchain
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
@@ -57,6 +58,7 @@ func OnChainRefresh(conn *connector.Connector, c state.MarketReader, mParam morp
 	ctx := context.Background()
 	calls, _, results := OnChainCalls(c, mParam, id)
 	if err := conn.EthCallCtx(ctx, calls); err != nil {
+		fmt.Printf("[onchain] rpc error %x: %v\n", id[:4], err)
 		return err
 	}
 	ApplyResults(c, results)

@@ -44,7 +44,7 @@ func NewLogger(ctx context.Context, filename string) chan string {
 	}()
 
 	// ✅ ticker dans sa propre goroutine
-	go utils.RunTicker(ctx, 5*time.Minute, func() {
+	go utils.RunTicker(ctx, 2*time.Minute, func() {
 		mu.Lock()
 		defer mu.Unlock()
 		if len(logCache) == 0 {

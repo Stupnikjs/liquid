@@ -49,6 +49,17 @@ func FormatWAD(v *big.Int) string {
 	return fmt.Sprintf("%.4f", f)
 }
 
+// for token amounts where you know decimals
+func FormatDecimals(x *big.Int, decimals int) string {
+	if x == nil {
+		return "nil"
+	}
+	divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+	f := new(big.Float).SetInt(x)
+	f.Quo(f, new(big.Float).SetInt(divisor))
+	return f.Text('f', 4)
+}
+
 func BigIntToFloat(v *big.Int) float64 {
 	if v == nil {
 		return 0
