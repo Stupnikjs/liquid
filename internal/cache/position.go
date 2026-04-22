@@ -93,11 +93,17 @@ func (pos *BorrowPosition) HF(
 	return hf
 }
 
-func (m *Market) RecomputeAllHFUnsafe() {
-	for _, p := range m.Positions {
+// recompute n hf from start
+func (m *Market) RecomputeHFUnsafe(n int) {
+	for i, p := range m.Positions {
+  if i > n {
+    break
+  }
 		p.CachedHF = p.HF(m.Stats.TotalBorrowShares, m.Stats.TotalBorrowAssets, m.Oracle.Price, m.LLTV)
 	}
 }
+
+
 
 func (m *Market) SortAllPositionsByHFUnsafe() {
 	sort.Slice(m.Positions, func(i, j int) bool {
