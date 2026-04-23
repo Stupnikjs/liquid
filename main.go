@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -34,7 +35,14 @@ func main() {
 
 	go func() {
 		defer wg.Done()
+		time.Sleep(10 * time.Second) // to avoid too much logs at the same time
 		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+	}()
+
+	go func() {
+		defer wg.Done()
+		time.Sleep(30 * time.Second) // to avoid too much logs at the same time
+		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
 	}()
 
 	wg.Wait()

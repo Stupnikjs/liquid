@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"sync"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
@@ -35,18 +34,7 @@ func NewRunner(initedCache *cache.Cache, conf config.Config, logfile string) *Ru
 	}
 }
 
-func formatAmount(amount *big.Int, decimals uint8) string {
-	if amount == nil {
-		return "0"
-	}
-	divisor := new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil))
-	amountF := new(big.Float).SetInt(amount)
-	result := new(big.Float).Quo(amountF, divisor)
-	return result.Text('f', 4)
-}
-
 func (r *Runner) Init(ctx context.Context) {
-	fmt.Println("INITING __ ")
 	err := r.ApiCallRoutine(ctx)
 	if err != nil {
 		fmt.Println(err)
@@ -57,34 +45,26 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
-			fmt.Println("SNAP IS NIL __ OK ")
 			return
 		}
-		fmt.Println("SNAP ISNT NIL __ OK ")
 		morphoM := r.Cache.MarketMap[id]
-		result, err := swap.Quote(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if err != nil {
-			fmt.Println("QUOTE __ IS NIL ", err)
 			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Canceled = true
 			})
 			return
 		}
-		fmt.Printf("Pair %s/%s | source: uniswap | slippage: %f%% | amountIn: %s %s\n",
-			morphoM.CollateralTokenStr,
-			morphoM.LoanTokenStr,
-			result.Slippage,
-			formatAmount(result.AmountIn, uint8(morphoM.CollateralTokenDecimals)),
-			morphoM.CollateralTokenStr,
-		)
 		r.Cache.Markets.Update(id, func(m *cache.Market) {
 			m.Stats.MaxUniSwappable = result.AmountIn
 			m.Stats.SwapFee = result.Fee
+			m.RecomputeHFUnsafe(len(m.Positions))
 		})
 
 	})
 
-	fmt.Println(len(r.Cache.Markets.Ids()))
+	fmt.Println(r.Config.ChainID, len(r.Cache.Markets.Ids()))
+
 }
 
 func (r *Runner) OnChainRefreshAll() {

@@ -14,6 +14,7 @@ func (r *Runner) Run(ctx context.Context) {
 	// log markets info
 	go r.EventListener(ctx)
 	go r.LiquidationRoutine(ctx)
+	go r.LogMarketState(ctx)
 	// 👇 bloque proprement
 	<-ctx.Done()
 }

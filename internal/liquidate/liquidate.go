@@ -155,8 +155,8 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 	}
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr,        // change for multichain
-		To:    &config.BaseLiquidatorAddrV2, //
+		From:  config.BaseWalletAddr,      // change for multichain
+		To:    &config.BaseLiquidatorAddr, //
 		Input: data,
 	}
 

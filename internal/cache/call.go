@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -22,7 +21,6 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			fmt.Println(chainId)
 			fetched, err := api.FetchBorrowersFromMarket(id, chainId)
 			if err != nil {
 				mu.Lock()
