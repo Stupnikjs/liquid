@@ -93,7 +93,7 @@ func (r *Runner) OnChainRefreshAll() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id)
+			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
 		}(id)
 	}
 	wg.Wait()
