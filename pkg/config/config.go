@@ -38,7 +38,7 @@ func LoadBaseConfig() Config {
 			UniSwapRouter:      BaseUniswapV3Router,
 			UniSwapQuoter:      BaseUniswapQuoterV2Addr,
 			LiquidatorContract: BaseLiquidatorAddr,
-			Morpho:             BaseMorphoBlueAddr,
+			Morpho:             MorphoMain,
 			Wallet:             BaseWalletAddr,
 		},
 		ChainID: 8453,
@@ -87,7 +87,7 @@ func LoadArbitrumConfig() Config {
 		Addresses: Addresses{
 			Wallet:             ArbitrumWalletAddress,
 			UniSwapRouter:      ArbitrumUniswapV3Router,
-			Morpho:             BaseMorphoBlueAddr,
+			Morpho:             ArbitrumMorphoBlueAddr,
 			UniSwapQuoter:      ArbitrumUniswapQuoterV2Addr,
 			LiquidatorContract: ArbitrumLiquidatorAddr,
 		},
@@ -111,18 +111,19 @@ func LoadOptimismConfig() Config {
 		Signer: signer,
 		// Change here
 		Addresses: Addresses{
-			Wallet:             ArbitrumWalletAddress,
-			UniSwapRouter:      ArbitrumUniswapV3Router,
-			UniSwapQuoter:      ArbitrumUniswapQuoterV2Addr,
-			LiquidatorContract: ArbitrumLiquidatorAddr,
+			Wallet:             OptimismWalletAddress,
+			UniSwapRouter:      OptimismUniswapV3Router,
+			UniSwapQuoter:      OptimismUniswapQuoterV2Addr,
+			LiquidatorContract: OptimismLiquidatorAddr,
+			Morpho:             OptimismMorphoBlueAddr,
 		},
 		ChainID: 10,
 		RPC: struct {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: []string{os.Getenv("OP_HTTP_RPC_ALCH"), os.Getenv("OP_HTTP_RPC_ALCH")},
-			WS:   []string{os.Getenv("OP_WS_RPC_ALCH"), os.Getenv("OP_WS_RPC_ALCH")},
+			HTTP: []string{os.Getenv("OPT_HTTP_RPC_ALCH"), os.Getenv("OPT_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("OPT_WS_RPC_ALCH"), os.Getenv("OPT_WS_RPC_ALCH")},
 		},
 	}
 }

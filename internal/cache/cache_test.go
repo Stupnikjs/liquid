@@ -18,8 +18,8 @@ func newMarketID(b byte) [32]byte {
 
 func newBorrowPosition(addr common.Address, hf int64, collateral int64) *BorrowPosition {
 	return &BorrowPosition{
-		Address:         addr,
-		CachedHF:        big.NewInt(hf),
+		Address:          addr,
+		CachedHF:         big.NewInt(hf),
 		CollateralAssets: big.NewInt(collateral),
 	}
 }
@@ -27,8 +27,8 @@ func newBorrowPosition(addr common.Address, hf int64, collateral int64) *BorrowP
 func newMarket() *Market {
 	return &Market{
 		Canceled:    false,
-		Sorted:      make([]*BorrowPosition, 0),
-		ActiveLimit: 0,
+		Positions:   make([]*BorrowPosition, 0),
+		ActiveIndex: 0,
 		Oracle: Oracle{
 			Price:   big.NewInt(1e18),
 			Address: common.Address{},
@@ -59,7 +59,7 @@ func TestIds_ExcludesCanceled(t *testing.T) {
 	store, id := newPopulatedStore()
 
 	canceledID := newMarketID(0x02)
-	store.markets[canceledID] = &Market{Canceled: true, Sorted: make([]*BorrowPosition, 0)}
+	store.markets[canceledID] = &Market{Canceled: true, Positions: make([]*BorrowPosition, 0)}
 
 	ids := store.Ids()
 	if len(ids) != 1 {
@@ -119,7 +119,7 @@ func TestAllPosLen(t *testing.T) {
 	addr2 := common.HexToAddress("0x2")
 
 	store.Update(id, func(m *Market) {
-		m.Sorted = append(m.Sorted,
+		m.Positions = append(m.Positions,
 			newBorrowPosition(addr1, 9e17, 100),
 			newBorrowPosition(addr2, 8e17, 200),
 		)
@@ -165,8 +165,8 @@ func TestGetSnapshot_CopiesPositions(t *testing.T) {
 
 	addr := common.HexToAddress("0x1")
 	store.Update(id, func(m *Market) {
-		m.Sorted = append(m.Sorted, newBorrowPosition(addr, 9e17, 100))
-		m.ActiveLimit = 1
+		m.Positions = append(m.Positions, newBorrowPosition(addr, 9e17, 100))
+		m.ActiveIndex = 1
 	})
 
 	snap := store.GetSnapshot(id)
@@ -183,7 +183,8 @@ func TestGetSnapshot_IsolatesFromOriginal(t *testing.T) {
 
 	addr := common.HexToAddress("0x1")
 	store.Update(id, func(m *Market) {
-		m.Sorted = append(m.Sorted, newBorrowPosition(addr, 9e17, 100))
+		m.Positions = append(m.Positions, newBorrowPosition(addr, 9e17, 100))
+		m.ActiveIndex = 1
 	})
 
 	snap := store.GetSnapshot(id)
@@ -212,20 +213,20 @@ func TestActiveLimitFiltersHotZone(t *testing.T) {
 
 	store.Update(id, func(m *Market) {
 		// positions triées HF asc
-		m.Sorted = []*BorrowPosition{
+		m.Positions = []*BorrowPosition{
 			newBorrowPosition(common.HexToAddress("0x1"), 8e17, 100),  // liquidable
 			newBorrowPosition(common.HexToAddress("0x2"), 95e16, 100), // hot
 			newBorrowPosition(common.HexToAddress("0x3"), 12e17, 100), // cold
 			newBorrowPosition(common.HexToAddress("0x4"), 15e17, 100), // cold
 		}
-		// calculer ActiveLimit
-		for i, p := range m.Sorted {
+		// calculer ActiveIndex
+		for i, p := range m.Positions {
 			if p.CachedHF.Cmp(HFThreshold) >= 0 {
-				m.ActiveLimit = i
+				m.ActiveIndex = i
 				return
 			}
 		}
-		m.ActiveLimit = len(m.Sorted)
+		m.ActiveIndex = len(m.Positions)
 	})
 
 	store.mu.RLock()
@@ -233,7 +234,7 @@ func TestActiveLimitFiltersHotZone(t *testing.T) {
 	store.mu.RUnlock()
 
 	m.Mu.RLock()
-	hotZone := m.Sorted[:m.ActiveLimit]
+	hotZone := m.Positions[:m.ActiveIndex]
 	m.Mu.RUnlock()
 
 	if len(hotZone) != 2 {
