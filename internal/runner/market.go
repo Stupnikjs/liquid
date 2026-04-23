@@ -60,6 +60,9 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			if diff < 0 {
 				for _, pos := range snap.Positions {
 					if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
+      // faire une map[common.Address]int 
+      // pour compter le nombre de simulation
+      // au delà de 20 simulation ignorer 
 						r.LiquidateCh <- pos
 					}
 				}
