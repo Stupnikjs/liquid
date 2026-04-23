@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -9,6 +10,12 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
+
+/*
+    One routine per market with dynamic interval based on distance to liquidation (HF = 1)
+	Hold Liquidation logic
+
+*/
 
 func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	// Wait for initial data
@@ -35,12 +42,16 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
+			start := time.Now().UnixNano()
+			err := onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
+			if err != nil {
+				r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
+			}
 			r.Cache.Markets.Update(id, func(m *market.Market) {
-				m.RecomputeActiveHF()
+				m.RecomputeHFUnsafe(len(m.Positions))
+				m.SortAllPositionsByHFUnsafe() // need to sort less often than recompute
 			})
 			snap = r.Cache.Markets.GetSnapshot(id)
-			snap.Log(r.Cache.GetMorphoMarketFromId(id))
 			firstHF = snap.GetFirstHF()
 			if firstHF == nil {
 				firstHF = utils.TenPowInt(19)
@@ -58,6 +69,8 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 				ticker.Reset(newInterval)
 				interval = newInterval
 			}
+			end := time.Now().UnixNano()
+			fmt.Println("market routine ms:", (end-start)/1e6)
 		}
 	}
 }

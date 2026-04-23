@@ -1,11 +1,9 @@
 package cache
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
@@ -135,19 +133,4 @@ func (s *MarketSnapshot) GetFirstHF() *big.Int {
 		return big.NewInt(0)
 	}
 	return s.Positions[0].CachedHF
-}
-
-func (s *MarketSnapshot) Log(p morpho.MarketParams) string {
-	return fmt.Sprintf(
-		"[%x] %s/%s oracle=%s totalBorrow=%s totalShares=%s positions=%d firstHF=%s lltv=%s",
-		s.ID[:4],
-		p.CollateralTokenStr,
-		p.LoanTokenStr,
-		utils.FormatWAD(s.Oracle.Price),
-		utils.FormatDecimals(s.Stats.TotalBorrowAssets, int(p.LoanTokenDecimals)),
-		utils.FormatDecimals(s.Stats.TotalBorrowShares, int(p.LoanTokenDecimals)),
-		len(s.Positions),
-		utils.FormatWAD(s.GetFirstHF()),
-		utils.FormatWAD(s.LLTV),
-	)
 }

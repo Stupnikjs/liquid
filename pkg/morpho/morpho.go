@@ -49,6 +49,7 @@ func SharesToAssets(shares, totalAssets, totalShares *big.Int) *big.Int {
 	return r.Div(r, totalShares)
 }
 
+/* Profit = seized - repayed - gas */
 func EstimateProfit(
 	seizeAssets, repayAssets *big.Int,
 	gasEst uint64,

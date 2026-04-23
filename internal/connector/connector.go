@@ -29,22 +29,22 @@ type Connector struct {
 	currWS     int
 	ClientHTTP *w3.Client
 	ClientWS   *w3.Client
-	PositionCh chan *types.Log
+	PositionCh chan *types.Log // usefull ?
 }
 
 func NewConnector(httpRPC, websocket []string) *Connector {
-	clientHTTP, err := w3.Dial(httpRPC[1])
+	clientHTTP, err := w3.Dial(httpRPC[0])
 	if err != nil {
 		panic(err)
 	}
-	clientWS, err := w3.Dial(websocket[1])
+	clientWS, err := w3.Dial(websocket[0])
 	if err != nil {
 		panic(err)
 	}
 	return &Connector{
 		WS:         websocket,
-		currHTTP:   1,
-		currWS:     1,
+		currHTTP:   0,
+		currWS:     0,
 		HTTP:       httpRPC,
 		ClientHTTP: clientHTTP,
 		ClientWS:   clientWS,

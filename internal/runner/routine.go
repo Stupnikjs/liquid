@@ -4,10 +4,15 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/liquidate"
+	"github.com/Stupnikjs/morpho-sepolia/internal/state"
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
+
+/*          Parralel calls in Orchestrator                         */
 
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 	for _, id := range r.Cache.Markets.Ids() {
@@ -22,6 +27,15 @@ func (r *Runner) ApiCallRoutine(ctx context.Context) error {
 
 func (r *Runner) LogEthCallsPerMin(ctx context.Context) {
 	r.Conn.LogsEthCallsFromLastMin(ctx, r.Logger)
+}
+
+func (r *Runner) LogMarketState(ctx context.Context) {
+	utils.RunTicker(ctx, time.Minute, func() {
+		r.Cache.Markets.Range(func(id [32]byte) {
+			morphoM := r.Cache.GetMorphoMarketFromId(id)
+			r.Logger <- state.GetMarketLog(r.Cache.Markets, id, morphoM)
+		})
+	})
 }
 
 func (r *Runner) LiquidationRoutine(ctx context.Context) {
