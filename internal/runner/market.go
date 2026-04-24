@@ -18,6 +18,14 @@ import (
 
 */
 
+// Dans runner.go — local à la routine, pas dans Market
+type marketState struct {
+    ignoreMap map[common.Address]int
+    tickCount int
+}
+
+
+
 func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	// Wait for initial data
 	var snap *market.MarketSnapshot
