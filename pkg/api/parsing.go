@@ -5,10 +5,15 @@ import (
 	"fmt"
 )
 
-func PositionsQuery(marketID string, chainID uint32) string {
+func PositionsQuery(marketID string, chainID uint32, cursor string) string {
+	afterClause := ""
+	if cursor != "" {
+		afterClause = fmt.Sprintf(`after: "%s"`, cursor)
+	}
 	return fmt.Sprintf(`{
         marketPositions(
             first: 1000
+            %s
             where: {
                 marketUniqueKey_in: ["%s"]
                 chainId_in: [%d]
@@ -16,15 +21,19 @@ func PositionsQuery(marketID string, chainID uint32) string {
         ) {
             items {
                 user { address }
-                state { 
-borrowShares borrowAssetsUsd collateral }
+                state {
+                    borrowShares borrowAssetsUsd collateral
+                }
+            }
+            pageInfo {
+                endCursor
+                hasNextPage
             }
         }
-    }`, marketID, chainID)
+    }`, afterClause, marketID, chainID)
 }
 
 func MarketsQuery(chainid uint32) string {
-	// On récupère tout sur Base (8453) pour filtrer ensuite en Go
 	return fmt.Sprintf(`{
         markets(
             orderBy: SupplyAssetsUsd
@@ -57,24 +66,6 @@ func MarketsQuery(chainid uint32) string {
 }
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
-
-type PositionsResult struct {
-	MarketPositions struct {
-		Items []struct {
-			User struct {
-				Address string `json:"address"`
-			} `json:"user"`
-			State struct {
-				BorrowShares    json.Number `json:"borrowShares"`
-				BorrowAssetsUsd json.Number `json:"borrowAssetsUsd"`
-				Collateral      json.Number `json:"collateral"`
-			} `json:"state"`
-		} `json:"items"`
-		PageInfo struct {
-			CountTotal int `json:"countTotal"`
-		} `json:"pageInfo"`
-	} `json:"marketPositions"`
-}
 
 type MarketsResult struct {
 	Markets struct {
