@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
@@ -73,17 +72,9 @@ func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) 
 		return
 	}
 	r.Logger <- fmt.Sprintf("[liq] sending tx for %s profit=%s gas=%d", p.Address, result.EstProfit, result.GasEstimate)
-	morphoP := r.Cache.MarketMap[p.MarketID]
 
 	// Simlation worked now send the tx
-	err := liquidate.LiquidateCall(r.Config.Signer, r.Conn.ClientHTTP, ctx, liquidate.LiquidateArgs{
-		MarketParams: *morphoP.ToMarketContractParams(),
-		Borrower:     p.Address,
-		SeizedAssets: result.SeizeAssets,
-		RepaidShares: result.RepayShares,
-		SwapRouter:   r.Config.Addresses.UniSwapRouter,
-		PoolFee:      big.NewInt(int64(morphoP.PoolFee)), // fees not set here
-	})
+	err := liquidate.LiquidateCall(r.Config.Signer, r.Conn.ClientHTTP, ctx, result.Args)
 
 	if err != nil {
 		r.Logger <- fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err)

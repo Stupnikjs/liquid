@@ -31,7 +31,10 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 				mu.Unlock()
 				return
 			}
-			positions := ApiItemToPos(fetched, id)
+			var positions []*BorrowPosition
+			for _, pos := range fetched {
+				positions = append(positions, ApiItemToPos(pos, id))
+			}
 			sort.Slice(positions, func(i, j int) bool {
 				pi := positions[i].CollateralAssets
 				pj := positions[j].CollateralAssets
@@ -66,19 +69,14 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 	return firstErr
 }
 
-func ApiItemToPos(result api.PositionsResult, marketId [32]byte) []*BorrowPosition {
-	var positions []*BorrowPosition
-	for _, p := range result.MarketPositions.Items {
-
-		pos := &BorrowPosition{
-			BorrowShares:     utils.ParseBigInt(p.State.BorrowShares.String()),
-			CollateralAssets: utils.ParseBigInt(p.State.Collateral.String()),
-			MarketID:         marketId,
-			Address:          common.HexToAddress(p.User.Address),
-		}
-		positions = append(positions, pos)
+func ApiItemToPos(p api.PositionItem, marketId [32]byte) *BorrowPosition {
+	return &BorrowPosition{
+		BorrowShares:     utils.ParseBigInt(p.State.BorrowShares.String()),
+		CollateralAssets: utils.ParseBigInt(p.State.Collateral.String()),
+		MarketID:         marketId,
+		Address:          common.HexToAddress(p.User.Address),
 	}
-	return positions
+
 }
 
 func ParsePositions(id [32]byte, result api.PositionsResult) []BorrowPosition {
