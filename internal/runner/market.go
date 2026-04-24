@@ -92,6 +92,21 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	}
 }
 
+
+func (r *Runner) tryLiquidateActive(id [32]byte, state *marketState) {
+    r.Cache.Markets.Update(id, func(m *market.Market) {
+        for _, pos := range m.Positions[:m.ActiveIndex] {
+            if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
+                break
+            }
+            if state.ignoreMap[pos.Address] < 10 {
+                r.LiquidateCh <- *pos
+            }
+            state.ignoreMap[pos.Address]++
+        }
+    })
+}
+
 func distanceToInterval(distance float64) time.Duration {
 	switch {
 	// 1% if ETH pair < 0.0001
