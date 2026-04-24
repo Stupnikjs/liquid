@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"math/big"
 	"sort"
 	"sync"
@@ -15,13 +16,13 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var firstErr error
-
+	ctx := context.Background()
 	// gets positions and maxPos for swap
 	for id := range c.MarketMap {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			fetched, err := api.FetchBorrowersFromMarket(id, chainId)
+			fetched, err := api.FetchAllPositions(ctx, id, chainId)
 			if err != nil {
 				mu.Lock()
 				if firstErr == nil {
