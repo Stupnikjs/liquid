@@ -29,13 +29,22 @@ func marketWithStats(price, lltv, totalBorrowAssets, totalBorrowShares *big.Int)
 // pos construit une BorrowPosition simple.
 func pos(addr string, collateral, borrowShares int64) *BorrowPosition {
 	return &BorrowPosition{
-		Address:         common.HexToAddress(addr),
+		Address:          common.HexToAddress(addr),
 		CollateralAssets: big.NewInt(collateral),
-		BorrowShares:    big.NewInt(borrowShares),
+		BorrowShares:     big.NewInt(borrowShares),
 	}
 }
 
 // ── HF ───────────────────────────────────────────────────────────────────────
+
+// HF() retourne nil (pas 0) pour les positions sans borrow/collateral.
+// Les tests vérifient Sign() == 0 via un helper qui traite nil comme 0.
+func hfSign(hf *big.Int) int {
+	if hf == nil {
+		return 0
+	}
+	return hf.Sign()
+}
 
 func TestHF_ZeroWhenBorrowSharesZero(t *testing.T) {
 	m := marketWithStats(
@@ -45,8 +54,8 @@ func TestHF_ZeroWhenBorrowSharesZero(t *testing.T) {
 	p := pos("0x1", 1000, 0) // BorrowShares = 0
 
 	hf := m.HF(p)
-	if hf.Sign() != 0 {
-		t.Errorf("expected 0, got %s", hf)
+	if hfSign(hf) != 0 {
+		t.Errorf("expected nil/0, got %s", hf)
 	}
 }
 
@@ -58,8 +67,8 @@ func TestHF_ZeroWhenCollateralZero(t *testing.T) {
 	p := pos("0x1", 0, 500)
 
 	hf := m.HF(p)
-	if hf.Sign() != 0 {
-		t.Errorf("expected 0, got %s", hf)
+	if hfSign(hf) != 0 {
+		t.Errorf("expected nil/0, got %s", hf)
 	}
 }
 
@@ -68,8 +77,8 @@ func TestHF_ZeroWhenNilStats(t *testing.T) {
 	p := pos("0x1", 1000, 500)
 
 	hf := m.HF(p)
-	if hf.Sign() != 0 {
-		t.Errorf("expected 0 for nil stats, got %s", hf)
+	if hfSign(hf) != 0 {
+		t.Errorf("expected nil/0 for nil stats, got %s", hf)
 	}
 }
 
@@ -82,7 +91,7 @@ func TestHF_ZeroWhenNilStats(t *testing.T) {
 // HF = 1.6e39 / 1e39 → 1 (integer div) mais > seuil 0
 func TestHF_HealthyPosition(t *testing.T) {
 	m := marketWithStats(
-		new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil), // price = 1e18
+		new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil),                                  // price = 1e18
 		new(big.Int).Mul(big.NewInt(8), new(big.Int).Exp(big.NewInt(10), big.NewInt(17), nil)), // lltv = 8e17
 		big.NewInt(1000),
 		big.NewInt(1000),
@@ -90,8 +99,8 @@ func TestHF_HealthyPosition(t *testing.T) {
 	p := pos("0x1", 2000, 1000)
 
 	hf := m.HF(p)
-	if hf.Sign() <= 0 {
-		t.Errorf("expected positive HF for healthy position, got %s", hf)
+	if hf == nil || hf.Sign() <= 0 {
+		t.Errorf("expected positive HF for healthy position, got %v", hf)
 	}
 }
 
@@ -110,6 +119,9 @@ func TestHF_RiskyLowerThanHealthy(t *testing.T) {
 	hfHealthy := m.HF(healthy)
 	hfRisky := m.HF(risky)
 
+	if hfHealthy == nil || hfRisky == nil {
+		t.Fatal("neither healthy nor risky HF should be nil")
+	}
 	if hfRisky.Cmp(hfHealthy) >= 0 {
 		t.Errorf("risky HF (%s) should be < healthy HF (%s)", hfRisky, hfHealthy)
 	}
@@ -130,8 +142,8 @@ func TestRecomputeHF_UpdatesCachedHF(t *testing.T) {
 
 	m.RecomputeHF(1)
 
-	if p.CachedHF.Sign() <= 0 {
-		t.Errorf("CachedHF should be > 0 after recompute, got %s", p.CachedHF)
+	if p.CachedHF == nil || p.CachedHF.Sign() <= 0 {
+		t.Errorf("CachedHF should be > 0 after recompute, got %v", p.CachedHF)
 	}
 }
 
@@ -150,11 +162,12 @@ func TestRecomputeHF_RespectsNLimit(t *testing.T) {
 
 	m.RecomputeHF(1) // seulement la première
 
-	if p1.CachedHF.Sign() <= 0 {
-		t.Errorf("p1 CachedHF should be updated")
+	if p1.CachedHF == nil || p1.CachedHF.Sign() <= 0 {
+		t.Errorf("p1 CachedHF should be updated, got %v", p1.CachedHF)
 	}
-	if p2.CachedHF.Sign() != 0 {
-		t.Errorf("p2 CachedHF should not be updated, got %s", p2.CachedHF)
+	// p2 n'a pas été recompute : CachedHF reste big.NewInt(0)
+	if p2.CachedHF == nil || p2.CachedHF.Sign() != 0 {
+		t.Errorf("p2 CachedHF should not be updated, got %v", p2.CachedHF)
 	}
 }
 
@@ -174,11 +187,11 @@ func TestRecomputeActiveHF_UsesActiveIndex(t *testing.T) {
 
 	m.RecomputeActiveHF()
 
-	if p1.CachedHF.Sign() <= 0 {
-		t.Errorf("p1 (active) should be recomputed")
+	if p1.CachedHF == nil || p1.CachedHF.Sign() <= 0 {
+		t.Errorf("p1 (active) should be recomputed, got %v", p1.CachedHF)
 	}
-	if p2.CachedHF.Sign() != 0 {
-		t.Errorf("p2 (cold) should not be recomputed")
+	if p2.CachedHF == nil || p2.CachedHF.Sign() != 0 {
+		t.Errorf("p2 (cold) should not be recomputed, got %v", p2.CachedHF)
 	}
 }
 
@@ -199,6 +212,10 @@ func TestSortAllPositionsByHF_SortsAscending(t *testing.T) {
 
 	expected := []int64{8e17, 11e17, 15e17}
 	for i, exp := range expected {
+		if m.Positions[i].CachedHF == nil {
+			t.Errorf("pos[%d]: expected %d, got nil", i, exp)
+			continue
+		}
 		if m.Positions[i].CachedHF.Cmp(big.NewInt(exp)) != 0 {
 			t.Errorf("pos[%d]: expected %d, got %s", i, exp, m.Positions[i].CachedHF)
 		}
@@ -210,7 +227,7 @@ func TestSortAllPositionsByHF_NilCachedHFLast(t *testing.T) {
 
 	p1 := pos("0x1", 100, 100)
 	p2 := pos("0x2", 100, 100)
-	p1.CachedHF = nil             // nil → rejeté en fin
+	p1.CachedHF = nil // nil → rejeté en fin
 	p2.CachedHF = big.NewInt(9e17)
 	m.Positions = []*BorrowPosition{p1, p2}
 
@@ -232,29 +249,50 @@ func TestSortAllPositionsByHF_Empty(t *testing.T) {
 	m.SortAllPositionsByHF()
 }
 
-// ── GetFirstHF ────────────────────────────────────────────────────────────────
+// ── GetFirstHF (sur *MarketSnapshot) ─────────────────────────────────────────
 
-func TestMarketGetFirstHF_Empty(t *testing.T) {
-	m := marketWithStats(big.NewInt(1e18), big.NewInt(8e17), big.NewInt(1000), big.NewInt(1000))
-	m.Positions = []*BorrowPosition{}
-
-	hf := m.GetFirstHF()
-	if hf.Sign() != 0 {
-		t.Errorf("expected 0 for empty positions, got %s", hf)
+// snapWithPositions construit un MarketSnapshot minimal avec les positions données.
+func snapWithPositions(positions []BorrowPosition) *MarketSnapshot {
+	return &MarketSnapshot{
+		Positions: positions,
 	}
 }
 
-func TestMarketGetFirstHF_ReturnsLowest(t *testing.T) {
-	m := marketWithStats(big.NewInt(1e18), big.NewInt(8e17), big.NewInt(1000), big.NewInt(1000))
+func TestSnapshotGetFirstHF_Empty(t *testing.T) {
+	snap := snapWithPositions([]BorrowPosition{})
 
-	p1 := pos("0x1", 100, 100)
-	p2 := pos("0x2", 100, 100)
-	p1.CachedHF = big.NewInt(8e17)
-	p2.CachedHF = big.NewInt(12e17)
-	m.Positions = []*BorrowPosition{p1, p2}
+	hf := snap.GetFirstHF()
+	if hf != nil {
+		t.Errorf("expected nil for empty positions, got %s", hf)
+	}
+}
 
-	hf := m.GetFirstHF()
+func TestSnapshotGetFirstHF_ReturnsLowest(t *testing.T) {
+	// Positions déjà triées : lowest en premier (invariant post-sort)
+	snap := snapWithPositions([]BorrowPosition{
+		{CachedHF: big.NewInt(8e17)},
+		{CachedHF: big.NewInt(12e17)},
+	})
+
+	hf := snap.GetFirstHF()
+	if hf == nil {
+		t.Fatal("GetFirstHF should not return nil for non-empty positions")
+	}
 	if hf.Cmp(big.NewInt(8e17)) != 0 {
 		t.Errorf("expected 8e17, got %s", hf)
+	}
+}
+
+// GetFirstHF doit sauter les entrées nil et retourner le premier CachedHF valide.
+func TestSnapshotGetFirstHF_SkipsNilEntries(t *testing.T) {
+	// Après sort : valides en premier, nil en fin
+	snap := snapWithPositions([]BorrowPosition{
+		{CachedHF: big.NewInt(9e17)},
+		{CachedHF: nil},
+	})
+
+	hf := snap.GetFirstHF()
+	if hf == nil || hf.Cmp(big.NewInt(9e17)) != 0 {
+		t.Errorf("expected 9e17, got %v", hf)
 	}
 }

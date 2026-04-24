@@ -61,10 +61,9 @@ func (r *Runner) LiquidationRoutine(ctx context.Context) {
 }
 
 func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) {
-	liqPos := &liquidate.Liquidable{Pos: p}
 
 	// Precompute and simulation
-	result := liquidate.SimulateAndPreComputeTx(r.Conn, r.Cache.Markets, r.Cache.MarketMap, liqPos)
+	result := liquidate.SimulateAndPreComputeTx(r.Conn, r.Cache.Markets, r.Cache.MarketMap, p)
 	if result.SimErr != nil {
 		r.Logger <- fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr)
 		return
@@ -82,7 +81,7 @@ func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) 
 		Borrower:     p.Address,
 		SeizedAssets: result.SeizeAssets,
 		RepaidShares: result.RepayShares,
-		SwapRouter:   liquidate.SwapRouterAddr,
+		SwapRouter:   r.Config.Addresses.UniSwapRouter,
 		PoolFee:      big.NewInt(int64(morphoP.PoolFee)), // fees not set here
 	})
 

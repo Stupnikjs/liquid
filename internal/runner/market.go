@@ -9,6 +9,7 @@ import (
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 /*
@@ -36,6 +37,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	interval := distanceToInterval(diff)
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
+	ignoreMap := make(map[common.Address]int)
 
 	for {
 		select {
@@ -60,10 +62,14 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			if diff < 0 {
 				for _, pos := range snap.Positions {
 					if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
-      // faire une map[common.Address]int 
-      // pour compter le nombre de simulation
-      // au delà de 20 simulation ignorer 
-						r.LiquidateCh <- pos
+						// faire une map[common.Address]int
+						// pour compter le nombre de simulation
+						// au delà de 20 simulation ignorer
+						if count, ok := ignoreMap[pos.Address]; !ok || count < 10 {
+							r.LiquidateCh <- pos
+						}
+						ignoreMap[pos.Address] += 1
+
 					}
 				}
 			}
@@ -87,10 +93,10 @@ func distanceToInterval(distance float64) time.Duration {
 	case distance < 0.03:
 		return 10 * time.Second
 	// 1% if ETH pair < 0.0005
-	case distance < 0.05:
-		return 100 * time.Second
+	case distance < 0.20:
+		return 500 * time.Second
 	default:
-		return 200 * time.Second
+		return 500 * time.Second
 	}
 }
 

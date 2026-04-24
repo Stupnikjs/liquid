@@ -63,7 +63,7 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 	var gasEst uint64
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr,
+		From:  config.BaseWalletAddr, // pass config
 		To:    params.To,
 		Input: params.Calldata,
 		Value: params.Value,
@@ -114,44 +114,47 @@ func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context
 	}
 
 	_, err = SendSignedTx(signer, client, ctx, TxParams{
-		To:       &config.BaseLiquidatorAddrV2,
+		To:       &config.BaseLiquidatorAddr,
 		Calldata: calldata,
 	})
 	return err
 }
 
-func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, liq *Liquidable) *Liquidable {
-	out := *liq
-	snap := c.GetSnapshot(liq.Pos.MarketID)
+func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, p *cache.BorrowPosition) *Liquidable {
+	out := &Liquidable{}
+	snap := c.GetSnapshot(p.MarketID)
 	if snap == nil {
 		out.SimErr = fmt.Errorf("snap nil")
-		return &out
+		return out
 	}
 
-	params := marketMap[liq.Pos.MarketID]
+	params := marketMap[p.MarketID]
 
 	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
-		liq.Pos.BorrowShares,
+		p.BorrowShares,
 		snap.Stats.TotalBorrowAssets,
 		snap.Stats.TotalBorrowShares,
 		snap.LLTV,
 	)
 	out.RepayShares = repayShares
-	out.SeizeAssets = seizeAssets
+
+	if seizeAssets.Cmp(snap.Stats.MaxUniSwappable) > 0 {
+		seizeAssets = snap.Stats.MaxUniSwappable
+	}
 
 	// 2. Dry-run eth_call + EstimateGas en batch
 	data, err := config.FuncLiquidate.EncodeArgs(
 		params.ToMarketContractParams(),
-		liq.Pos.Address,
+		p.Address,
+		seizeAssets,
 		big.NewInt(0),
-		repayShares,
 		config.BaseUniswapV3Router, // change for multichain
 		big.NewInt(int64(params.PoolFee)),
 	)
 	if err != nil {
 		out.SimErr = fmt.Errorf("encode: %w", err)
-		return &out
+		return out
 	}
 
 	msg := w3types.Message{
@@ -167,7 +170,7 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 		eth.EstimateGas(&msg, nil).Returns(&gasVal),
 	}); err != nil {
 		out.SimErr = fmt.Errorf("eth_call failed: %w", err)
-		return &out
+		return out
 	}
 
 	// 3. Profit net
@@ -176,5 +179,5 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
 
-	return &out
+	return out
 }
