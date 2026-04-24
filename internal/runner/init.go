@@ -40,8 +40,7 @@ func (r *Runner) Init(ctx context.Context) {
 		fmt.Println(err)
 	}
 	r.OnChainRefreshAll()
-	fmt.Println("all pos", r.Cache.Markets.AllPosLen())
-	// CHECK Liquidity on markets with uniswap
+
 	r.Cache.Markets.Range(func(id [32]byte) {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
@@ -63,7 +62,18 @@ func (r *Runner) Init(ctx context.Context) {
 
 	})
 
-	fmt.Println(r.Config.ChainID, len(r.Cache.Markets.Ids()))
+	var snap *cache.MarketSnapshot
+	for k, v := range r.Cache.MarketMap {
+		snap = r.Cache.Markets.GetSnapshot(k)
+		if snap != nil {
+			msg := fmt.Sprintf("_________ Market %s/%s in cache with %d pos ___________",
+				v.CollateralTokenStr, v.LoanTokenStr, len(snap.Positions))
+			fmt.Println(msg) // log direct pour confirmer que les marchés existent
+			r.Logger <- msg
+		} else {
+			fmt.Println("snap nil for market", v.CollateralTokenStr) // voir si snap est nil
+		}
+	}
 
 }
 

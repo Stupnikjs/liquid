@@ -127,10 +127,3 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 
 	return snap
 }
-
-func (s *MarketSnapshot) GetFirstHF() *big.Int {
-	if len(s.Positions) == 0 {
-		return big.NewInt(0)
-	}
-	return s.Positions[0].CachedHF
-}
