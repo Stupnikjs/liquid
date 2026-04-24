@@ -20,11 +20,9 @@ import (
 
 // Dans runner.go — local à la routine, pas dans Market
 type marketState struct {
-    ignoreMap map[common.Address]int
-    tickCount int
+	ignoreMap map[common.Address]int
+	tickCount int
 }
-
-
 
 func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	// Wait for initial data
@@ -90,21 +88,6 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 			fmt.Println("market routine ms:", (end-start)/1e6)
 		}
 	}
-}
-
-
-func (r *Runner) tryLiquidateActive(id [32]byte, state *marketState) {
-    r.Cache.Markets.Update(id, func(m *market.Market) {
-        for _, pos := range m.Positions[:m.ActiveIndex] {
-            if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
-                break
-            }
-            if state.ignoreMap[pos.Address] < 10 {
-                r.LiquidateCh <- *pos
-            }
-            state.ignoreMap[pos.Address]++
-        }
-    })
 }
 
 func distanceToInterval(distance float64) time.Duration {

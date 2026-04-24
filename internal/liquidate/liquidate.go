@@ -30,7 +30,8 @@ var (
 			uint256 seizedAssets,
 			uint256 repaidShares,
 			address swapRouter,
-			uint24 poolFee
+			uint24 poolFee,
+			uint256 minOut
 		)`,
 		``,
 	)
@@ -41,11 +42,13 @@ type Liquidable struct {
 	HF           *big.Int
 	RepayShares  *big.Int
 	SeizeAssets  *big.Int
+	MinOut       *big.Int
 	EstProfit    *big.Int
 	GasEstimate  uint64
 	SimulatedAt  time.Time
 	SimErr       error
 	IsLiquidable bool
+	Args         LiquidateArgs
 }
 
 type LiquidateArgs struct {
@@ -55,6 +58,7 @@ type LiquidateArgs struct {
 	RepaidShares *big.Int
 	SwapRouter   common.Address
 	PoolFee      *big.Int
+	MinOut       *big.Int
 }
 
 func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
@@ -63,7 +67,7 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 	var gasEst uint64
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr, // pass config
+		From:  config.BaseWalletAddr,
 		To:    params.To,
 		Input: params.Calldata,
 		Value: params.Value,
@@ -104,7 +108,7 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 type TxParams struct {
 	To       *common.Address
 	Calldata []byte
-	Value    *big.Int // nil = 0
+	Value    *big.Int
 }
 
 func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context, args LiquidateArgs) error {
@@ -118,6 +122,12 @@ func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context
 		Calldata: calldata,
 	})
 	return err
+}
+
+func ComputeMinOut(seizedAssets, collateralPrice, loanPrice *big.Int) *big.Int {
+	valueInLoan := new(big.Int).Mul(seizedAssets, collateralPrice)
+	valueInLoan.Div(valueInLoan, loanPrice)
+	return valueInLoan
 }
 
 func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, p *cache.BorrowPosition) *Liquidable {
@@ -143,23 +153,31 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 		seizeAssets = snap.Stats.MaxUniSwappable
 	}
 
-	// 2. Dry-run eth_call + EstimateGas en batch
-	data, err := config.FuncLiquidate.EncodeArgs(
-		params.ToMarketContractParams(),
+	// 2. MinOut off-chain selon la liquidité du marché
+
+	minOut := ComputeMinOut(seizeAssets, snap.Oracle.Price, snap.Oracle.Price)
+	out.MinOut = minOut
+
+	args := LiquidateArgs{
+		*params.ToMarketContractParams(),
 		p.Address,
 		seizeAssets,
 		big.NewInt(0),
-		config.BaseUniswapV3Router, // change for multichain
+		config.BaseUniswapV3Router,
 		big.NewInt(int64(params.PoolFee)),
-	)
+		minOut,
+	}
+	// 3. Dry-run eth_call + EstimateGas en batch
+	data, err := config.FuncLiquidate.EncodeArgs(args)
 	if err != nil {
 		out.SimErr = fmt.Errorf("encode: %w", err)
 		return out
 	}
+	out.Args = args
 
 	msg := w3types.Message{
-		From:  config.BaseWalletAddr,      // change for multichain
-		To:    &config.BaseLiquidatorAddr, //
+		From:  config.BaseWalletAddr,
+		To:    &config.BaseLiquidatorAddr,
 		Input: data,
 	}
 
@@ -173,9 +191,9 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 		return out
 	}
 
-	// 3. Profit net
+	// 4. Profit net
 	out.GasEstimate = gasVal
-	out.EstProfit = morpho.EstimateProfit(seizeAssets, repayShares, gasVal)
+	out.SeizeAssets = seizeAssets
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
 

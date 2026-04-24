@@ -5,15 +5,11 @@ import (
 	"fmt"
 )
 
-func PositionsQuery(marketID string, chainID uint32, cursor string) string {
-	afterClause := ""
-	if cursor != "" {
-		afterClause = fmt.Sprintf(`after: "%s"`, cursor)
-	}
+func PositionsQuery(marketID string, chainID uint32, skip int) string {
 	return fmt.Sprintf(`{
         marketPositions(
             first: 1000
-            %s
+            skip: %d
             where: {
                 marketUniqueKey_in: ["%s"]
                 chainId_in: [%d]
@@ -26,11 +22,11 @@ func PositionsQuery(marketID string, chainID uint32, cursor string) string {
                 }
             }
             pageInfo {
-                endCursor
-                hasNextPage
+                count
+                countTotal
             }
         }
-    }`, afterClause, marketID, chainID)
+    }`, skip, marketID, chainID)
 }
 
 func MarketsQuery(chainid uint32) string {
@@ -66,6 +62,30 @@ func MarketsQuery(chainid uint32) string {
 }
 
 // ── TYPES ────────────────────────────────────────────────────────────────────
+
+// Dans types.go ou en haut de api.go
+type PositionItem struct {
+	User struct {
+		Address string `json:"address"`
+	} `json:"user"`
+	State struct {
+		BorrowShares    json.Number `json:"borrowShares"`
+		BorrowAssetsUsd json.Number `json:"borrowAssetsUsd"`
+		Collateral      json.Number `json:"collateral"`
+	} `json:"state"`
+}
+type PageInfo struct {
+	Count      int `json:"count"`
+	CountTotal int `json:"countTotal"`
+}
+
+// PositionsResult mis à jour pour utiliser PositionItem
+type PositionsResult struct {
+	MarketPositions struct {
+		Items    []PositionItem `json:"items"`
+		PageInfo PageInfo       `json:"pageInfo"`
+	} `json:"marketPositions"`
+}
 
 type MarketsResult struct {
 	Markets struct {
