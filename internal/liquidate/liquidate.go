@@ -164,7 +164,7 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 		seizeAssets,
 		big.NewInt(0),
 		config.BaseUniswapV3Router,
-		big.NewInt(int64(params.PoolFee)),
+		big.NewInt(int64(snap.Stats.SwapFee)),
 		minOut,
 	}
 	// 3. Dry-run eth_call + EstimateGas en batch

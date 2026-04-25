@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 
@@ -55,6 +56,10 @@ func (m *Market) RecomputeActiveHF() {
 }
 
 func (m *Market) SortAllPositionsByHFUnsafe() {
+	fmt.Println("=== AFTER SORT ===")
+	for i, p := range m.Positions {
+		fmt.Printf("  [%d] HF=%v\n", i, p.CachedHF)
+	}
 	sort.Slice(m.Positions, func(i, j int) bool {
 		pi := m.Positions[i].CachedHF
 		pj := m.Positions[j].CachedHF
@@ -70,12 +75,19 @@ func (m *Market) SortAllPositionsByHFUnsafe() {
 		}
 		return pi.Cmp(pj) < 0
 	})
+	fmt.Println("=== AFTER SORT ===")
+	for i, p := range m.Positions {
+		fmt.Printf("  [%d] HF=%v\n", i, p.CachedHF)
+	}
 }
 
+// unused i think
 func (m *Market) SortAllPositionsByHF() {
+
 	m.Mu.Lock()
 	defer m.Mu.Unlock()
 	m.SortAllPositionsByHFUnsafe()
+
 }
 
 func (s *MarketSnapshot) GetFirstHF() *big.Int {
