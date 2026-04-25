@@ -22,15 +22,40 @@ import (
 type marketState struct {
 	ignoreMap map[common.Address]int
 	tickCount int
+	ticker    *time.Ticker
+	interval  time.Duration
 }
 
 func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
+
+	ms := &marketState{
+		ignoreMap: make(map[common.Address]int),
+		tickCount: 0,
+	}
+	ticker, interval := r.MarketInitTicker(ctx, id)
+	if ticker == nil {
+		return
+	}
+	ms.ticker = ticker
+	ms.interval = interval
+	defer ms.ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ms.ticker.C:
+			r.MarketTick(ctx, ms, id)
+		}
+	}
+}
+
+func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticker, time.Duration) {
 	// Wait for initial data
 	var snap *market.MarketSnapshot
 	for snap == nil || snap.Oracle.Price == nil || snap.Oracle.Price.Sign() == 0 {
 		select {
 		case <-ctx.Done():
-			return
+			return nil, time.Second
 		case <-time.After(500 * time.Millisecond):
 			snap = r.Cache.Markets.GetSnapshot(id)
 		}
@@ -40,69 +65,69 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		firstHF = utils.TenPowInt(19)
 	}
 	diff := getDiffFloat(firstHF)
-	interval := distanceToInterval(diff)
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-	ignoreMap := make(map[common.Address]int)
+	morphoM := r.Cache.GetMorphoMarketFromId(id)
+	var interval time.Duration
+	if morphoM.IsETHCorrelated() {
+		diff *= 100
+	}
+	interval = distanceToInterval(diff)
+	return time.NewTicker(interval), interval
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			start := time.Now().UnixNano()
-			err := onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
-			if err != nil {
-				r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
-			}
-			r.Cache.Markets.Update(id, func(m *market.Market) {
-				m.RecomputeHFUnsafe(len(m.Positions))
-				m.SortAllPositionsByHFUnsafe() // need to sort less often than recompute
-			})
-			snap = r.Cache.Markets.GetSnapshot(id)
-			firstHF = snap.GetFirstHF()
-			if firstHF == nil {
-				firstHF = utils.TenPowInt(19)
-			}
-			diff := getDiffFloat(firstHF)
-			if diff < 0 {
-				for _, pos := range snap.Positions {
-					if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
-						// faire une map[common.Address]int
-						// pour compter le nombre de simulation
-						// au delà de 20 simulation ignorer
-						if count, ok := ignoreMap[pos.Address]; !ok || count < 10 {
-							r.LiquidateCh <- pos
-						}
-						ignoreMap[pos.Address] += 1
+}
 
-					}
+func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
+	ms.tickCount++
+	morphoM := r.Cache.GetMorphoMarketFromId(id)
+	start := time.Now().UnixNano()
+	err := onchain.OnChainRefresh(r.Conn, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
+	if err != nil {
+		r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
+	}
+	r.Cache.Markets.Update(id, func(m *market.Market) {
+		m.RecomputeHFUnsafe(len(m.Positions))
+		if ms.tickCount%10 == 0 {
+			m.SortAllPositionsByHFUnsafe()
+		}
+		// need to sort less often than recompute
+	})
+	snap := r.Cache.Markets.GetSnapshot(id)
+	firstHF := snap.GetFirstHF()
+	if firstHF == nil {
+		firstHF = utils.TenPowInt(19)
+	}
+	diff := getDiffFloat(firstHF)
+	if morphoM.IsETHCorrelated() {
+		diff *= 100
+	}
+	if diff < 0 {
+		for _, pos := range snap.Positions {
+			if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
+				if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
+					r.LiquidateCh <- pos
 				}
+				ms.ignoreMap[pos.Address]++
 			}
-			newInterval := distanceToInterval(diff)
-			if newInterval != interval {
-				ticker.Reset(newInterval)
-				interval = newInterval
-			}
-			end := time.Now().UnixNano()
-			fmt.Println("market routine ms:", (end-start)/1e6)
 		}
 	}
+	newInterval := distanceToInterval(diff)
+	if newInterval != ms.interval {
+		ms.ticker.Reset(newInterval)
+		ms.interval = newInterval
+	}
+	end := time.Now().UnixNano()
+	fmt.Println("market routine ms:", (end-start)/1e6)
 }
 
 func distanceToInterval(distance float64) time.Duration {
 	switch {
-	// 1% if ETH pair < 0.0001
 	case distance < 0.01:
 		return 2 * time.Second
-	// 1% if ETH pair < 0.0003
 	case distance < 0.03:
 		return 10 * time.Second
-	// 1% if ETH pair < 0.0005
 	case distance < 0.20:
 		return 500 * time.Second
 	default:
-		return 500 * time.Second
+		return 800 * time.Second
 	}
 }
 
