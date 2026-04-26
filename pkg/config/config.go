@@ -37,7 +37,7 @@ func LoadBaseConfig() Config {
 		Addresses: Addresses{
 			UniSwapRouter:      BaseUniswapV3Router,
 			UniSwapQuoter:      BaseUniswapQuoterV2Addr,
-			LiquidatorContract: BaseLiquidatorAddr,
+			LiquidatorContract: BaseLiquidatorUni,
 			Morpho:             MorphoMain,
 			Wallet:             BaseWalletAddr,
 		},
@@ -124,6 +124,81 @@ func LoadOptimismConfig() Config {
 		}{
 			HTTP: []string{os.Getenv("OPT_HTTP_RPC_ALCH"), os.Getenv("OPT_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("OPT_WS_RPC_ALCH"), os.Getenv("OPT_WS_RPC_ALCH")},
+		},
+	}
+}
+
+func LoadUnichainConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	signer, _ := NewUnichainSigner()
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:             UnichainWalletAddress,
+			UniSwapRouter:      UnichainUniswapV3Router,
+			Morpho:             UnichainMorphoBlueAddr,
+			UniSwapQuoter:      UnichainUniswapQuoterV2Addr,
+			LiquidatorContract: UnichainLiquidatorAddr,
+		},
+		ChainID: 130,
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: []string{os.Getenv("UNICHAIN_HTTP_RPC_ALCH"), os.Getenv("UNICHAIN_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("UNICHAIN_WS_RPC_ALCH"), os.Getenv("UNICHAIN_WS_RPC_ALCH")},
+		},
+	}
+}
+
+func LoadWorldChainConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	signer, _ := NewWorldChainSigner()
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:             WorldChainWalletAddress,
+			UniSwapRouter:      WorldChainUniswapV3Router,
+			Morpho:             WorldChainMorphoBlueAddr,
+			UniSwapQuoter:      WorldChainUniswapQuoterV2Addr,
+			LiquidatorContract: WorldChainLiquidatorAddr,
+		},
+		ChainID: 480,
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: []string{os.Getenv("WORLDCHAIN_HTTP_RPC_ALCH"), os.Getenv("WORLDCHAIN_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("WORLDCHAIN_WS_RPC_ALCH"), os.Getenv("WORLDCHAIN_WS_RPC_ALCH")},
+		},
+	}
+}
+
+func LoadKatanaConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	signer, _ := NewKatanaSigner()
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:             KatanaWalletAddress,
+			UniSwapRouter:      KatanaUniswapV3Router,
+			Morpho:             KatanaMorphoBlueAddr,
+			UniSwapQuoter:      KatanaUniswapQuoterV2Addr,
+			LiquidatorContract: KatanaLiquidatorAddr,
+		},
+		ChainID: 747474,
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: []string{os.Getenv("KATANA_HTTP_RPC_ALCH"), os.Getenv("KATANA_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("KATANA_WS_RPC_ALCH"), os.Getenv("KATANA_WS_RPC_ALCH")},
 		},
 	}
 }

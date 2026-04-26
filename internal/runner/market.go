@@ -88,7 +88,6 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 		if ms.tickCount%10 == 0 {
 			m.SortAllPositionsByHFUnsafe()
 		}
-		// need to sort less often than recompute
 	})
 	snap := r.Cache.Markets.GetSnapshot(id)
 	firstHF := snap.GetFirstHF()

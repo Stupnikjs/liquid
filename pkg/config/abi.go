@@ -39,13 +39,18 @@ var (
 	EventAccrueInterest   = w3.MustNewEvent("AccrueInterest(bytes32 indexed id,uint256,uint256,uint256)")
 	EventSupplyCollateral = w3.MustNewEvent("SupplyCollateral(bytes32 indexed id,address indexed,address indexed,uint256)")
 
-	FuncLiquidate = w3.MustNewFunc(`liquidate(
-		(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
-		address borrower,
-		uint256 seizedAssets,
-		uint256 repaidShares,
-		bytes odosCalldata
-	)`, "")
+	FuncLiquidate = w3.MustNewFunc(
+		`liquidate(
+			(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
+			address borrower,
+			uint256 seizedAssets,
+			uint256 repaidShares,
+			address swapRouter,
+			uint24 poolFee,
+			uint256 minOut
+		)`,
+		``,
+	)
 
 	// Chainlink v2
 	FuncLatestAnswer = w3.MustNewFunc("latestAnswer()", "int256")
