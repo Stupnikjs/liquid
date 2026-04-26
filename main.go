@@ -27,30 +27,30 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(4)
+	/*
+		go func() {
+			defer wg.Done()
+			Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
+		}()
 
-	go func() {
-		defer wg.Done()
-		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
-	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(10 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
-	}()
-
+		go func() {
+			defer wg.Done()
+			time.Sleep(10 * time.Second) // to avoid too much logs at the same time
+			Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
+		}()
+	*/
 	go func() {
 		defer wg.Done()
 		time.Sleep(30 * time.Second) // to avoid too much logs at the same time
 		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
 	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(5 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadUnichainConfig(), baseFilter, "uni.log")
-	}()
-
+	/*
+		go func() {
+			defer wg.Done()
+			time.Sleep(5 * time.Second) // to avoid too much logs at the same time
+			Wrapper(config.LoadUnichainConfig(), baseFilter, "uni.log")
+		}()
+	*/
 	wg.Wait()
 }
 

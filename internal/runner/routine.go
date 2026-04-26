@@ -68,7 +68,7 @@ func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) 
 		return
 	}
 	if !result.IsLiquidable {
-		r.Logger <- fmt.Sprintf("[liq] not profitable for %s profit=%s", p.Address, result.EstProfit)
+		r.Logger <- "[liq] not profitable"
 		return
 	}
 	r.Logger <- fmt.Sprintf("[liq] sending tx for %s profit=%s gas=%d", p.Address, result.EstProfit, result.GasEstimate)
