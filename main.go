@@ -21,28 +21,34 @@ func main() {
 
 	baseFilter = api.MarketFilters{
 		MaxUsdMarket: 10_000_000_000,
-		MinUsdMarket: 10_000,
+		MinUsdMarket: 20_000,
 	}
 
 	var wg sync.WaitGroup
 
-	wg.Add(2)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
-		Wrapper(config.LoadOptimismConfig(), baseFilter, "opt.log")
+		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
 	}()
 
 	go func() {
 		defer wg.Done()
 		time.Sleep(10 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
 	}()
 
 	go func() {
 		defer wg.Done()
 		time.Sleep(30 * time.Second) // to avoid too much logs at the same time
 		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+	}()
+
+	go func() {
+		defer wg.Done()
+		time.Sleep(5 * time.Second) // to avoid too much logs at the same time
+		Wrapper(config.LoadUnichainConfig(), baseFilter, "uni.log")
 	}()
 
 	wg.Wait()
@@ -54,7 +60,7 @@ func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
 	// market from less than 10mounth
 
 	cached := cache.NewCache(conn, conf, filters)
-	runn := runner.NewRunner(cached, conf, logfile)
+	runn := runner.NewRunner(cached, conn, conf, logfile)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
 

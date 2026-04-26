@@ -22,8 +22,8 @@ type Runner struct {
 	// Config avec signer
 }
 
-func NewRunner(initedCache *cache.Cache, conf config.Config, logfile string) *Runner {
-	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
+func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.Config, logfile string) *Runner {
+
 	logger := logging.NewLogger(context.Background(), logfile)
 	return &Runner{
 		Cache:       initedCache,
@@ -58,22 +58,10 @@ func (r *Runner) Init(ctx context.Context) {
 			m.Stats.MaxUniSwappable = result.AmountIn
 			m.Stats.SwapFee = result.Fee
 			m.RecomputeHFUnsafe(len(m.Positions))
+			m.SortAllPositionsByHFUnsafe()
 		})
 
 	})
-
-	var snap *cache.MarketSnapshot
-	for k, v := range r.Cache.MarketMap {
-		snap = r.Cache.Markets.GetSnapshot(k)
-		if snap != nil {
-			msg := fmt.Sprintf("_________ Market %s/%s in cache with %d pos ___________",
-				v.CollateralTokenStr, v.LoanTokenStr, len(snap.Positions))
-			fmt.Println(msg) // log direct pour confirmer que les marchés existent
-			r.Logger <- msg
-		} else {
-			fmt.Println("snap nil for market", v.CollateralTokenStr) // voir si snap est nil
-		}
-	}
 
 }
 

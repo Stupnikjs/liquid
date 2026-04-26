@@ -67,7 +67,7 @@ func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) 
 		r.Logger <- fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr)
 		return
 	}
-	if !result.IsLiquidable || result.EstProfit.Sign() <= 0 {
+	if !result.IsLiquidable {
 		r.Logger <- fmt.Sprintf("[liq] not profitable for %s profit=%s", p.Address, result.EstProfit)
 		return
 	}

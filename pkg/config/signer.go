@@ -18,7 +18,7 @@ type Signer struct {
 
 func NewBaseSigner() (*Signer, error) {
 
-	keyHex := os.Getenv("LIQUIDATOR_BASE_PRIVATE_KEY")
+	keyHex := os.Getenv("BASE_PK")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR__BASE_PRIVATE_KEY not set")
 	}
@@ -45,5 +45,17 @@ func NewArbitrumSigner() (*Signer, error) {
 }
 
 func NewOptimismSigner() (*Signer, error) {
+	return nil, nil
+}
+
+func NewUnichainSigner() (*Signer, error) {
+	return nil, nil
+}
+
+func NewWorldChainSigner() (*Signer, error) {
+	return nil, nil
+}
+
+func NewKatanaSigner() (*Signer, error) {
 	return nil, nil
 }

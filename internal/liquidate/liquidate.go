@@ -22,19 +22,6 @@ import (
 var (
 	LiquidatorAddr = common.HexToAddress("0xYOUR_LIQUIDATOR_CONTRACT")
 	SwapRouterAddr = common.HexToAddress("0x2626664c2603336E57B271c5C0b26F421741e481")
-
-	FuncLiquidate = w3.MustNewFunc(
-		`liquidate(
-			(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
-			address borrower,
-			uint256 seizedAssets,
-			uint256 repaidShares,
-			address swapRouter,
-			uint24 poolFee,
-			uint256 minOut
-		)`,
-		``,
-	)
 )
 
 type Liquidable struct {
@@ -112,7 +99,15 @@ type TxParams struct {
 }
 
 func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context, args LiquidateArgs) error {
-	calldata, err := config.FuncLiquidate.EncodeArgs(args)
+	calldata, err := config.FuncLiquidate.EncodeArgs(
+		args.MarketParams,
+		args.Borrower,
+		args.SeizedAssets,
+		args.RepaidShares,
+		args.SwapRouter,
+		args.PoolFee,
+		args.MinOut,
+	)
 	if err != nil {
 		return fmt.Errorf("LiquidateCall: encode: %w", err)
 	}
@@ -168,7 +163,15 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 		minOut,
 	}
 	// 3. Dry-run eth_call + EstimateGas en batch
-	data, err := config.FuncLiquidate.EncodeArgs(args)
+	data, err := config.FuncLiquidate.EncodeArgs(
+		args.MarketParams,
+		args.Borrower,
+		args.SeizedAssets,
+		args.RepaidShares,
+		args.SwapRouter,
+		args.PoolFee,
+		args.MinOut)
+
 	if err != nil {
 		out.SimErr = fmt.Errorf("encode: %w", err)
 		return out

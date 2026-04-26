@@ -67,3 +67,16 @@ query {
     collateralAsset { address symbol decimals }
   }
 }
+
+// MORPHO BLUE ADDRESS
+
+query {
+  morphoBlues(where: { chainId_in: [130] }) {
+    items {
+      address
+      chain {
+        id
+      }
+    }
+  }
+}

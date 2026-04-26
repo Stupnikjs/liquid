@@ -7,7 +7,7 @@ import (
 )
 
 func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
-	r.Conn.SubscribeToEventPos(ctx)
+	r.Conn.SubscribeToEventPos(ctx, r.Config)
 }
 
 func (r *Runner) EventListener(ctx context.Context) {
