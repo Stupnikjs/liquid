@@ -191,6 +191,7 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 		eth.EstimateGas(&msg, nil).Returns(&gasVal),
 	}); err != nil {
 		out.SimErr = fmt.Errorf("eth_call failed: %w", err)
+		out.IsLiquidable = false
 		return out
 	}
 

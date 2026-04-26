@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -31,7 +32,11 @@ func LoadBaseConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewBaseSigner()
+	signer, err := NewBaseSigner()
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
