@@ -84,8 +84,9 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 		r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
 	}
 	r.Cache.Markets.Update(id, func(m *market.Market) {
-		m.RecomputeHFUnsafe(len(m.Positions))
+		m.RecomputeHFUnsafe(len(m.Positions) / 2)
 		if ms.tickCount%10 == 0 {
+			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
 		}
 	})
