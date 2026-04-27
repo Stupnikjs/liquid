@@ -170,7 +170,7 @@ func AccrueInterestEventProcess(c state.MarketReader, log *types.Log) {
 		m.Stats.TotalBorrowAssets = new(big.Int).Add(m.Stats.TotalBorrowAssets, &interest)
 		m.Stats.BorrowRate = &prevBorrowRate
 		m.Stats.LastUpdate = time.Now().Unix()
-		// m.RecomputeAllHFUnsafe()
+
 	})
 
 }

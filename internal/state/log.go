@@ -8,21 +8,21 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
+// just log market pair and first pos
 func GetMarketLog(c MarketReader, id [32]byte, morphoM morpho.MarketParams) string {
 	snap := c.GetSnapshot(id)
 
 	var sb strings.Builder
 
-	title := fmt.Sprintf("\n ________________  Market %s/%s _________________ ", morphoM.CollateralTokenStr, morphoM.LoanTokenStr)
+	marketPair := fmt.Sprintf("%s/%s ", morphoM.CollateralTokenStr, morphoM.LoanTokenStr)
 
 	if snap == nil {
-		fmt.Fprintf(&sb, "%s\n", title)
-		sb.WriteString(" (empty snapshot)\n")
-		fmt.Fprintf(&sb, "%s\n", title)
+		fmt.Fprintf(&sb, "%s", marketPair)
+		sb.WriteString("(empty snapshot)\n")
 		return sb.String()
 	}
 
-	fmt.Fprintf(&sb, "%s\n", title)
+	fmt.Fprintf(&sb, "%s %d pos", marketPair, len(snap.Positions))
 
 	priceStr := "nil"
 	if snap.Oracle.Price != nil {
@@ -32,20 +32,18 @@ func GetMarketLog(c MarketReader, id [32]byte, morphoM morpho.MarketParams) stri
 		)
 	}
 
-	limit := min(len(snap.Positions), 6)
+	limit := min(len(snap.Positions), 1)
 
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		pos := snap.Positions[i]
 
 		fmt.Fprintf(&sb,
-			" Pos %d: BorrowShares=%s, Collateral=%s, Oracle=%s  , HF=%s\n",
-			i,
+			"BorrowShares=%s, Collateral=%s, Oracle=%s  , HF=%s\n",
 			utils.FormatDecimals(pos.BorrowShares, 18),
 			utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
 			priceStr,
 			utils.FormatDecimals(pos.CachedHF, 18),
 		)
 	}
-
 	return sb.String()
 }

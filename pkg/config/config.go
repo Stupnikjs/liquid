@@ -32,7 +32,8 @@ func LoadBaseConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, err := NewBaseSigner()
+	chainid := int64(8453)
+	signer, err := NewBaseSigner(common.HashLength)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -46,7 +47,7 @@ func LoadBaseConfig() Config {
 			Morpho:             MorphoMain,
 			Wallet:             BaseWalletAddr,
 		},
-		ChainID: 8453,
+		ChainID: uint32(chainid),
 
 		RPC: struct {
 			HTTP []string
@@ -62,7 +63,11 @@ func LoadMainnetConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewMainnetSigner()
+	signer, err := NewMainnetSigner()
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
@@ -86,7 +91,12 @@ func LoadArbitrumConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewArbitrumSigner()
+	chainid := 42161
+	signer, err := NewArbitrumSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
@@ -96,7 +106,7 @@ func LoadArbitrumConfig() Config {
 			UniSwapQuoter:      ArbitrumUniswapQuoterV2Addr,
 			LiquidatorContract: ArbitrumLiquidatorAddr,
 		},
-		ChainID: 42161,
+		ChainID: uint32(chainid),
 		RPC: struct {
 			HTTP []string
 			WS   []string
@@ -111,7 +121,12 @@ func LoadOptimismConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewOptimismSigner()
+	chainid := 10
+	signer, err := NewOptimismSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return Config{
 		Signer: signer,
 		// Change here
@@ -122,7 +137,7 @@ func LoadOptimismConfig() Config {
 			LiquidatorContract: OptimismLiquidatorAddr,
 			Morpho:             OptimismMorphoBlueAddr,
 		},
-		ChainID: 10,
+		ChainID: uint32(chainid),
 		RPC: struct {
 			HTTP []string
 			WS   []string
@@ -137,7 +152,12 @@ func LoadUnichainConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewUnichainSigner()
+	chainid := 130
+	signer, err := NewUniChainSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
@@ -147,7 +167,7 @@ func LoadUnichainConfig() Config {
 			UniSwapQuoter:      UnichainUniswapQuoterV2Addr,
 			LiquidatorContract: UnichainLiquidatorAddr,
 		},
-		ChainID: 130,
+		ChainID: uint32(chainid),
 		RPC: struct {
 			HTTP []string
 			WS   []string
@@ -162,7 +182,8 @@ func LoadWorldChainConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewWorldChainSigner()
+	chainid := 480
+	signer, _ := NewWorldChainSigner(int64(chainid))
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
@@ -172,7 +193,7 @@ func LoadWorldChainConfig() Config {
 			UniSwapQuoter:      WorldChainUniswapQuoterV2Addr,
 			LiquidatorContract: WorldChainLiquidatorAddr,
 		},
-		ChainID: 480,
+		ChainID: uint32(chainid),
 		RPC: struct {
 			HTTP []string
 			WS   []string
@@ -187,7 +208,12 @@ func LoadKatanaConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
-	signer, _ := NewKatanaSigner()
+	chainid := 747474
+	signer, err := NewKatanaSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return Config{
 		Signer: signer,
 		Addresses: Addresses{
@@ -197,7 +223,7 @@ func LoadKatanaConfig() Config {
 			UniSwapQuoter:      KatanaUniswapQuoterV2Addr,
 			LiquidatorContract: KatanaLiquidatorAddr,
 		},
-		ChainID: 747474,
+		ChainID: uint32(chainid),
 		RPC: struct {
 			HTTP []string
 			WS   []string

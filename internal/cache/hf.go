@@ -41,21 +41,6 @@ func (m *Market) RecomputeHFUnsafe(n int) {
 	}
 }
 
-// maybe useless since always called in update
-func (m *Market) RecomputeHF(n int) {
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
-	m.RecomputeHFUnsafe(n)
-}
-
-func (m *Market) RecomputeAllHF() {
-	m.RecomputeHF(len(m.Positions))
-}
-
-func (m *Market) RecomputeActiveHF() {
-	m.RecomputeHF(m.ActiveIndex)
-}
-
 func (m *Market) SortAllPositionsByHFUnsafe() {
 
 	sort.Slice(m.Positions, func(i, j int) bool {
@@ -73,15 +58,6 @@ func (m *Market) SortAllPositionsByHFUnsafe() {
 		}
 		return pi.Cmp(pj) < 0
 	})
-
-}
-
-// unused i think
-func (m *Market) SortAllPositionsByHF() {
-
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
-	m.SortAllPositionsByHFUnsafe()
 
 }
 

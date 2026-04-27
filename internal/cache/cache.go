@@ -3,10 +3,8 @@ package cache
 import (
 	"math/big"
 	"sync"
-	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
@@ -79,6 +77,8 @@ func (c *Cache) GetMorphoMarketFromId(id [32]byte) morpho.MarketParams {
 	return c.MarketMap[id]
 }
 
+/*
+
 // AccruedBorrowAssets retourne totalBorrowAssets mis à jour jusqu'à `now`
 // To Simulate Morpho call accrue interest at begin of liquidate func
 func (ms *MarketStats) AccruedBorrowAssets() *big.Int {
@@ -103,3 +103,4 @@ func (ms *MarketStats) AccruedBorrowAssets() *big.Int {
 
 	return new(big.Int).Add(ms.TotalBorrowAssets, interest)
 }
+*/
