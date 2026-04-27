@@ -102,7 +102,7 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 	if diff < 0 {
 		for _, pos := range snap.Positions {
 			if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
-				if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
+				if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 5 {
 					r.LiquidateCh <- pos
 				}
 				ms.ignoreMap[pos.Address]++
@@ -122,7 +122,7 @@ func distanceToInterval(distance float64) time.Duration {
 	switch {
 	case distance < 0.01:
 		return 2 * time.Second
-	case distance < 0.03:
+	case distance < 0.02:
 		return 10 * time.Second
 	case distance < 0.20:
 		return 500 * time.Second

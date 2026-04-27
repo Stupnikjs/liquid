@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -27,30 +26,32 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(4)
-
-	go func() {
-		defer wg.Done()
-		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
-	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(10 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
-	}()
 	/*
 		go func() {
 			defer wg.Done()
-			time.Sleep(30 * time.Second) // to avoid too much logs at the same time
-			Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+			time.Sleep(3 * time.Second)
+			Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
+		}()
+
+		go func() {
+			defer wg.Done()
+			Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
 		}()
 	*/
 	go func() {
 		defer wg.Done()
-		time.Sleep(5 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadUnichainConfig(), baseFilter, "uni.log")
-	}()
 
+		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+	}()
+	/*
+		go func() {
+			defer wg.Done()
+			time.Sleep(10 * time.Second) // to avoid too much logs at the same time
+			Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+		}()
+
+		// uni to few liquid markets
+	*/
 	wg.Wait()
 }
 

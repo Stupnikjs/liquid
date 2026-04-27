@@ -7,9 +7,9 @@ import (
 )
 
 type BorrowPosition struct {
-	MarketID                                 [32]byte
-	Address                                  common.Address
-	BorrowShares, CollateralAssets, CachedHF *big.Int
+	MarketID                                                  [32]byte
+	Address                                                   common.Address
+	BorrowShares, BorrowAssetsUsd, CollateralAssets, CachedHF *big.Int
 }
 
 func (m *Market) InsertPositionUnsafe(pos *BorrowPosition) {

@@ -71,6 +71,8 @@ func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) 
 		r.Logger <- "[liq] not profitable"
 		return
 	}
+	m := r.Cache.GetMorphoMarketFromId(p.MarketID)
+	fmt.Printf("[liq] sending tx for %s repayed=%s  on %s/%s %d", p.Address, utils.FormatDecimals(result.SeizeAssets, int(m.CollateralTokenDecimals)), m.CollateralTokenStr, m.LoanTokenStr, r.Config.ChainID)
 	r.Logger <- fmt.Sprintf("[liq] sending tx for %s profit=%s gas=%d", p.Address, result.EstProfit, result.GasEstimate)
 
 	// Simlation worked now send the tx

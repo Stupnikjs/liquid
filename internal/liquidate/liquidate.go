@@ -198,6 +198,7 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 	// 4. Profit net
 	out.GasEstimate = gasVal
 	out.SeizeAssets = seizeAssets
+	fmt.Println("SEIZED ASSET IN SIMULATION", seizeAssets.String())
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
 

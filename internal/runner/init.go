@@ -9,6 +9,7 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/logging"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 )
@@ -40,29 +41,32 @@ func (r *Runner) Init(ctx context.Context) {
 		fmt.Println(err)
 	}
 	r.OnChainRefreshAll()
+	for _, id := range r.Cache.Markets.Ids() {
+		r.CheckSwap(id)
+	}
 
-	r.Cache.Markets.Range(func(id [32]byte) {
-		snap := r.Cache.Markets.GetSnapshot(id)
-		if snap == nil {
-			return
-		}
-		morphoM := r.Cache.MarketMap[id]
-		result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-		if err != nil {
-			r.Cache.Markets.Update(id, func(m *cache.Market) {
-				m.Canceled = true
-			})
-			return
-		}
+}
+
+func (r *Runner) CheckSwap(id [32]byte) {
+	snap := r.Cache.Markets.GetSnapshot(id)
+	if snap == nil {
+		return
+	}
+
+	morphoM := r.Cache.MarketMap[id]
+	result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+	if err != nil {
 		r.Cache.Markets.Update(id, func(m *cache.Market) {
-			m.Stats.MaxUniSwappable = result.AmountIn
-			m.Stats.SwapFee = result.Fee
-			m.RecomputeHFUnsafe(len(m.Positions))
-			m.SortAllPositionsByHFUnsafe()
+			m.Canceled = true
 		})
-
+		return
+	}
+	r.Cache.Markets.Update(id, func(m *cache.Market) {
+		m.Stats.MaxUniSwappable = result.AmountIn
+		m.Stats.SwapFee = result.Fee
+		m.RecomputeHFUnsafe(len(m.Positions))
+		m.SortAllPositionsByHFUnsafe()
 	})
-
 }
 
 func (r *Runner) OnChainRefreshAll() {
@@ -74,5 +78,19 @@ func (r *Runner) OnChainRefreshAll() {
 			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
 		}(id)
 	}
+
 	wg.Wait()
+
+}
+
+func (r *Runner) LogMarkets() {
+	for _, id := range r.Cache.Markets.Ids() {
+		m := r.Cache.GetMorphoMarketFromId(id)
+		snap := r.Cache.Markets.GetSnapshot(id)
+		if snap == nil {
+			continue
+		}
+		stats := snap.Stats
+		r.Logger <- fmt.Sprintf("%s/%s shares:%s totcoll:%s", m.CollateralTokenStr, m.LoanTokenStr, utils.FormatWAD(stats.TotalBorrowShares), utils.FormatDecimals(stats.TotalBorrowAssets, int(m.CollateralTokenDecimals)))
+	}
 }

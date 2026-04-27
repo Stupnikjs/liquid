@@ -71,7 +71,7 @@ func NewOptimismSigner(chainid int64) (*Signer, error) {
 }
 
 func NewUniChainSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("OPT_PK")
+	keyHex := os.Getenv("UNI_PK")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR__UNI_PRIVATE_KEY not set")
 	}
