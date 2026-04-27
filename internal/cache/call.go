@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -33,7 +34,12 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 			}
 			var positions []*BorrowPosition
 			for _, pos := range fetched {
-				positions = append(positions, ApiItemToPos(pos, id))
+				p := ApiItemToPos(pos, id)
+				// pos less than 1 dollard
+				if p.BorrowAssetsUsd.Cmp(utils.WAD) < 0 {
+					continue
+				}
+				positions = append(positions, p)
 			}
 			sort.Slice(positions, func(i, j int) bool {
 				pi := positions[i].CollateralAssets
@@ -60,6 +66,7 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 
 			c.Markets.Update(id, func(m *Market) {
 				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
+				fmt.Println(new(big.Int).Set(positions[0].CollateralAssets))
 			})
 
 		}(id)
@@ -72,32 +79,10 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 func ApiItemToPos(p api.PositionItem, marketId [32]byte) *BorrowPosition {
 	return &BorrowPosition{
 		BorrowShares:     utils.ParseBigInt(p.State.BorrowShares.String()),
-		CollateralAssets: utils.ParseBigInt(p.State.Collateral.String()),
+		BorrowAssetsUsd:  utils.ParseBigInt(p.State.BorrowAssetsUsd.String()),
+		CollateralAssets: utils.ParseBigFloatToBigInt(p.State.Collateral.String()),
 		MarketID:         marketId,
 		Address:          common.HexToAddress(p.User.Address),
 	}
 
-}
-
-func ParsePositions(id [32]byte, result api.PositionsResult) []BorrowPosition {
-	items := result.MarketPositions.Items // ✅ plus de .Data
-	positions := make([]BorrowPosition, 0, len(items))
-	for _, item := range items {
-		borrowAssetUsd := utils.ParseBigInt(item.State.BorrowAssetsUsd.String())
-		if borrowAssetUsd.Cmp(utils.TenPowInt(2)) < 0 {
-			continue
-		}
-		borrowShares := utils.ParseBigInt(item.State.BorrowShares.String())
-		collateral := utils.ParseBigInt(item.State.Collateral.String())
-		if borrowShares.Sign() == 0 && collateral.Sign() == 0 {
-			continue
-		}
-		positions = append(positions, BorrowPosition{
-			MarketID:         id,
-			Address:          common.HexToAddress(item.User.Address),
-			BorrowShares:     borrowShares,
-			CollateralAssets: collateral,
-		})
-	}
-	return positions
 }
