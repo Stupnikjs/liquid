@@ -6,9 +6,11 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -79,12 +81,13 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 	ms.tickCount++
 	morphoM := r.Cache.GetMorphoMarketFromId(id)
 	start := time.Now().UnixNano()
-	err := onchain.OnChainRefresh(r.Conn, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
+	err := onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
 	if err != nil {
 		r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
 	}
 	r.Cache.Markets.Update(id, func(m *market.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
+		r.Swap(id)
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
@@ -135,4 +138,25 @@ func getDiffFloat(hf *big.Int) float64 {
 	diff := new(big.Int).Sub(hf, utils.WAD) // distance to 1
 	diffFloat, _ := new(big.Float).SetInt(diff).Float64()
 	return diffFloat / 1e18
+}
+
+func (r *Runner) Swap(id [32]byte) {
+	snap := r.Cache.Markets.GetSnapshot(id)
+	if snap == nil {
+		return
+	}
+	morphoM := r.Cache.MarketMap[id]
+	fmt.Println(morphoM.GetPair())
+	result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+	if err != nil {
+		r.Cache.Markets.Update(id, func(m *cache.Market) {
+			m.Canceled = true
+		})
+		return
+	}
+	r.Cache.Markets.Update(id, func(m *cache.Market) {
+		m.Stats.MaxUniSwappable = result.AmountIn
+		m.Stats.SwapFee = result.Fee
+	})
+
 }

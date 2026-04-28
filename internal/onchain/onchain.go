@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"time"
 
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -56,9 +57,9 @@ func OnChainCalls(c state.MarketReader, mParam morpho.MarketParams, id [32]byte,
 	return calls, callIndexToID, res
 }
 
-func OnChainRefresh(conn *connector.Connector, c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) error {
-	ctx := context.Background()
-
+func OnChainRefresh(conn *connector.Connector, ctx context.Context, c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	calls, _, results := OnChainCalls(c, mParam, id, morphoAddr)
 
 	if err := conn.EthCallCtx(ctx, calls); err != nil {
