@@ -1,6 +1,7 @@
 package morpho
 
 import (
+	"fmt"
 	"math/big"
 	"strings"
 
@@ -53,4 +54,8 @@ func (m *MarketParams) ToMarketContractParams() *MarketContractParams {
 
 func (m *MarketParams) IsETHCorrelated() bool {
 	return strings.Contains(m.CollateralTokenStr, "ETH") && strings.Contains(m.LoanTokenStr, "ETH")
+}
+
+func (m *MarketParams) GetPair() string {
+	return fmt.Sprintf("%s/%s", m.CollateralTokenStr, m.LoanTokenStr)
 }

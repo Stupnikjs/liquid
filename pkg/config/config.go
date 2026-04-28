@@ -33,7 +33,7 @@ func LoadBaseConfig() Config {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := int64(8453)
-	signer, err := NewBaseSigner(common.HashLength)
+	signer, err := NewBaseSigner(chainid)
 	if err != nil {
 		fmt.Println(err)
 	}

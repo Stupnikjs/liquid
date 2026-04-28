@@ -35,10 +35,12 @@ type Connector struct {
 func NewConnector(httpRPC, websocket []string) *Connector {
 	clientHTTP, err := w3.Dial(httpRPC[0])
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 	clientWS, err := w3.Dial(websocket[0])
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 	return &Connector{

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -29,28 +30,28 @@ func main() {
 	/*
 		go func() {
 			defer wg.Done()
-			time.Sleep(3 * time.Second)
 			Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
 		}()
 
 		go func() {
 			defer wg.Done()
+			time.Sleep(10 * time.Second) // to avoid too much logs at the same time
 			Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
 		}()
 	*/
+
 	go func() {
 		defer wg.Done()
-
+		time.Sleep(2 * time.Second) // to avoid too much logs at the same time
 		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
 	}()
+
 	/*
 		go func() {
 			defer wg.Done()
-			time.Sleep(10 * time.Second) // to avoid too much logs at the same time
-			Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+			time.Sleep(5 * time.Second) // to avoid too much logs at the same time
+			Wrapper(config.LoadUnichainConfig(), baseFilter, "uni.log")
 		}()
-
-		// uni to few liquid markets
 	*/
 	wg.Wait()
 }
@@ -58,7 +59,6 @@ func main() {
 func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
 
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
-	// market from less than 10mounth
 
 	cached := cache.NewCache(conn, conf, filters)
 	runn := runner.NewRunner(cached, conn, conf, logfile)

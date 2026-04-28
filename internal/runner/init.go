@@ -11,7 +11,6 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 )
 
 type Runner struct {
@@ -36,46 +35,25 @@ func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.
 }
 
 func (r *Runner) Init(ctx context.Context) {
+	fmt.Println("here")
 	err := r.ApiCallRoutine(ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
-	r.OnChainRefreshAll()
-	for _, id := range r.Cache.Markets.Ids() {
-		r.CheckSwap(id)
-	}
+	fmt.Println("there")
+	r.OnChainRefreshAll(ctx)
+
+	fmt.Println("now")
 
 }
 
-func (r *Runner) CheckSwap(id [32]byte) {
-	snap := r.Cache.Markets.GetSnapshot(id)
-	if snap == nil {
-		return
-	}
-
-	morphoM := r.Cache.MarketMap[id]
-	result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-	if err != nil {
-		r.Cache.Markets.Update(id, func(m *cache.Market) {
-			m.Canceled = true
-		})
-		return
-	}
-	r.Cache.Markets.Update(id, func(m *cache.Market) {
-		m.Stats.MaxUniSwappable = result.AmountIn
-		m.Stats.SwapFee = result.Fee
-		m.RecomputeHFUnsafe(len(m.Positions))
-		m.SortAllPositionsByHFUnsafe()
-	})
-}
-
-func (r *Runner) OnChainRefreshAll() {
+func (r *Runner) OnChainRefreshAll(ctx context.Context) {
 	var wg sync.WaitGroup
 	for _, id := range r.Cache.Markets.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			onchain.OnChainRefresh(r.Conn, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
+			onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, r.Cache.GetMorphoMarketFromId(id), id, r.Config.Addresses.Morpho)
 		}(id)
 	}
 
