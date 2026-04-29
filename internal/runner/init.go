@@ -35,16 +35,15 @@ func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.
 }
 
 func (r *Runner) Init(ctx context.Context) {
-	fmt.Println("here")
 	err := r.ApiCallRoutine(ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("there")
 	r.OnChainRefreshAll(ctx)
 
-	fmt.Println("now")
-
+	for _, id := range r.Cache.Markets.Ids() {
+		r.Swap(id)
+	}
 }
 
 func (r *Runner) OnChainRefreshAll(ctx context.Context) {

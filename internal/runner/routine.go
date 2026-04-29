@@ -2,10 +2,8 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/liquidate"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
@@ -38,49 +36,14 @@ func (r *Runner) LogMarketState(ctx context.Context) {
 }
 
 func (r *Runner) LiquidationRoutine(ctx context.Context) {
-	sem := make(chan struct{}, 5)
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case pos := <-r.LiquidateCh:
-			p := pos
-			select {
-			case sem <- struct{}{}:
-			case <-ctx.Done():
-				return
-			}
-			go func() {
-				defer func() { <-sem }()
-				r.LiquidateWrapper(ctx, &p)
-			}()
-		}
+	consumer := &liquidate.Consumer{
+		Conn:      r.Conn,
+		Cache:     r.Cache.Markets,
+		MarketMap: r.Cache.MarketMap,
+		Logger:    r.Logger,
+		Signer:    r.Config.Signer,
+		Ch:        r.LiquidateCh,
 	}
-}
+	consumer.Run(ctx)
 
-func (r *Runner) LiquidateWrapper(ctx context.Context, p *cache.BorrowPosition) {
-
-	// Precompute and simulation
-	result := liquidate.SimulateAndPreComputeTx(r.Conn, r.Cache.Markets, r.Cache.MarketMap, p)
-	if result.SimErr != nil {
-		r.Logger <- fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr)
-		return
-	}
-	if !result.IsLiquidable {
-		r.Logger <- "[liq] not profitable"
-		return
-	}
-	m := r.Cache.GetMorphoMarketFromId(p.MarketID)
-	fmt.Printf("[liq] sending tx for %s repayed=%s  on %s/%s %d", p.Address, utils.FormatDecimals(result.SeizeAssets, int(m.CollateralTokenDecimals)), m.CollateralTokenStr, m.LoanTokenStr, r.Config.ChainID)
-	r.Logger <- fmt.Sprintf("[liq] sending tx for %s profit=%s gas=%d", p.Address, result.EstProfit, result.GasEstimate)
-
-	// Simlation worked now send the tx
-	err := liquidate.LiquidateCall(r.Config.Signer, r.Conn.ClientHTTP, ctx, result.Args)
-
-	if err != nil {
-		r.Logger <- fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err)
-		return
-	}
-	r.Logger <- fmt.Sprintf("[liq] ✓ liquidated %s", p.Address)
 }

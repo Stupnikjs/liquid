@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -63,10 +62,8 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 			c.Markets.Update(id, func(m *Market) {
 				m.Positions = positions
 			})
-
 			c.Markets.Update(id, func(m *Market) {
 				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
-				fmt.Println(new(big.Int).Set(positions[0].CollateralAssets))
 			})
 
 		}(id)
@@ -79,8 +76,8 @@ func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 func ApiItemToPos(p api.PositionItem, marketId [32]byte) *BorrowPosition {
 	return &BorrowPosition{
 		BorrowShares:     utils.ParseBigInt(p.State.BorrowShares.String()),
-		BorrowAssetsUsd:  utils.ParseBigInt(p.State.BorrowAssetsUsd.String()),
-		CollateralAssets: utils.ParseBigFloatToBigInt(p.State.Collateral.String()),
+		BorrowAssetsUsd:  utils.ParseBigFloatToBigInt(p.State.BorrowAssetsUsd.String()),
+		CollateralAssets: utils.ParseBigInt(p.State.Collateral.String()),
 		MarketID:         marketId,
 		Address:          common.HexToAddress(p.User.Address),
 	}

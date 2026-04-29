@@ -87,7 +87,6 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 	}
 	r.Cache.Markets.Update(id, func(m *market.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
-		r.Swap(id)
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
@@ -146,7 +145,6 @@ func (r *Runner) Swap(id [32]byte) {
 		return
 	}
 	morphoM := r.Cache.MarketMap[id]
-	fmt.Println(morphoM.GetPair())
 	result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 	if err != nil {
 		r.Cache.Markets.Update(id, func(m *cache.Market) {

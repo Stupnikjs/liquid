@@ -152,12 +152,12 @@ func (q *Quoter) QuoteBinarySearch(
 	}
 
 	if best == nil {
-		fmt.Println(fmt.Errorf("no acceptable slippage found for %s -> %s",
+		fmt.Println(fmt.Errorf("no acceptable slippage found for %s -> %s ",
 			marketp.CollateralTokenStr, marketp.LoanTokenStr))
 		return nil, fmt.Errorf("no acceptable slippage found for %s -> %s",
 			marketp.CollateralTokenStr, marketp.LoanTokenStr)
 	}
-	fmt.Printf("acceptable slippage found for %s -> %s  %f",
+	fmt.Printf("acceptable slippage found for %s -> %s  %f \n",
 		marketp.CollateralTokenStr, marketp.LoanTokenStr, best.Slippage)
 	return best, nil
 }

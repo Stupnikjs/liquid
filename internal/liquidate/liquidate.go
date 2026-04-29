@@ -10,6 +10,7 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/state"
+	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -46,6 +47,58 @@ type LiquidateArgs struct {
 	SwapRouter   common.Address
 	PoolFee      *big.Int
 	MinOut       *big.Int
+}
+
+func NewConsumer(conn *connector.Connector, marketReader state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, signer *config.Signer, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+	return &Consumer{
+		Conn:      conn,
+		Cache:     marketReader,
+		MarketMap: marketMap,
+		Signer:    signer,
+		Logger:    logger,
+		Ch:        ch,
+	}
+}
+
+type Consumer struct {
+	Conn      *connector.Connector
+	Cache     state.MarketReader
+	MarketMap map[[32]byte]morpho.MarketParams
+	Signer    *config.Signer
+	Logger    chan string
+	Ch        <-chan cache.BorrowPosition
+}
+
+func (c *Consumer) Run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case pos := <-c.Ch:
+			c.liquidateWrapper(ctx, &pos)
+		}
+	}
+}
+
+func (c *Consumer) liquidateWrapper(ctx context.Context, p *cache.BorrowPosition) {
+	result := SimulateAndPreComputeTx(c.Conn, c.Cache, c.MarketMap, p)
+	if result.SimErr != nil {
+		c.Logger <- fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr)
+		return
+	}
+	if !result.IsLiquidable {
+		c.Logger <- "[liq] not profitable"
+		return
+	}
+	market := c.MarketMap[p.MarketID]
+	c.Logger <- fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair())
+
+	err := LiquidateCall(c.Signer, c.Conn.ClientHTTP, ctx, result.Args)
+	if err != nil {
+		c.Logger <- fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err)
+		return
+	}
+	c.Logger <- fmt.Sprintf("[liq] ✓ liquidated %s", p.Address)
 }
 
 func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
