@@ -16,10 +16,12 @@ type AppLogg struct {
 	Content string
 }
 
+/* define log type instead of string  */
+
 func NewLogger(ctx context.Context, filename string) chan string {
 	var mu sync.Mutex
 
-	logChannel := make(chan string, 100) // ✅ buffered pour éviter les blocages
+	logChannel := make(chan string, 1000) // ✅ buffered pour éviter les blocages
 	logCache := make(map[int64]string)
 
 	pathLog := path.Join("logs", filename)

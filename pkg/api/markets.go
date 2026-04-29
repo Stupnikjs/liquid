@@ -34,6 +34,7 @@ func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 			CollateralTokenStr:      m.CollateralAsset.Symbol,
 			Oracle:                  common.HexToAddress(m.OracleAddress),
 			LLTV:                    utils.ParseBigInt(string(m.Lltv)),
+			Irm:                     common.HexToAddress(m.Irm),
 			LoanTokenDecimals:       uint16(m.LoanAsset.Decimals),
 			CollateralTokenDecimals: uint16(m.CollateralAsset.Decimals),
 			PoolFee:                 0,

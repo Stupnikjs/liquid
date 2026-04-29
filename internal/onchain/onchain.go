@@ -22,6 +22,11 @@ type OnChainResult struct {
 	OraclePrice *big.Int
 }
 
+/*
+	split to reduce only oracle calls
+	and reduce market call
+*/
+
 func OnChainCalls(c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) ([]w3types.RPCCaller, map[int][32]byte, *OnChainResult) {
 	var calls []w3types.RPCCaller
 

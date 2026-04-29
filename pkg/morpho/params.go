@@ -25,6 +25,7 @@ type MarketParams struct {
 	CollateralToken common.Address // 20
 	Oracle          common.Address // 20
 	// 4 padding
+	Irm                     common.Address
 	LLTV                    *big.Int // 8
 	LoanTokenStr            string   // 16
 	CollateralTokenStr      string   // 16
@@ -47,7 +48,7 @@ func (m *MarketParams) ToMarketContractParams() *MarketContractParams {
 		LoanToken:       m.LoanToken,
 		CollateralToken: m.CollateralToken,
 		Oracle:          m.Oracle,
-		Irm:             IRM,
+		Irm:             m.Irm,
 		Lltv:            m.LLTV,
 	}
 }

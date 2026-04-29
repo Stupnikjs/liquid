@@ -4,21 +4,18 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 )
 
 // just log market pair and first pos
-func GetMarketLog(c MarketReader, id [32]byte, morphoM morpho.MarketParams) string {
-	snap := c.GetSnapshot(id)
+func GetMarketLog(snap cache.MarketSnapshot, id [32]byte, morphoM morpho.MarketParams) string {
+
 	var sb strings.Builder
 	marketPair := fmt.Sprintf("%s/%s ", morphoM.CollateralTokenStr, morphoM.LoanTokenStr)
-	if snap == nil {
-		fmt.Fprintf(&sb, "%s", marketPair)
-		sb.WriteString("(empty snapshot)\n")
-		return sb.String()
-	}
-	fmt.Fprintf(&sb, "%s %d pos", marketPair, len(snap.Positions))
+
+	fmt.Fprintf(&sb, "%s %d pos ", marketPair, len(snap.Positions))
 	priceStr := "nil"
 	if snap.Oracle.Price != nil {
 		priceStr = utils.FormatDecimals(

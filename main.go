@@ -12,10 +12,6 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 )
 
-/*
-Snap shot s'initialize pas
-*/
-
 func main() {
 	var baseFilter api.MarketFilters
 
@@ -27,30 +23,22 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(4)
-
-	go func() {
-		defer wg.Done()
-		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
-	}()
-
+	/*
+		go func() {
+			time.Sleep(200 * time.Second)
+			defer wg.Done()
+			Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
+		}()
+	*/
 	go func() {
 		defer wg.Done()
 		time.Sleep(100 * time.Second) // to avoid too much logs at the same time
 		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
 	}()
 
-	/*
-		go func() {
-			defer wg.Done()
-			time.Sleep(2 * time.Second) // to avoid too much logs at the same time
-			Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
-		}()
-	*/
-
 	go func() {
 		defer wg.Done()
-		time.Sleep(600 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadUnichainConfig(), baseFilter, "uni.log")
+		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
 	}()
 
 	wg.Wait()

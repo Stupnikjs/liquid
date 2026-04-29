@@ -42,6 +42,7 @@ func MarketsQuery(chainid uint32) string {
                 creationTimestamp
                 oracleAddress
                 lltv
+                irmAddress
                 loanAsset {
                     address
                     symbol
@@ -98,6 +99,7 @@ type MarketItem struct {
 	CreationTimestamp int64       `json:"creationTimestamp"`
 	OracleAddress     string      `json:"oracleAddress"`
 	Lltv              json.Number `json:"lltv"`
+	Irm               string      `json:"irmAddress"`
 	LoanAsset         Asset       `json:"loanAsset"`
 	CollateralAsset   *Asset      `json:"collateralAsset"` // Pointeur car peut être null
 	State             struct {

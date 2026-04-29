@@ -80,3 +80,34 @@ query {
     }
   }
 }
+
+
+query {
+  marketPositions(
+    first: 10
+    where: {
+      userAddress_in: [
+        "0xFFCF0Ed1759Ec32138F509E5FBf31e6838846594",
+      ]
+      chainId_in: [480]
+    }
+  ) {
+    items {
+      user { address }
+      market {
+        uniqueKey
+        loanAsset { symbol decimals }
+        collateralAsset { symbol decimals }
+        irmAddress
+        lltv
+      }
+      state {
+        borrowShares
+        borrowAssets
+        borrowAssetsUsd
+        collateral
+        collateralUsd
+      }
+    }
+  }
+}

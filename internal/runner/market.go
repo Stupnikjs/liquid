@@ -9,6 +9,7 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
+	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
@@ -90,9 +91,12 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
+
 		}
 	})
 	snap := r.Cache.Markets.GetSnapshot(id)
+	r.Logger <- state.GetMarketLog(*snap, id, morphoM)
+
 	firstHF := snap.GetFirstHF()
 	if firstHF == nil {
 		firstHF = utils.TenPowInt(19)
@@ -122,11 +126,15 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 
 func distanceToInterval(distance float64) time.Duration {
 	switch {
+	// 1% to liquidation or 0.01% for correlated ETH pairs
 	case distance < 0.01:
 		return 2 * time.Second
+	// 2% to liquidation or 0.02% for correlated ETH pairs
 	case distance < 0.02:
 		return 10 * time.Second
+	// 20% to liquidation or 0.2% for correlated ETH pairs
 	case distance < 0.20:
+		// 8min20sec
 		return 500 * time.Second
 	default:
 		return 800 * time.Second
