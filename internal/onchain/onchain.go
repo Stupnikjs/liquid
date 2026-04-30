@@ -16,6 +16,8 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+//
+
 type OnChainResult struct {
 	ID          [32]byte
 	Stats       market.MarketStats
