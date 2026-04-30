@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -30,11 +29,13 @@ func main() {
 			Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
 		}()
 	*/
-	go func() {
-		defer wg.Done()
-		time.Sleep(100 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
-	}()
+	/*
+		go func() {
+			defer wg.Done()
+			time.Sleep(100 * time.Second) // to avoid too much logs at the same time
+			Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
+		}()
+	*/
 
 	go func() {
 		defer wg.Done()
@@ -45,9 +46,7 @@ func main() {
 }
 
 func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
-
 	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
-
 	cached := cache.NewCache(conn, conf, filters)
 	runn := runner.NewRunner(cached, conn, conf, logfile)
 	runn.Init(context.Background())
