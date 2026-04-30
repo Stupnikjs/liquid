@@ -53,8 +53,8 @@ func LoadBaseConfig() Config {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: []string{os.Getenv("BASE_HTTP_RPC_ALCH"), os.Getenv("BASE_HTTP_RPC_ALCH")},
-			WS:   []string{os.Getenv("BASE_WS_RPC_ALCH"), os.Getenv("BASE_WS_RPC_ALCH")},
+			HTTP: []string{os.Getenv("BASE_HTTP_RPC_DRPC"), os.Getenv("BASE_HTTP_RPC_DRPC")},
+			WS:   []string{os.Getenv("BASE_WS_RPC_DRPC"), os.Getenv("BASE_WS_RPC_DRPC")},
 		},
 	}
 }

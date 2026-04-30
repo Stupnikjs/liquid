@@ -32,5 +32,6 @@ var (
 
 	INFURAMAIN = "https://mainnet.infura.io/v3/e587127983764e6284261ebf6b4aaedf"
 	BASEDRPC   = "https://lb.drpc.live/base/AhuxMhCqfkI8pF_0y4Fpi89GWcIMFIwR8ZsatuZZzRRv"
+	BASEWSDRPC = "https://lb.drpc.live/base/AhuxMhCqfkI8pF_0y4Fpi89GWcIMFIwR8ZsatuZZzRRv"
 	PubRPC     = "https://ethereum-rpc.publicnode.com"
 )

@@ -142,7 +142,7 @@ func (q *Quoter) QuoteBinarySearch(
 	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
 		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
 
-		result := q.bestFeeTier(client, marketp, uniswapQuoterAddr, mid, oraclePrice, maxSlippage, 300*time.Millisecond)
+		result := q.bestFeeTier(client, marketp, uniswapQuoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond)
 		if result != nil {
 			best = result
 			lo = new(big.Int).Add(mid, big.NewInt(1))

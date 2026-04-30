@@ -44,6 +44,28 @@ func (r *Runner) Init(ctx context.Context) {
 	for _, id := range r.Cache.Markets.Ids() {
 		r.Swap(id)
 	}
+
+	r.LogMarkets()
+
+}
+
+func (r *Runner) LogMarkets() {
+	ids := r.Cache.Markets.Ids()
+	r.Logger <- fmt.Sprintf("── %d markets ──", len(ids))
+	for _, id := range ids {
+		m := r.Cache.GetMorphoMarketFromId(id)
+		snap := r.Cache.Markets.GetSnapshot(id)
+		if snap == nil {
+			continue
+		}
+		r.Logger <- fmt.Sprintf("[%s/%s] shares=%-12s borrow=%-12s oracle=%s",
+			m.CollateralTokenStr,
+			m.LoanTokenStr,
+			utils.FormatWAD(snap.Stats.TotalBorrowShares),
+			utils.FormatDecimals(snap.Stats.TotalBorrowAssets, int(m.CollateralTokenDecimals)),
+			utils.FormatWAD(snap.Oracle.Price),
+		)
+	}
 }
 
 func (r *Runner) OnChainRefreshAll(ctx context.Context) {
@@ -58,16 +80,4 @@ func (r *Runner) OnChainRefreshAll(ctx context.Context) {
 
 	wg.Wait()
 
-}
-
-func (r *Runner) LogMarkets() {
-	for _, id := range r.Cache.Markets.Ids() {
-		m := r.Cache.GetMorphoMarketFromId(id)
-		snap := r.Cache.Markets.GetSnapshot(id)
-		if snap == nil {
-			continue
-		}
-		stats := snap.Stats
-		r.Logger <- fmt.Sprintf("%s/%s shares:%s totcoll:%s", m.CollateralTokenStr, m.LoanTokenStr, utils.FormatWAD(stats.TotalBorrowShares), utils.FormatDecimals(stats.TotalBorrowAssets, int(m.CollateralTokenDecimals)))
-	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"golang.org/x/time/rate"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -30,6 +31,7 @@ type Connector struct {
 	ClientHTTP *w3.Client
 	ClientWS   *w3.Client
 	PositionCh chan *types.Log // usefull ?
+	limiter    *rate.Limiter
 }
 
 func NewConnector(httpRPC, websocket []string) *Connector {
@@ -51,6 +53,7 @@ func NewConnector(httpRPC, websocket []string) *Connector {
 		ClientHTTP: clientHTTP,
 		ClientWS:   clientWS,
 		PositionCh: make(chan *types.Log, 100),
+		limiter:    rate.NewLimiter(rate.Every(time.Minute/300), 10),
 	}
 }
 
@@ -114,12 +117,9 @@ func (conn *Connector) LogsEthCallsFromLastMin(ctx context.Context, logChan chan
 
 // func (c *w3.Client) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
 func (conn *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error {
+	if err := conn.limiter.Wait(ctx); err != nil {
+		return fmt.Errorf("rate limit: %w", err)
+	}
 	defer conn.ethCalls.Add(uint64(len(calls)))
 	return conn.ClientHTTP.CallCtx(ctx, calls...)
-}
-
-// func (c *w3.Client) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
-func (conn *Connector) EthSingleCallCtx(ctx context.Context, call w3types.RPCCaller) error {
-	defer conn.ethCalls.Add(1)
-	return conn.ClientHTTP.CallCtx(ctx, call)
 }

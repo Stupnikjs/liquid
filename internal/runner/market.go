@@ -9,7 +9,6 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
-	"github.com/Stupnikjs/morpho-sepolia/internal/state"
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
@@ -33,7 +32,6 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 
 	ms := &marketState{
 		ignoreMap: make(map[common.Address]int),
-		tickCount: 0,
 	}
 	ticker, interval := r.MarketInitTicker(ctx, id)
 	if ticker == nil {
@@ -47,7 +45,11 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ctx.Done():
 			return
 		case <-ms.ticker.C:
-			r.MarketTick(ctx, ms, id)
+			interval := r.MarketTick(ctx, ms, id)
+			if interval != ms.interval {
+				ms.ticker.Reset(interval) // ← manque ça
+			}
+			ms.interval = interval
 		}
 	}
 }
@@ -63,6 +65,11 @@ func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticke
 			snap = r.Cache.Markets.GetSnapshot(id)
 		}
 	}
+	return r.SnapToTickerInterval(*snap, id)
+
+}
+
+func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, id [32]byte) (*time.Ticker, time.Duration) {
 	firstHF := snap.GetFirstHF()
 	if firstHF == nil {
 		firstHF = utils.TenPowInt(19)
@@ -75,57 +82,62 @@ func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticke
 	}
 	interval = distanceToInterval(diff)
 	return time.NewTicker(interval), interval
-
 }
 
-func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
+func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) time.Duration {
 	ms.tickCount++
-	morphoM := r.Cache.GetMorphoMarketFromId(id)
-	start := time.Now().UnixNano()
-	err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
-	if err != nil {
-		r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
+	r.MarketRefresh(ctx, ms, id)
+	snap := r.Cache.Markets.GetSnapshot(id)
+	if snap == nil || len(snap.Positions) == 0 {
+		return 10 * time.Hour
 	}
+	r.MarketRecompute(ms, id, snap)
+	_, interval := r.SnapToTickerInterval(*snap, id)
+	r.LiquidationCheck(ctx, *snap, ms)
+	return interval
+}
+
+// Responsabilité : RPC onchain uniquement
+func (r *Runner) MarketRefresh(ctx context.Context, ms *marketState, id [32]byte) {
+	morphoM := r.Cache.GetMorphoMarketFromId(id)
+
+	if ms.tickCount%20 == 0 {
+		if err := onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho); err != nil {
+			r.Logger <- fmt.Sprintf("full refresh error: %v", err)
+		}
+		return
+	}
+
+	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho); err != nil {
+		r.Logger <- fmt.Sprintf("oracle refresh error: %v", err)
+	}
+}
+
+// Responsabilité : calcul HF + tri uniquement
+func (r *Runner) MarketRecompute(ms *marketState, id [32]byte, snap *cache.MarketSnapshot) {
 	r.Cache.Markets.Update(id, func(m *market.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
-		if ms.tickCount%20 == 0 {
-			err := onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
-			if err != nil {
-				r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
-			}
+		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
-
 		}
 	})
-	snap := r.Cache.Markets.GetSnapshot(id)
-	r.Logger <- state.GetMarketLog(*snap, id, morphoM)
+}
 
-	firstHF := snap.GetFirstHF()
-	if firstHF == nil {
-		firstHF = utils.TenPowInt(19)
-	}
-	diff := getDiffFloat(firstHF)
-	if morphoM.IsETHCorrelated() {
-		diff *= 100
-	}
-	if diff < 0 {
-		for _, pos := range snap.Positions {
-			if pos.CachedHF != nil && pos.CachedHF.Cmp(utils.WAD) < 0 {
-				if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 5 {
-					r.LiquidateCh <- pos
-				}
-				ms.ignoreMap[pos.Address]++
-			}
+func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState) {
+	for _, pos := range snap.Positions {
+		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
+			break
 		}
+		if pos.CachedHF.Cmp(utils.HALF_WAD) < 0 {
+			ms.ignoreMap[pos.Address] = 999
+			continue
+		}
+		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 5 {
+			r.LiquidateCh <- pos
+		}
+		ms.ignoreMap[pos.Address]++
 	}
-	newInterval := distanceToInterval(diff)
-	if newInterval != ms.interval {
-		ms.ticker.Reset(newInterval)
-		ms.interval = newInterval
-	}
-	end := time.Now().UnixNano()
-	fmt.Println("market routine ms:", (end-start)/1e6)
 }
 
 func distanceToInterval(distance float64) time.Duration {
