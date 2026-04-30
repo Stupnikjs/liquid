@@ -16,114 +16,97 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
-//
+const rpcTimeout = 5 * time.Second
 
+// OnChainResult holds the raw values returned from on-chain calls.
 type OnChainResult struct {
 	ID          [32]byte
 	Stats       market.MarketStats
 	OraclePrice *big.Int
 }
 
-/*
-	split to reduce only oracle calls
-	and reduce market call
-*/
-
-func OnChainCalls(c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) ([]w3types.RPCCaller, *OnChainResult) {
-	var calls []w3types.RPCCaller
-
-	callIndexToID := make(map[int][32]byte)
-
-	res := &OnChainResult{
+func newResult(id [32]byte) *OnChainResult {
+	return &OnChainResult{
 		ID:          id,
 		Stats:       market.MarketStats{},
 		OraclePrice: new(big.Int),
 	}
-
-	// market call
-	callIdx := len(calls)
-	callIndexToID[callIdx] = id
-
-	calls = append(calls,
-		eth.CallFunc(morphoAddr, config.MarketFunc, id).Returns(
-			new(big.Int), new(big.Int),
-			&res.Stats.TotalBorrowAssets,
-			&res.Stats.TotalBorrowShares,
-			new(big.Int),
-			new(big.Int),
-		),
-	)
-
-	calls = append(calls,
-		eth.CallFunc(mParam.Oracle, config.OraclePriceFunc).
-			Returns(res.OraclePrice),
-	)
-
-	// oracle call
-
-	return calls, res
 }
 
-func OnChainRefresh(conn *connector.Connector, ctx context.Context, c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	calls, results := OnChainCalls(c, mParam, id, morphoAddr)
+// marketCall builds the eth_call for a Morpho market.
+func marketCall(morphoAddr common.Address, id [32]byte, res *OnChainResult) w3types.RPCCaller {
+	return eth.CallFunc(morphoAddr, config.MarketFunc, id).Returns(
+		new(big.Int), new(big.Int),
+		&res.Stats.TotalBorrowAssets,
+		&res.Stats.TotalBorrowShares,
+		new(big.Int),
+		new(big.Int),
+	)
+}
 
+// oracleCall builds the eth_call for an oracle price.
+func oracleCall(oracle common.Address, res *OnChainResult) w3types.RPCCaller {
+	return eth.CallFunc(oracle, config.OraclePriceFunc).Returns(res.OraclePrice)
+}
+
+// refresh is the shared implementation for on-chain refreshes.
+// callBuilder returns the list of RPCCallers to batch, plus a function
+// that writes the results back into the market cache.
+func refresh(
+	conn *connector.Connector,
+	ctx context.Context,
+	id [32]byte,
+	callBuilder func() ([]w3types.RPCCaller, func()),
+) error {
+	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
+	defer cancel()
+
+	calls, apply := callBuilder()
 	if err := conn.EthCallCtx(ctx, calls); err != nil {
 		fmt.Printf("[onchain] rpc error %x: %v\n", id[:4], err)
 		return err
 	}
-
-	ApplyResults(c, results)
+	apply()
 	return nil
 }
 
-func OnChainOracleRefresh(conn *connector.Connector, ctx context.Context, c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	call, results := OnChainOracleCall(c, mParam, id, morphoAddr)
-
-	if err := conn.EthSingleCallCtx(ctx, call); err != nil {
-		fmt.Printf("[onchain] rpc error %x: %v\n", id[:4], err)
-		return err
-	}
-
-	ApplyOracle(c, results)
-	return nil
-}
-
-func OnChainOracleCall(c state.MarketReader, mParam morpho.MarketParams, id [32]byte, morphoAddr common.Address) (w3types.RPCCaller, *OnChainResult) {
-	res := &OnChainResult{
-		ID:          id,
-		Stats:       market.MarketStats{},
-		OraclePrice: new(big.Int),
-	}
-
-	call := eth.CallFunc(mParam.Oracle, config.OraclePriceFunc).
-		Returns(res.OraclePrice)
-
-	// oracle call
-
-	return call, res
-}
-
-func ApplyResults(c state.MarketReader, results *OnChainResult) {
-	// fmt.Println("results: ", results.Stats.TotalBorrowAssets, results.Stats.TotalBorrowShares, results.OraclePrice)
-	c.Update(results.ID, func(m *market.Market) {
-
-		m.Stats.TotalBorrowAssets = results.Stats.TotalBorrowAssets
-		m.Stats.TotalBorrowShares = results.Stats.TotalBorrowShares
-		m.Oracle.Price = results.OraclePrice
-
+// OnChainRefresh fetches both the market state and the oracle price.
+func OnChainRefresh(
+	conn *connector.Connector, ctx context.Context,
+	c state.MarketReader, mParam morpho.MarketParams,
+	id [32]byte, morphoAddr common.Address,
+) error {
+	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
+		res := newResult(id)
+		calls := []w3types.RPCCaller{
+			marketCall(morphoAddr, id, res),
+			oracleCall(mParam.Oracle, res),
+		}
+		apply := func() {
+			c.Update(res.ID, func(m *market.Market) {
+				m.Stats.TotalBorrowAssets = res.Stats.TotalBorrowAssets
+				m.Stats.TotalBorrowShares = res.Stats.TotalBorrowShares
+				m.Oracle.Price = res.OraclePrice
+			})
+		}
+		return calls, apply
 	})
-
 }
 
-func ApplyOracle(c state.MarketReader, results *OnChainResult) {
-	// fmt.Println("results: ", results.Stats.TotalBorrowAssets, results.Stats.TotalBorrowShares, results.OraclePrice)
-	c.Update(results.ID, func(m *market.Market) {
-		m.Oracle.Price = results.OraclePrice
-
+// OnChainOracleRefresh fetches only the oracle price.
+func OnChainOracleRefresh(
+	conn *connector.Connector, ctx context.Context,
+	c state.MarketReader, mParam morpho.MarketParams,
+	id [32]byte, morphoAddr common.Address,
+) error {
+	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
+		res := newResult(id)
+		calls := []w3types.RPCCaller{oracleCall(mParam.Oracle, res)}
+		apply := func() {
+			c.Update(res.ID, func(m *market.Market) {
+				m.Oracle.Price = res.OraclePrice
+			})
+		}
+		return calls, apply
 	})
-
 }

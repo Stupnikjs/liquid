@@ -82,13 +82,17 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) {
 	ms.tickCount++
 	morphoM := r.Cache.GetMorphoMarketFromId(id)
 	start := time.Now().UnixNano()
-	err := onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
+	err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
 	if err != nil {
 		r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
 	}
 	r.Cache.Markets.Update(id, func(m *market.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
-		if ms.tickCount%10 == 0 {
+		if ms.tickCount%20 == 0 {
+			err := onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho)
+			if err != nil {
+				r.Logger <- fmt.Sprintf("Error refreshing on-chain data: %v", err)
+			}
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
 
