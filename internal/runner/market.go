@@ -86,18 +86,19 @@ func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, id [32]byte) (*
 
 func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) time.Duration {
 	ms.tickCount++
+
 	r.MarketRefresh(ctx, ms, id)
+	r.MarketRecompute(ms, id)
 	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
 		return 10 * time.Hour
 	}
-	r.MarketRecompute(ms, id, snap)
 	_, interval := r.SnapToTickerInterval(*snap, id)
 	r.LiquidationCheck(ctx, *snap, ms)
 	return interval
 }
 
-// Responsabilité : RPC onchain uniquement
+// RPC Call Oracle only or Markets
 func (r *Runner) MarketRefresh(ctx context.Context, ms *marketState, id [32]byte) {
 	morphoM := r.Cache.GetMorphoMarketFromId(id)
 
@@ -113,8 +114,8 @@ func (r *Runner) MarketRefresh(ctx context.Context, ms *marketState, id [32]byte
 	}
 }
 
-// Responsabilité : calcul HF + tri uniquement
-func (r *Runner) MarketRecompute(ms *marketState, id [32]byte, snap *cache.MarketSnapshot) {
+// Sorting + Hf recalculate
+func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
 	r.Cache.Markets.Update(id, func(m *market.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
 		if ms.tickCount%10 == 0 {
@@ -142,14 +143,17 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 
 func distanceToInterval(distance float64) time.Duration {
 	switch {
-	// 1% to liquidation or 0.01% for correlated ETH pairs
-	case distance < 0.01:
+	case distance < 0.002:
+		return 1 * time.Second
+	case distance < 0.005:
 		return 2 * time.Second
 	// 2% to liquidation or 0.02% for correlated ETH pairs
+	case distance < 0.01:
+		return 4 * time.Second
 	case distance < 0.02:
 		return 10 * time.Second
 	// 20% to liquidation or 0.2% for correlated ETH pairs
-	case distance < 0.20:
+	case distance < 0.10:
 		// 8min20sec
 		return 500 * time.Second
 	default:

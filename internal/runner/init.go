@@ -46,6 +46,7 @@ func (r *Runner) Init(ctx context.Context) {
 	}
 
 	r.LogMarkets()
+	r.Conn.SwapHTPP() // Use alchemy after initing
 
 }
 
@@ -62,8 +63,8 @@ func (r *Runner) LogMarkets() {
 			m.CollateralTokenStr,
 			m.LoanTokenStr,
 			utils.FormatWAD(snap.Stats.TotalBorrowShares),
-			utils.FormatDecimals(snap.Stats.TotalBorrowAssets, int(m.CollateralTokenDecimals)),
-			utils.FormatWAD(snap.Oracle.Price),
+			utils.FormatDecimals(snap.Stats.TotalBorrowAssets, int(m.LoanTokenDecimals)),
+			utils.FormatDecimals(snap.Oracle.Price, 36),
 		)
 	}
 }

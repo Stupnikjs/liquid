@@ -22,7 +22,7 @@ func NewLogger(ctx context.Context, filename string) chan string {
 	var mu sync.Mutex
 
 	logChannel := make(chan string, 1000) // ✅ buffered pour éviter les blocages
-	logCache := make(map[int64]string)
+	logCache := make([]string, 0, 100)
 
 	pathLog := path.Join("logs", filename)
 	file, err := os.Create(pathLog)
@@ -39,7 +39,7 @@ func NewLogger(ctx context.Context, filename string) chan string {
 				return
 			case msg := <-logChannel:
 				mu.Lock()
-				logCache[time.Now().Unix()] = msg
+				logCache = append(logCache, fmt.Sprintf("[%s] %s", time.Now().Format(time.RFC3339), msg))
 				mu.Unlock()
 			}
 		}
@@ -52,10 +52,11 @@ func NewLogger(ctx context.Context, filename string) chan string {
 		if len(logCache) == 0 {
 			return
 		}
-		for ts, msg := range logCache {
-			fmt.Fprintf(file, "[%s] %s\n", time.Unix(ts, 0).Format(time.RFC3339), msg)
+		for _, line := range logCache {
+			fmt.Fprintln(file, line)
 		}
-		clear(logCache)
+		file.Sync()
+		logCache = logCache[:0]
 
 	})
 

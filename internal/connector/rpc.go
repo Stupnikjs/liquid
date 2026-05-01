@@ -8,6 +8,34 @@ import (
 	"github.com/lmittmann/w3"
 )
 
+func (c *Connector) SwapHTPP() {
+	backoff := 1 * time.Second
+	for i := range c.HTTP {
+		endpoint := c.HTTP[(c.currHTTP+i)%len(c.HTTP)]
+		client, err := w3.Dial(endpoint)
+		if err != nil {
+			fmt.Printf("http swap failed for %s: %v, retry in %s\n", endpoint, err, backoff)
+			time.Sleep(backoff)
+			backoff = min(backoff*2, 30*time.Second)
+			continue
+		}
+
+		c.mu.Lock()
+		old := c.ClientHTTP
+		c.ClientHTTP = client
+		c.currHTTP = (c.currHTTP + i) % len(c.HTTP)
+		c.mu.Unlock()
+
+		if old != nil {
+			old.Close()
+		}
+		log.Printf("[connector] HTTP switched to %s", endpoint)
+		return
+	}
+	// All endpoints failed — keep retrying from start after delay
+	time.Sleep(backoff)
+	c.SwapHTPP()
+}
 func (c *Connector) reconnectWS() {
 	backoff := 1 * time.Second
 	for i := range c.WS {
@@ -35,48 +63,4 @@ func (c *Connector) reconnectWS() {
 	// All endpoints failed — keep retrying from start after delay
 	time.Sleep(backoff)
 	c.reconnectWS()
-}
-
-// SwapToMainHttp tries the main index first, falls back to rotating through others.
-func (c *Connector) SwapToMainHttp() (bool, error) {
-	client, err := w3.Dial(c.HTTP[c.MainIndex])
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if err != nil {
-		c.currHTTP = (c.currHTTP + 1) % len(c.HTTP)
-		fallback, err2 := w3.Dial(c.HTTP[c.currHTTP])
-		if err2 != nil {
-			return false, fmt.Errorf("swap to main failed, fallback also failed: %w", err2)
-		}
-		if c.ClientHTTP != nil {
-			c.ClientHTTP.Close()
-		}
-		c.ClientHTTP = fallback
-		return false, fmt.Errorf("swap to main failed, using fallback: %w", err)
-	}
-
-	if c.ClientHTTP != nil {
-		c.ClientHTTP.Close()
-	}
-	c.ClientHTTP = client
-	c.currHTTP = c.MainIndex
-	return true, nil
-}
-
-func (c *Connector) RefreshRPC() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.currHTTP = (c.currHTTP + 1) % len(c.HTTP)
-	client, err := w3.Dial(c.HTTP[c.currHTTP])
-	if err != nil {
-		return fmt.Errorf("RefreshRPC: failed to dial %s: %w", c.HTTP[c.currHTTP], err)
-	}
-	if c.ClientHTTP != nil {
-		c.ClientHTTP.Close()
-	}
-	c.ClientHTTP = client
-	return nil
 }

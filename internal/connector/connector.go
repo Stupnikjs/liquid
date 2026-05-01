@@ -120,6 +120,9 @@ func (conn *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller
 	if err := conn.limiter.Wait(ctx); err != nil {
 		return fmt.Errorf("rate limit: %w", err)
 	}
+	conn.mu.RLock()
+	client := conn.ClientHTTP
+	conn.mu.RUnlock()
 	defer conn.ethCalls.Add(uint64(len(calls)))
-	return conn.ClientHTTP.CallCtx(ctx, calls...)
+	return client.CallCtx(ctx, calls...)
 }

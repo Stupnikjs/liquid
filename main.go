@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
@@ -22,20 +23,24 @@ func main() {
 	var wg sync.WaitGroup
 
 	wg.Add(4)
-	/*
-		go func() {
-			time.Sleep(200 * time.Second)
-			defer wg.Done()
-			Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
-		}()
-	*/
-	/*
-		go func() {
-			defer wg.Done()
-			time.Sleep(100 * time.Second) // to avoid too much logs at the same time
-			Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
-		}()
-	*/
+
+	go func() {
+		time.Sleep(200 * time.Second)
+		defer wg.Done()
+		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
+	}()
+
+	go func() {
+		time.Sleep(200 * time.Second)
+		defer wg.Done()
+		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+	}()
+
+	go func() {
+		defer wg.Done()
+		time.Sleep(100 * time.Second) // to avoid too much logs at the same time
+		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
+	}()
 
 	go func() {
 		defer wg.Done()
