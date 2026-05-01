@@ -64,7 +64,7 @@ func (r *Runner) LogMarkets() {
 			m.LoanTokenStr,
 			utils.FormatWAD(snap.Stats.TotalBorrowShares),
 			utils.FormatDecimals(snap.Stats.TotalBorrowAssets, int(m.LoanTokenDecimals)),
-			utils.FormatDecimals(snap.Oracle.Price, 36),
+			utils.FormatDecimals(snap.Oracle.Price, int(36+m.CollateralTokenDecimals-m.LoanTokenDecimals)),
 		)
 	}
 }

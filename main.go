@@ -31,7 +31,7 @@ func main() {
 	}()
 
 	go func() {
-		time.Sleep(200 * time.Second)
+		time.Sleep(400 * time.Second)
 		defer wg.Done()
 		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
 	}()
