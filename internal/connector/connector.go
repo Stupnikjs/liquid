@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -21,39 +22,43 @@ import (
 )
 
 type Connector struct {
-	WS         []string
-	HTTP       []string
-	MainIndex  int
-	ethCalls   atomic.Uint64
-	mu         sync.RWMutex
-	currHTTP   int
-	currWS     int
-	ClientHTTP *w3.Client
-	ClientWS   *w3.Client
-	PositionCh chan *types.Log // usefull ?
-	limiter    *rate.Limiter
+	ethCalls           atomic.Uint64
+	mu                 sync.RWMutex
+	MainRPC            string
+	QuoteRPC           string
+	WsRPC              string
+	ClientHTTP         *w3.Client
+	ClientHTTPFallback *w3.Client
+	ClientWS           *w3.Client
+	PositionCh         chan *types.Log // usefull ?
+	limiter            *rate.Limiter
 }
 
-func NewConnector(httpRPC, websocket []string) *Connector {
-	clientHTTP, err := w3.Dial(httpRPC[0])
+func NewConnector(mainRPC, quoteRPC, wsRPC string) *Connector {
+	clientHTTP, err := w3.Dial(mainRPC)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	clientWS, err := w3.Dial(websocket[0])
+	clientHTTPFallback, err := w3.Dial(quoteRPC)
+	if err != nil {
+		fmt.Println("fallback dial failed:", err)
+		panic(err)
+	}
+	clientWS, err := w3.Dial(wsRPC)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 	return &Connector{
-		WS:         websocket,
-		currHTTP:   0,
-		currWS:     0,
-		HTTP:       httpRPC,
-		ClientHTTP: clientHTTP,
-		ClientWS:   clientWS,
-		PositionCh: make(chan *types.Log, 100),
-		limiter:    rate.NewLimiter(rate.Every(time.Minute/300), 10),
+		MainRPC:            mainRPC,
+		QuoteRPC:           quoteRPC,
+		WsRPC:              wsRPC,
+		ClientHTTP:         clientHTTP,
+		ClientHTTPFallback: clientHTTPFallback,
+		ClientWS:           clientWS,
+		PositionCh:         make(chan *types.Log, 100),
+		limiter:            rate.NewLimiter(rate.Every(time.Minute/300), 10),
 	}
 }
 
@@ -106,10 +111,10 @@ func (c *Connector) watchLogs(ctx context.Context, query ethereum.FilterQuery, c
 	}
 }
 
-func (conn *Connector) LogsEthCallsFromLastMin(ctx context.Context, logChan chan string) {
-	utils.RunTicker(ctx, time.Minute, func() {
+func (conn *Connector) LogsEthCallsNum(ctx context.Context, logChan chan string) {
+	utils.RunTicker(ctx, 10*time.Minute, func() {
 		count := conn.ethCalls.Load()
-		logChan <- fmt.Sprintf("%d ETH_CALLS \n", count)
+		logChan <- fmt.Sprintf("%d ETH_CALLS  \n", count)
 		conn.ethCalls.Store(0)
 	})
 
@@ -124,5 +129,9 @@ func (conn *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller
 	client := conn.ClientHTTP
 	conn.mu.RUnlock()
 	defer conn.ethCalls.Add(uint64(len(calls)))
-	return client.CallCtx(ctx, calls...)
+	err := client.CallCtx(ctx, calls...)
+	if err != nil && strings.Contains(err.Error(), "Request timeout") {
+		return conn.ClientHTTPFallback.CallCtx(ctx, calls...)
+	}
+	return err
 }

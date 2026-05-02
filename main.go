@@ -29,13 +29,13 @@ func main() {
 		defer wg.Done()
 		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
 	}()
-
-	go func() {
-		time.Sleep(400 * time.Second)
-		defer wg.Done()
-		Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
-	}()
-
+	/*
+		go func() {
+			time.Sleep(400 * time.Second)
+			defer wg.Done()
+			Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
+		}()
+	*/
 	go func() {
 		defer wg.Done()
 		time.Sleep(100 * time.Second) // to avoid too much logs at the same time
@@ -51,7 +51,7 @@ func main() {
 }
 
 func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
-	conn := connector.NewConnector(conf.RPC.HTTP, conf.RPC.WS)
+	conn := connector.NewConnector(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
 	cached := cache.NewCache(conn, conf, filters)
 	runn := runner.NewRunner(cached, conn, conf, logfile)
 	runn.Init(context.Background())

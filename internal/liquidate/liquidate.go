@@ -14,8 +14,8 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -27,7 +27,6 @@ var (
 
 type Liquidable struct {
 	Pos          *cache.BorrowPosition
-	HF           *big.Int
 	RepayShares  *big.Int
 	SeizeAssets  *big.Int
 	MinOut       *big.Int
@@ -75,13 +74,13 @@ func (c *Consumer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			c.liquidateWrapper(ctx, &pos)
+			c.liquidateWrapper(ctx, c.Cache, &pos)
 		}
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, p *cache.BorrowPosition) {
-	result := SimulateAndPreComputeTx(c.Conn, c.Cache, c.MarketMap, p)
+func (c *Consumer) liquidateWrapper(ctx context.Context, mReader state.MarketReader, p *cache.BorrowPosition) {
+	result := c.SimulateAndPreComputeTx(ctx, mReader, p)
 	if result.SimErr != nil {
 		c.Logger <- fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr)
 		return
@@ -93,15 +92,15 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, p *cache.BorrowPosition
 	market := c.MarketMap[p.MarketID]
 	c.Logger <- fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair())
 
-	err := LiquidateCall(c.Signer, c.Conn.ClientHTTP, ctx, result.Args)
+	err := c.LiquidateCall(ctx, result.Args)
 	if err != nil {
 		c.Logger <- fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err)
 		return
 	}
-	c.Logger <- fmt.Sprintf("[liq] ✓ liquidated %s", p.Address)
+	c.Logger <- fmt.Sprintf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address)
 }
 
-func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context, params TxParams) (common.Hash, error) {
+func (c *Consumer) SendSignedTx(ctx context.Context, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
 	var gasEst uint64
@@ -113,7 +112,7 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 		Value: params.Value,
 	}
 
-	if err := client.CallCtx(ctx,
+	if err := c.Conn.ClientHTTP.CallCtx(ctx,
 		eth.Nonce(config.BaseWalletAddr, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
 		eth.EstimateGas(&msg, nil).Returns(&gasEst),
@@ -131,13 +130,13 @@ func SendSignedTx(signer *config.Signer, client *w3.Client, ctx context.Context,
 		GasFeeCap: new(big.Int).Add(gasPrice, big.NewInt(1e9)),
 	})
 
-	signedTx, err := signer.Sign(tx)
+	signedTx, err := c.Signer.Sign(tx)
 	if err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: sign: %w", err)
 	}
 
 	var receipt common.Hash
-	if err := client.CallCtx(ctx, eth.SendTx(signedTx).Returns(&receipt)); err != nil {
+	if err := c.Conn.ClientHTTP.CallCtx(ctx, eth.SendTx(signedTx).Returns(&receipt)); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
 	}
 
@@ -151,7 +150,7 @@ type TxParams struct {
 	Value    *big.Int
 }
 
-func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context, args LiquidateArgs) error {
+func (c *Consumer) LiquidateCall(ctx context.Context, args LiquidateArgs) error {
 	calldata, err := config.FuncLiquidate.EncodeArgs(
 		args.MarketParams,
 		args.Borrower,
@@ -165,7 +164,7 @@ func LiquidateCall(signer *config.Signer, client *w3.Client, ctx context.Context
 		return fmt.Errorf("LiquidateCall: encode: %w", err)
 	}
 
-	_, err = SendSignedTx(signer, client, ctx, TxParams{
+	_, err = c.SendSignedTx(ctx, TxParams{
 		To:       &config.BaseLiquidatorAddr,
 		Calldata: calldata,
 	})
@@ -178,15 +177,15 @@ func ComputeMinOut(seizedAssets, collateralPrice, loanPrice *big.Int) *big.Int {
 	return valueInLoan
 }
 
-func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, marketMap map[[32]byte]morpho.MarketParams, p *cache.BorrowPosition) *Liquidable {
+func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader state.MarketReader, p *cache.BorrowPosition) *Liquidable {
 	out := &Liquidable{}
-	snap := c.GetSnapshot(p.MarketID)
+	snap := mReader.GetSnapshot(p.MarketID)
 	if snap == nil {
 		out.SimErr = fmt.Errorf("snap nil")
 		return out
 	}
 
-	params := marketMap[p.MarketID]
+	params := c.MarketMap[p.MarketID]
 
 	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
@@ -239,7 +238,7 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 
 	var gasVal uint64
 	var callResult []byte
-	if err := conn.EthCallCtx(context.Background(), []w3types.RPCCaller{
+	if err := c.Conn.EthCallCtx(context.Background(), []w3types.RPCCaller{
 		eth.Call(&msg, nil, nil).Returns(&callResult),
 		eth.EstimateGas(&msg, nil).Returns(&gasVal),
 	}); err != nil {
@@ -251,7 +250,7 @@ func SimulateAndPreComputeTx(conn *connector.Connector, c state.MarketReader, ma
 	// 4. Profit net
 	out.GasEstimate = gasVal
 	out.SeizeAssets = seizeAssets
-	fmt.Println("SEIZED ASSET IN SIMULATION", seizeAssets.String())
+	c.Logger <- fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(out.SeizeAssets, int(params.CollateralTokenDecimals)), utils.FormatWAD(out.Pos.CachedHF))
 	out.SimulatedAt = time.Now()
 	out.IsLiquidable = true
 

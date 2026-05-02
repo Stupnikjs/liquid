@@ -12,6 +12,7 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 /*
@@ -87,10 +88,11 @@ func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, id [32]byte) (*
 func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) time.Duration {
 	ms.tickCount++
 
-	r.MarketRefresh(ctx, ms, id)
+	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
 	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
+		r.log("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
 	_, interval := r.SnapToTickerInterval(*snap, id)
@@ -99,18 +101,17 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 }
 
 // RPC Call Oracle only or Markets
-func (r *Runner) MarketRefresh(ctx context.Context, ms *marketState, id [32]byte) {
+func (r *Runner) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [32]byte) {
 	morphoM := r.Cache.GetMorphoMarketFromId(id)
-
 	if ms.tickCount%20 == 0 {
+
 		if err := onchain.OnChainRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho); err != nil {
-			r.Logger <- fmt.Sprintf("full refresh error: %v", err)
+			r.log(fmt.Sprintf("full refresh error: %v", err))
 		}
 		return
 	}
-
 	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache.Markets, morphoM, id, r.Config.Addresses.Morpho); err != nil {
-		r.Logger <- fmt.Sprintf("oracle refresh error: %v", err)
+		r.log(fmt.Sprintf("oracle refresh error: %v", err))
 	}
 }
 
@@ -121,8 +122,10 @@ func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
+
 		}
 	})
+
 }
 
 func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState) {
@@ -134,7 +137,16 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 			ms.ignoreMap[pos.Address] = 999
 			continue
 		}
+		morphoM := r.Cache.GetMorphoMarketFromId(snap.ID)
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 5 {
+			r.log(fmt.Sprintf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
+				pos.Address,
+				utils.FormatWAD(pos.BorrowAssetsUsd),
+				morphoM.GetPair(),
+				hexutil.Encode(pos.MarketID[:]),
+				utils.FormatWAD(pos.CachedHF),
+				utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
+				utils.FormatDecimals(snap.Oracle.Price, int(36+morphoM.CollateralTokenDecimals-morphoM.LoanTokenDecimals))))
 			r.LiquidateCh <- pos
 		}
 		ms.ignoreMap[pos.Address]++

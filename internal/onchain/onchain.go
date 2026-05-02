@@ -104,6 +104,7 @@ func OnChainOracleRefresh(
 		calls := []w3types.RPCCaller{oracleCall(mParam.Oracle, res)}
 		apply := func() {
 			c.Update(res.ID, func(m *market.Market) {
+				// log price to debug
 				m.Oracle.Price = res.OraclePrice
 			})
 		}

@@ -35,18 +35,18 @@ func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.
 }
 
 func (r *Runner) Init(ctx context.Context) {
-	err := r.ApiCallRoutine(ctx)
+	err := r.ApiCall(ctx)
 	if err != nil {
-		fmt.Println(err)
+		r.Logger <- err.Error()
 	}
+	r.Logger <- "Api call init"
 	r.OnChainRefreshAll(ctx)
-
+	r.Logger <- "Refresh all markets for init"
 	for _, id := range r.Cache.Markets.Ids() {
 		r.Swap(id)
 	}
-
+	r.Logger <- "Quoting over "
 	r.LogMarkets()
-	r.Conn.SwapHTPP() // Use alchemy after initing
 
 }
 
@@ -55,17 +55,18 @@ func (r *Runner) LogMarkets() {
 	r.Logger <- fmt.Sprintf("── %d markets ──", len(ids))
 	for _, id := range ids {
 		m := r.Cache.GetMorphoMarketFromId(id)
+		r.log(fmt.Sprintf("%s coldecimals %d loandecimals %d", m.GetPair(), m.CollateralTokenDecimals, m.LoanTokenDecimals))
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
-		r.Logger <- fmt.Sprintf("[%s/%s] shares=%-12s borrow=%-12s oracle=%s",
+		r.log(fmt.Sprintf("[%s/%s] shares=%-12s borrow=%-12s oracle=%s",
 			m.CollateralTokenStr,
 			m.LoanTokenStr,
 			utils.FormatWAD(snap.Stats.TotalBorrowShares),
 			utils.FormatDecimals(snap.Stats.TotalBorrowAssets, int(m.LoanTokenDecimals)),
-			utils.FormatDecimals(snap.Oracle.Price, int(36+m.CollateralTokenDecimals-m.LoanTokenDecimals)),
-		)
+			utils.FormatDecimals(snap.Oracle.Price, 36+int(m.CollateralTokenDecimals)-int(m.LoanTokenDecimals)),
+		))
 	}
 }
 

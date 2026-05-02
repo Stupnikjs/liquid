@@ -12,13 +12,18 @@ import (
 	"github.com/lmittmann/w3"
 )
 
+/*
+Need  periodical refresh to melt data is missing some events
+Swap
+*/
 func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var firstErr error
 	ctx := context.Background()
 	// gets positions and maxPos for swap
-	for id := range c.MarketMap {
+	// test this
+	for _, id := range c.Markets.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()

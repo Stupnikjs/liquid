@@ -87,7 +87,8 @@ query {
     first: 10
     where: {
       userAddress_in: [
-        "0xFFCF0Ed1759Ec32138F509E5FBf31e6838846594",
+        "0xc593BB96BcC902E8523a1492fb3B45b6cc06A6a4",
+        "0x67C9083CD57860e270b94725592371646862cEc9",
       ]
       chainId_in: [480]
     }

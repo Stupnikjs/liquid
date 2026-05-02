@@ -198,7 +198,7 @@ func LoadWorldChainConfig() Config {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: []string{os.Getenv("WORLDCHAIN_HTTP_RPC_ALCH"), os.Getenv("WORLDCHAIN_HTTP_RPC_ALCH")},
+			HTTP: []string{os.Getenv("WORLDCHAIN_HTTP_RPC_DRPC"), os.Getenv("WORLDCHAIN_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("WORLDCHAIN_WS_RPC_ALCH"), os.Getenv("WORLDCHAIN_WS_RPC_ALCH")},
 		},
 	}
@@ -228,7 +228,7 @@ func LoadKatanaConfig() Config {
 			HTTP []string
 			WS   []string
 		}{
-			HTTP: []string{os.Getenv("KATANA_HTTP_RPC_ALCH"), os.Getenv("KATANA_HTTP_RPC_ALCH")},
+			HTTP: []string{os.Getenv("KATANA_HTTP_RPC_DRPC"), os.Getenv("KATANA_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("KATANA_WS_RPC_ALCH"), os.Getenv("KATANA_WS_RPC_ALCH")},
 		},
 	}
