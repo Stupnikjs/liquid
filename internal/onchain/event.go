@@ -6,10 +6,10 @@ import (
 	"slices"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/cache"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/state"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"github.com/Stupnikjs/liquid/internal/state"
+	"github.com/Stupnikjs/liquid/pkg/config"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"

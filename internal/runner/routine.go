@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/liquidate"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/Stupnikjs/liquid/internal/liquidate"
+	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {

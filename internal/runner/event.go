@@ -3,7 +3,7 @@ package runner
 import (
 	"context"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
+	"github.com/Stupnikjs/liquid/internal/onchain"
 )
 
 func (r *Runner) SubscribePositionRoutine(ctx context.Context) {

@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 )
 
 // changer map par array avec HF triée

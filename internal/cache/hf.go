@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
+	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 )
 
 // prec 1e18

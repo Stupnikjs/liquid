@@ -6,8 +6,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
+	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )

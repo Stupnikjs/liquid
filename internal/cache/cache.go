@@ -4,10 +4,10 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/morpho"
+	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/pkg/api"
+	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
 

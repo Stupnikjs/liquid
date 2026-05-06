@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
 type AppLogg struct {
