@@ -28,6 +28,11 @@ Maintains a stable connection to Ethereum RPC endpoints.
 - Detects and recovers from dropped connections
 - Exposes a stable client handle to the rest of the system
 
+
+**Testing**
+ - Force deconnection and swich on ClientHTTPFallback
+ - Timeout
+
 ---
 
 ### `cache` — Market State Store
@@ -46,6 +51,10 @@ Central in-memory store for all tracked market data.
 
 > **Note:** Health factor calculation may be delegated to `state` — to be decided.
 
+**Testing**
+ - Inserting pos then checking good ordering 
+ - Removing pos then checking good ordering 
+
 ---
 
 ### `state` — Interfaces & Shared Types
@@ -56,6 +65,8 @@ Defines the contracts between components.
 - Declares the `MarketReader` interface
 - Defines shared data types used across packages
 - Provides structured logging helpers
+
+**Testing**
 
 ---
 
@@ -68,6 +79,8 @@ Decoupled, non-blocking logger.
 - Launches a background goroutine for periodic flushing
 - Writes accumulated logs asynchronously to a log file at a configurable interval
 
+**Testing**
+
 ---
 
 ### `onchain` — Chain Data Fetcher
@@ -78,6 +91,8 @@ Handles all read interactions with the blockchain.
 - Constructs and dispatches `eth_call` batches for targeted market queries
 - Applies fetched data to update market state in `cache`
 - Processes on-chain events and translates them into cache mutations
+
+**Testing**
 
 ---
 
@@ -90,6 +105,8 @@ Executes liquidation transactions.
 - Signs and submits the liquidation transaction via the configured signer
 - Handles gas estimation and submission retries
 
+**Testing**
+
 ---
 
 ### `utils` — Math & Conversion Helpers
@@ -100,6 +117,8 @@ Shared utility functions with no external dependencies.
 - Provides fixed-point math helpers (WAD arithmetic, rounding)
 - Exposes `WAD` and other unit constants as package-level variables
 - Offers type conversion utilities (e.g. `*big.Int` ↔ `float64`, hex encoding)
+
+**Testing**
 
 ---
 
@@ -113,6 +132,8 @@ Fetches off-chain market and position data from the Morpho API.
 - Constructs and sends GraphQL queries to the Morpho API endpoint
 - Parses and deserializes JSON responses into typed Go structs
 - Provides a clean interface consumed by `cache` or `runner` at startup and refresh intervals
+
+**Testing**
 
 ---
 
