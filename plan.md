@@ -32,6 +32,8 @@ Maintains a stable connection to Ethereum RPC endpoints.
 **Testing**
  - Force deconnection and swich on ClientHTTPFallback
  - Timeout
+ - Mock the RPC transport, drop the connection mid-flight, assert reconnection to ClientHTTPFallback within N seconds
+ - Inject a context timeout, assert the connector surfaces the error cleanly and doesn't leak goroutines (check with goleak)
 
 ---
 
@@ -54,7 +56,9 @@ Central in-memory store for all tracked market data.
 **Testing**
  - Inserting pos then checking good ordering 
  - Removing pos then checking good ordering 
-
+ - Insert a position that updates an existing one (same key), assert no duplicates
+ - Snapshot test: mutate cache after snapshot, assert snapshot is not affected
+ - Concurrent goroutines inserting/removing — run with -race flag
 ---
 
 ### `state` — Interfaces & Shared Types
@@ -93,7 +97,10 @@ Handles all read interactions with the blockchain.
 - Processes on-chain events and translates them into cache mutations
 
 **Testing**
-
+- Spin up anvil --fork-url $RPC_URL in TestMain
+- Fire real eth_call batches, assert the parsed result matches known on-chain values for a real market (hardcode a known block + expected oracle price)
+- Feed a real event log (captured from mainnet) into the event parser, assert it produces the correct cache mutation
+- Test the "stale block" edge case: what happens when the fetcher gets a response from a block behind the cache's current head
 ---
 
 ### `liquidate` — Transaction Builder & Sender
@@ -106,7 +113,13 @@ Executes liquidation transactions.
 - Handles gas estimation and submission retries
 
 **Testing**
-
+- Given a position struct with known values, assert the precomputed call params match expected calldata byte-for-byte
+- Signer unit test: mock signer returns a known signature, assert it's embedded correctly in the tx envelope
+- Gas estimation: mock the estimator, assert the multiplier/cap logic is applied correctly
+- Deploy or use a forked Morpho deployment
+- Create an artificially undercollateralized position by manipulating storage slots (anvil_setStorageAt)
+- Call the full liquidate flow end-to-end, assert the tx lands and the position is cleared
+- Test the retry logic: simulate a first submission failure (nonce too low, gas too low) and assert the second attempt succeeds
 ---
 
 ### `utils` — Math & Conversion Helpers
