@@ -1,6 +1,6 @@
 package state
 
-import "github.com/Stupnikjs/morpho-sepolia/internal/cache"
+import "github.com/Stupnikjs/liquid/internal/cache"
 
 type MarketReader interface {
 	Ids() [][32]byte

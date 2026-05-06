@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
-	market "github.com/Stupnikjs/morpho-sepolia/internal/cache"
-	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/swap"
+	"github.com/Stupnikjs/liquid/internal/cache"
+	market "github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/onchain"
+	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )

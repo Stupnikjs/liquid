@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/cache"
-	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
-	"github.com/Stupnikjs/morpho-sepolia/internal/runner"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/api"
-	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/internal/runner"
+	"github.com/Stupnikjs/liquid/pkg/api"
+	"github.com/Stupnikjs/liquid/pkg/config"
 )
 
 func main() {

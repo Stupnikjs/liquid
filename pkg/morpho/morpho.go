@@ -3,7 +3,7 @@ package morpho
 import (
 	"math/big"
 
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
+	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
 var WAD = utils.TenPowInt(18)

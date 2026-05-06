@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/ethereum/go-ethereum/common"
 )
 
