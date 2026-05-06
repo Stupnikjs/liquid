@@ -48,7 +48,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ms.ticker.C:
 			interval := r.MarketTick(ctx, ms, id)
 			if interval != ms.interval {
-				ms.ticker.Reset(interval) // ← manque ça
+				ms.ticker.Reset(interval)
 			}
 			ms.interval = interval
 		}
@@ -75,8 +75,10 @@ func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, id [32]byte) (*
 	if firstHF == nil {
 		firstHF = utils.TenPowInt(19)
 	}
-	diff := getDiffFloat(firstHF)
 	morphoM := r.Cache.GetMorphoMarketFromId(id)
+	r.log(fmt.Sprintf("%s oracle_price:%s  hf:%s", morphoM.GetPair(), snap.Oracle.Price.String(), utils.FormatWAD(firstHF)))
+	diff := getDiffFloat(firstHF)
+
 	var interval time.Duration
 	if morphoM.IsETHCorrelated() {
 		diff *= 100
@@ -146,7 +148,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 				hexutil.Encode(pos.MarketID[:]),
 				utils.FormatWAD(pos.CachedHF),
 				utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
-				utils.FormatDecimals(snap.Oracle.Price, int(36+morphoM.CollateralTokenDecimals-morphoM.LoanTokenDecimals))))
+				snap.Oracle.Price.String()))
 			r.LiquidateCh <- pos
 		}
 		ms.ignoreMap[pos.Address]++

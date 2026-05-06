@@ -76,31 +76,3 @@ func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketF
 func (c *Cache) GetMorphoMarketFromId(id [32]byte) morpho.MarketParams {
 	return c.MarketMap[id]
 }
-
-/*
-
-// AccruedBorrowAssets retourne totalBorrowAssets mis à jour jusqu'à `now`
-// To Simulate Morpho call accrue interest at begin of liquidate func
-func (ms *MarketStats) AccruedBorrowAssets() *big.Int {
-	if ms.TotalBorrowAssets == nil {
-		return ms.TotalBorrowAssets
-	}
-	if ms.TotalBorrowAssets.Sign() == 0 {
-		return ms.TotalBorrowAssets
-	}
-
-	dt := big.NewInt(time.Now().Unix() - ms.LastUpdate)
-	if dt.Sign() <= 0 {
-		return ms.TotalBorrowAssets
-	}
-	if ms.BorrowRate == nil {
-		return ms.TotalBorrowAssets
-	}
-	// interest = totalBorrowAssets * borrowRate * dt / WAD
-	interest := new(big.Int).Mul(ms.TotalBorrowAssets, ms.BorrowRate)
-	interest.Mul(interest, dt)
-	interest.Div(interest, utils.WAD)
-
-	return new(big.Int).Add(ms.TotalBorrowAssets, interest)
-}
-*/

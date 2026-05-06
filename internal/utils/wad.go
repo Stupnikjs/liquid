@@ -18,6 +18,8 @@ var (
 	WAD1DOT0005  = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(2000)))  // 1.005%
 	WAD1DOT00005 = new(big.Int).Add(WAD, new(big.Int).Div(WAD, big.NewInt(20000))) // 1.0005%
 	WAD_2        = new(big.Int).Mul(big.NewInt(2), WAD)
+	WAD_10       = new(big.Int).Mul(big.NewInt(10), WAD)
+	WAD_10_000   = new(big.Int).Mul(big.NewInt(10_000), WAD)
 )
 
 func DetectScale(x *big.Int) int {

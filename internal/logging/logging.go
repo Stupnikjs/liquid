@@ -60,5 +60,5 @@ func NewLogger(ctx context.Context, filename string) chan string {
 
 	})
 
-	return logChannel // ✅ retourné pour être utilisé depuis n'importe quel package
+	return logChannel
 }

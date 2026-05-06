@@ -9,13 +9,10 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 )
 
-/*          Parralel calls in Orchestrator                         */
-
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 	for _, id := range r.Cache.Markets.Ids() {
 		go r.MarketRoutine(ctx, id)
 	}
-
 }
 
 func (r *Runner) ApiCall(ctx context.Context) error {

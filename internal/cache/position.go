@@ -37,6 +37,7 @@ func (m *Market) InsertPosition(pos *BorrowPosition) {
 	m.InsertPositionUnsafe(pos)
 }
 
+// O(n)
 func (m *Market) RemovePositionUnsafe(addr common.Address) {
 	for i, p := range m.Positions {
 		if p.Address == addr {
@@ -52,6 +53,7 @@ func (m *Market) RemovePosition(addr common.Address) {
 	m.RemovePositionUnsafe(addr)
 }
 
+// remove + insert
 func (m *Market) UpdatePositionUnsafe(pos *BorrowPosition) {
 	m.RemovePositionUnsafe(pos.Address)
 	pos.CachedHF = m.HF(pos)

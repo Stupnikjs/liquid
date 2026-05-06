@@ -9,7 +9,6 @@ import (
 	"github.com/Stupnikjs/morpho-sepolia/internal/connector"
 	"github.com/Stupnikjs/morpho-sepolia/internal/logging"
 	"github.com/Stupnikjs/morpho-sepolia/internal/onchain"
-	"github.com/Stupnikjs/morpho-sepolia/internal/utils"
 	"github.com/Stupnikjs/morpho-sepolia/pkg/config"
 )
 
@@ -19,7 +18,6 @@ type Runner struct {
 	Logger      chan string
 	Config      config.Config
 	LiquidateCh chan cache.BorrowPosition
-	// Config avec signer
 }
 
 func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.Config, logfile string) *Runner {
@@ -55,21 +53,17 @@ func (r *Runner) LogMarkets() {
 	r.Logger <- fmt.Sprintf("── %d markets ──", len(ids))
 	for _, id := range ids {
 		m := r.Cache.GetMorphoMarketFromId(id)
-		r.log(fmt.Sprintf("%s coldecimals %d loandecimals %d", m.GetPair(), m.CollateralTokenDecimals, m.LoanTokenDecimals))
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
-		r.log(fmt.Sprintf("[%s/%s] shares=%-12s borrow=%-12s oracle=%s",
+		r.log(fmt.Sprintf("[%s/%s]",
 			m.CollateralTokenStr,
-			m.LoanTokenStr,
-			utils.FormatWAD(snap.Stats.TotalBorrowShares),
-			utils.FormatDecimals(snap.Stats.TotalBorrowAssets, int(m.LoanTokenDecimals)),
-			utils.FormatDecimals(snap.Oracle.Price, 36+int(m.CollateralTokenDecimals)-int(m.LoanTokenDecimals)),
-		))
+			m.LoanTokenStr))
 	}
 }
 
+// on chain call for all active market
 func (r *Runner) OnChainRefreshAll(ctx context.Context) {
 	var wg sync.WaitGroup
 	for _, id := range r.Cache.Markets.Ids() {
