@@ -7,8 +7,8 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/internal/logging"
 	"github.com/Stupnikjs/liquid/internal/onchain"
+	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/config"
 )
 
@@ -22,7 +22,7 @@ type Runner struct {
 
 func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.Config, logfile string) *Runner {
 
-	logger := logging.NewLogger(context.Background(), logfile)
+	logger := utils.NewLogger(context.Background(), logfile)
 	return &Runner{
 		Cache:       initedCache,
 		Conn:        conn,

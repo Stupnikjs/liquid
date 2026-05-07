@@ -1,4 +1,4 @@
-package logging
+package utils
 
 import (
 	"context"
@@ -7,8 +7,6 @@ import (
 	"path"
 	"sync"
 	"time"
-
-	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
 type AppLogg struct {
@@ -52,7 +50,7 @@ func NewLogger(ctx context.Context, filename string) chan string {
 	}()
 
 	// ✅ ticker dans sa propre goroutine
-	go utils.RunTicker(ctx, 2*time.Minute, func() {
+	go RunTicker(ctx, 2*time.Minute, func() {
 		mu.Lock()
 		defer mu.Unlock()
 		if len(logCache) == 0 {
