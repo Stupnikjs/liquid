@@ -125,6 +125,8 @@ func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
 
 }
 
+// Checking hf and sending pos into liquidation channel
+// updating market state ignore map on malformed pos
 func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState) {
 	for _, pos := range snap.Positions {
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
@@ -135,7 +137,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 			continue
 		}
 		morphoM := r.Cache.GetMorphoMarketFromId(snap.ID)
-		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 5 {
+		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
 			r.log(fmt.Sprintf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
 				pos.Address,
 				utils.FormatWAD(pos.BorrowAssetsUsd),
