@@ -59,34 +59,6 @@ func LoadBaseConfig() Config {
 	}
 }
 
-func LoadMainnetConfig() Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("no .env file found, using system env")
-	}
-	signer, err := NewMainnetSigner()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return Config{
-		Signer: signer,
-		Addresses: Addresses{
-			Wallet:             MainWalletAddr,
-			LiquidatorContract: MainLiquidatorOdosAddr,
-			UniSwapRouter:      MainUniswapV3Router,
-			UniSwapQuoter:      MainUniswapV3Router, // change
-		},
-		ChainID: 1,
-		RPC: struct {
-			HTTP []string
-			WS   []string
-		}{
-			HTTP: MAIN_HTTP_RPC,
-			WS:   MAIN_WS_RPC,
-		},
-	}
-}
-
 func LoadArbitrumConfig() Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")

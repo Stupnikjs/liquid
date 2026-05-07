@@ -82,3 +82,9 @@ func FloatE36Int(f float64) *big.Int {
 	bigF.Int(result)
 	return result
 }
+
+func DiffWADToFloat(hf *big.Int) float64 {
+	diff := new(big.Int).Sub(hf, WAD) // distance to 1
+	diffFloat, _ := new(big.Float).SetInt(diff).Float64()
+	return diffFloat / 1e18
+}

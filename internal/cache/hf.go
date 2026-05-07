@@ -15,14 +15,15 @@ func (m *Market) HF(pos *BorrowPosition) *big.Int {
 		pos.BorrowShares, m.Stats.TotalBorrowShares, m.Stats.TotalBorrowAssets,
 	)
 	if borrowAssets == nil || pos.CollateralAssets == nil {
-		return nil // ← nil, not 0
+		return nil
 	}
 	if borrowAssets.Sign() == 0 || pos.CollateralAssets.Sign() == 0 {
-		return nil // ← nil, not 0
+		return nil
 	}
 	// numerator = collateral * price * LLTV
 	numerator := new(big.Int).Mul(pos.CollateralAssets, m.Oracle.Price)
 	numerator.Mul(numerator, m.LLTV)
+
 	// denominator = borrow * 1e36
 	denominator := new(big.Int).Mul(borrowAssets, utils.TenPowInt(36))
 	hf := new(big.Int).Div(numerator, denominator)
@@ -64,7 +65,7 @@ func (m *Market) SortAllPositionsByHFUnsafe() {
 func (s *MarketSnapshot) GetFirstHF() *big.Int {
 	for _, p := range s.Positions {
 		if p.CachedHF != nil {
-			return p.CachedHF // first non-nil HF (should be lowest after sort)
+			return p.CachedHF
 		}
 	}
 	return nil

@@ -3,13 +3,13 @@ package runner
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	market "github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -61,19 +61,18 @@ func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticke
 			snap = r.Cache.Markets.GetSnapshot(id)
 		}
 	}
-	return r.SnapToTickerInterval(*snap, id)
+	morphoM := r.Cache.GetMorphoMarketFromId(id)
+	return r.SnapToTickerInterval(*snap, morphoM)
 
 }
 
-func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, id [32]byte) (*time.Ticker, time.Duration) {
+func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.MarketParams) (*time.Ticker, time.Duration) {
 	firstHF := snap.GetFirstHF()
 	if firstHF == nil {
 		firstHF = utils.TenPowInt(19)
 	}
-	morphoM := r.Cache.GetMorphoMarketFromId(id)
-	r.log(fmt.Sprintf("%s oracle_price:%s  hf:%s", morphoM.GetPair(), snap.Oracle.Price.String(), utils.FormatWAD(firstHF)))
-	diff := getDiffFloat(firstHF)
 
+	diff := utils.DiffWADToFloat(firstHF)
 	var interval time.Duration
 	if morphoM.IsETHCorrelated() {
 		diff *= 100
@@ -83,8 +82,8 @@ func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, id [32]byte) (*
 }
 
 func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) time.Duration {
+	start := time.Now().UnixNano()
 	ms.tickCount++
-
 	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
 	snap := r.Cache.Markets.GetSnapshot(id)
@@ -92,8 +91,12 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 		r.log("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
-	_, interval := r.SnapToTickerInterval(*snap, id)
+	morphoM := r.Cache.GetMorphoMarketFromId(id)
+
+	_, interval := r.SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms)
+	latency := (start - time.Now().UnixNano()) / 1_000_000
+	r.log(fmt.Sprintf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF())))
 	return interval
 }
 
@@ -172,12 +175,9 @@ func distanceToInterval(distance float64) time.Duration {
 	}
 }
 
-func getDiffFloat(hf *big.Int) float64 {
-	diff := new(big.Int).Sub(hf, utils.WAD) // distance to 1
-	diffFloat, _ := new(big.Float).SetInt(diff).Float64()
-	return diffFloat / 1e18
-}
-
+// query quoter to test swaping
+// updating market if swapable
+// canceling if not
 func (r *Runner) Swap(id [32]byte) {
 	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil {

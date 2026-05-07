@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
@@ -42,6 +41,8 @@ type Oracle struct {
 	Address common.Address
 }
 
+// MaxCollateralPos is used for quoting max slipage
+// within api refresh time bigest borrow might be over swappable amount if liquidated fast
 type MarketStats struct {
 	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos, MaxUniSwappable *big.Int
 	SwapFee                                                                             uint32
@@ -56,8 +57,8 @@ type MarketSnapshot struct {
 	Positions []BorrowPosition
 }
 
-func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketFilters) *Cache {
-	result, err := api.QueryMarkets(conn, conf.ChainID)
+func NewCache(conf config.Config, filters api.MarketFilters) *Cache {
+	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {
 		return nil
 	}

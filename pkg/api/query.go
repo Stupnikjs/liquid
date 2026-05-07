@@ -16,7 +16,20 @@ const (
 // ── CLIENT ───────────────────────────────────────────────────────────────────
 
 // Query reste inchangé, c'est une implémentation générique solide.
-func Query(ctx context.Context, query string, out any) error {
+
+type HTTPClient struct {
+	URL        string
+	httpClient *http.Client
+}
+
+func NewHTTPClient() *HTTPClient {
+	return &HTTPClient{
+		URL:        MorphoGraphQLURL,
+		httpClient: http.DefaultClient,
+	}
+}
+
+func (client *HTTPClient) Query(ctx context.Context, query string, out any) error {
 	body, err := json.Marshal(struct {
 		Query string `json:"query"`
 	}{Query: query})

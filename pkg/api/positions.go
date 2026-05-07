@@ -10,12 +10,13 @@ import (
 
 // FetchAllPositions devient propre
 func FetchAllPositions(ctx context.Context, marketID [32]byte, chainID uint32) ([]PositionItem, error) {
+	client := NewHTTPClient()
 	var all []PositionItem
 	skip := 0
 	strId := fmt.Sprintf("0x%x", marketID)
 	for {
 		var result PositionsResult
-		if err := Query(ctx, PositionsQuery(strId, chainID, skip), &result); err != nil {
+		if err := client.Query(ctx, PositionsQuery(strId, chainID, skip), &result); err != nil {
 			return nil, fmt.Errorf("fetch positions page skip=%d: %w", skip, err)
 		}
 

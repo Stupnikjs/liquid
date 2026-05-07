@@ -3,21 +3,11 @@ package api
 import (
 	"context"
 	"fmt"
-	"math/big"
 
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
-
-type QuoteParams struct {
-	TokenIn           common.Address
-	TokenOut          common.Address
-	AmountIn          *big.Int
-	Fee               *big.Int
-	SqrtPriceLimitX96 *big.Int
-}
 
 type MarketConfig struct {
 	morpho.MarketParams
@@ -42,12 +32,13 @@ func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 	}
 }
 
-func QueryMarkets(conn *connector.Connector, chainid uint32) (MarketsResult, error) {
-
+// market query is a placeholder just adding chain id
+// query hold the api call
+func QueryMarkets(chainid uint32) (MarketsResult, error) {
+	client := NewHTTPClient()
 	ctx := context.Background()
-
 	var result MarketsResult
-	if err := Query(ctx, MarketsQuery(chainid), &result); err != nil {
+	if err := client.Query(ctx, MarketsQuery(chainid), &result); err != nil {
 		fmt.Printf("graphql fetch: %s", err.Error())
 		return MarketsResult{}, nil
 	}
