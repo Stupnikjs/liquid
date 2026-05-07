@@ -17,9 +17,7 @@ var (
 	BaseWalletAddr             = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 	BaseLiquidatorOdosContract = common.HexToAddress("")
 
-	IRM              = common.HexToAddress("0x46415998764C29aB2a25CbeA6254146D50D22687")
-	OdosRouterAddr   = common.HexToAddress("0x19cEeAd7105607Cd444F5ad10dd51356436095a1")
-	OdosRouterAddrV3 = common.HexToAddress("0x0D05a7D3448512B78fa8A9e46c4872C88C4a0D05")
+	IRM = common.HexToAddress("0x46415998764C29aB2a25CbeA6254146D50D22687")
 	// Mainnet Addresses
 	MainLiquidatorAddr     = common.HexToAddress("")
 	MainMorphoBlueAddr     = w3.A("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb")
