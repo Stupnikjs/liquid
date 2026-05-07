@@ -187,7 +187,7 @@ func (r *Runner) Swap(id [32]byte) {
 		return
 	}
 	morphoM := r.Cache.MarketMap[id]
-	result, err := swap.QuoteBinarySearch(r.Conn.ClientHTTP, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+	result, err := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 	if err != nil {
 		r.Cache.Markets.Update(id, func(m *cache.Market) {
 			m.Canceled = true

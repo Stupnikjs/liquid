@@ -111,12 +111,12 @@ func (c *Consumer) SendSignedTx(ctx context.Context, params TxParams) (common.Ha
 		Input: params.Calldata,
 		Value: params.Value,
 	}
-
-	if err := c.Conn.ClientHTTP.CallCtx(ctx,
+	calls := []w3types.RPCCaller{
 		eth.Nonce(config.BaseWalletAddr, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
 		eth.EstimateGas(&msg, nil).Returns(&gasEst),
-	); err != nil {
+	}
+	if err := c.Conn.EthCallCtx(ctx, calls); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", err)
 	}
 
@@ -136,7 +136,8 @@ func (c *Consumer) SendSignedTx(ctx context.Context, params TxParams) (common.Ha
 	}
 
 	var receipt common.Hash
-	if err := c.Conn.ClientHTTP.CallCtx(ctx, eth.SendTx(signedTx).Returns(&receipt)); err != nil {
+	if err := c.Conn.EthCallCtx(ctx, []w3types.RPCCaller{
+		eth.SendTx(signedTx).Returns(&receipt)}); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
 	}
 

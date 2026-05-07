@@ -51,7 +51,7 @@ type MarketSnapshot struct {
 }
 
 func NewCache(conn *connector.Connector, conf config.Config, filters api.MarketFilters) *Cache {
-	result, err := api.QueryMarkets(conn.ClientHTTP, conf.ChainID)
+	result, err := api.QueryMarkets(conn, conf.ChainID)
 	if err != nil {
 		return nil
 	}

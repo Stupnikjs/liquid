@@ -51,7 +51,7 @@ func main() {
 }
 
 func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
-	conn := connector.NewConnector(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
+	conn := connector.New(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
 	cached := cache.NewCache(conn, conf, filters)
 	runn := runner.NewRunner(cached, conn, conf, logfile)
 	runn.Init(context.Background())

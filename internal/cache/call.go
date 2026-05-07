@@ -6,13 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3"
 )
 
-func (c *Cache) ApiCall(client *w3.Client, chainId uint32) error {
+func (c *Cache) ApiCall(conn *connector.Connector, chainId uint32) error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var firstErr error

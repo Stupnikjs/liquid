@@ -6,10 +6,12 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
+	"github.com/lmittmann/w3/w3types"
 )
 
 // ---------------------------------------------------------------------------
@@ -45,7 +47,7 @@ type QuoteResult struct {
 // SingleQuoterFunc est la signature d'une fonction quotant un seul fee tier.
 // Elle est injectable pour faciliter les tests (mocks, stubs).
 type SingleQuoterFunc func(
-	client *w3.Client,
+	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
@@ -87,13 +89,13 @@ func NewQuoterWithFunc(fn SingleQuoterFunc) *Quoter {
 
 // Quote cherche le meilleur fee tier avec un slippage acceptable.
 // Si le montant est trop grand, il est divisé par 4 successivement.
-func Quote(client *w3.Client, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
-	return NewQuoter().Quote(client, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+	return NewQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
 // QuoteBinarySearch trouve le montant maximal swappable avec un slippage acceptable.
-func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
-	return NewQuoter().QuoteBinarySearch(client, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+func QuoteBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+	return NewQuoter().QuoteBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +105,7 @@ func QuoteBinarySearch(client *w3.Client, marketp morpho.MarketParams, uniswapQu
 // Quote cherche le meilleur fee tier parmi UniswapFees avec un slippage ≤ MaxSlippage.
 // Si aucun fee tier n'est acceptable pour amountIn, divise par 4 jusqu'à 1.
 func (q *Quoter) Quote(
-	client *w3.Client,
+	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
@@ -112,7 +114,7 @@ func (q *Quoter) Quote(
 	current := new(big.Int).Set(amountIn)
 
 	for current.Sign() > 0 {
-		best := q.bestFeeTier(client, marketp, uniswapQuoterAddr, current, oraclePrice, maxSlippage, 200*time.Millisecond)
+		best := q.bestFeeTier(conn, marketp, uniswapQuoterAddr, current, oraclePrice, maxSlippage, 200*time.Millisecond)
 		if best != nil {
 			fmt.Printf("Pair %s/%s | source: uniswap | fee: %d | slippage: %.4f%%\n",
 				marketp.CollateralTokenStr, marketp.LoanTokenStr, best.Fee, best.Slippage)
@@ -128,7 +130,7 @@ func (q *Quoter) Quote(
 // QuoteBinarySearch trouve le montant maximal swappable avec slippage ≤ MaxSlippage
 // en effectuant une recherche binaire (max 14 itérations).
 func (q *Quoter) QuoteBinarySearch(
-	client *w3.Client,
+	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
@@ -142,7 +144,7 @@ func (q *Quoter) QuoteBinarySearch(
 	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
 		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
 
-		result := q.bestFeeTier(client, marketp, uniswapQuoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond)
+		result := q.bestFeeTier(conn, marketp, uniswapQuoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond)
 		if result != nil {
 			best = result
 			lo = new(big.Int).Add(mid, big.NewInt(1))
@@ -165,7 +167,7 @@ func (q *Quoter) QuoteBinarySearch(
 // bestFeeTier itère sur tous les fee tiers et retourne le meilleur résultat
 // (amountOut maximal) avec un slippage ≤ maxSlippage, ou nil si aucun ne convient.
 func (q *Quoter) bestFeeTier(
-	client *w3.Client,
+	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
@@ -175,7 +177,7 @@ func (q *Quoter) bestFeeTier(
 	var best *QuoteResult
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
-		result, err := q.quoteSingle(client, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
+		result, err := q.quoteSingle(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
 		if err != nil || result == nil {
 			continue
 		}
@@ -196,7 +198,7 @@ func (q *Quoter) bestFeeTier(
 // un quote exact input single pour un fee tier donné.
 // Retourne nil, nil si le pool n'existe pas (erreur ignorée).
 func RPCQuoteSingle(
-	client *w3.Client,
+	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
@@ -217,13 +219,13 @@ func RPCQuoteSingle(
 		gasEstimate             *big.Int
 	)
 
-	if err := client.CallCtx(context.Background(),
-		eth.CallFunc(uniswapQuoterAddr, FuncQuoteExactInputSingleV2, params).Returns(
+	if err := conn.EthCallCtx(context.Background(),
+		[]w3types.RPCCaller{eth.CallFunc(uniswapQuoterAddr, FuncQuoteExactInputSingleV2, params).Returns(
 			&amountOut,
 			&sqrtPriceX96After,
 			&initializedTicksCrossed,
 			&gasEstimate,
-		),
+		)},
 	); err != nil {
 		// Pool inexistante ou appel échoué : on skip silencieusement.
 		return nil, nil

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3"
 )
 
 type QuoteParams struct {
@@ -42,7 +42,7 @@ func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 	}
 }
 
-func QueryMarkets(client *w3.Client, chainid uint32) (MarketsResult, error) {
+func QueryMarkets(conn *connector.Connector, chainid uint32) (MarketsResult, error) {
 
 	ctx := context.Background()
 

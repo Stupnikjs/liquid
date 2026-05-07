@@ -16,7 +16,7 @@ func (r *Runner) EventListener(ctx context.Context) {
 		case <-ctx.Done():
 			return
 
-		case event, ok := <-r.Conn.PositionCh:
+		case event, ok := <-r.Conn.LogsCh():
 			if !ok {
 				return
 			}

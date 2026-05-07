@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+
 	"time"
 
 	"sync"
@@ -17,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/lmittmann/w3"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
@@ -30,7 +32,7 @@ import (
 // Using an interface makes every method testable without a live RPC endpoint.
 type RPCClient interface {
 	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
-	Subscribe(args ...interface{}) (ethereum.Subscription, error)
+	Subscribe(w3types.RPCSubscriber) (*rpc.ClientSubscription, error)
 }
 
 // ---------------------------------------------------------------------------
@@ -99,9 +101,9 @@ type Connector struct {
 	dialWS func(url string) (RPCClient, error)
 
 	// RPC URLs kept for reconnect
-	mainRPC    string
-	quoteRPC   string
-	wsRPC      string
+	mainRPC  string
+	quoteRPC string
+	wsRPC    string
 
 	// logsCh is internal; expose read-only to consumers via LogsCh()
 	logsCh chan *types.Log
@@ -186,7 +188,6 @@ func (c *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) e
 	c.mu.RUnlock()
 
 	c.Metrics.EthCalls.Add(uint64(len(calls)))
-
 	err := primary.CallCtx(ctx, calls...)
 	if err != nil && isRetryable(err) {
 		c.Metrics.Fallbacks.Add(1)
