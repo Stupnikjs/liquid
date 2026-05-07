@@ -21,19 +21,46 @@ The top-level struct that holds the entire application together.
 
 ### `connector` — RPC Connection Manager
 
-Maintains a stable connection to Ethereum RPC endpoints.
+Maintains three concurrent connections to Ethereum RPC endpoints: a primary
+HTTP client, an HTTP fallback, and a WebSocket client for log subscriptions.
 
 **Responsibilities**
-- Establishes connections to RPC providers
-- Detects and recovers from dropped connections
-- Exposes a stable client handle to the rest of the system
+- Dials and holds primary HTTP (`mainRPC`), fallback HTTP (`quoteRPC`), and
+  WebSocket (`wsRPC`) connections at startup — hard-panics if any dial fails,
+  since connectivity is a non-negotiable requirement for the bot
+- Dispatches batched `eth_call` requests through the primary client; on any
+  transient error (`timeout`, `EOF`, `context deadline exceeded`) automatically
+  retries the same batch on the fallback
+- Enforces a rate limit of 300 req/min with a burst of 10; calls that exceed
+  the budget return a typed `ErrRateLimited` sentinel wrappable with `errors.Is`
+- Subscribes to Morpho position events over WebSocket (`Borrow`, `Repay`,
+  `SupplyCollateral`, `Liquidate`, `AccrueInterest`) and fans log events out
+  through an internal buffered channel exposed read-only as `LogsCh()`
+- Detects subscription drops and dead WebSocket connections, re-dials
+  automatically with a 2 s back-off loop, and increments `Reconnects` on each
+  successful recovery — without blocking the primary HTTP path
+- Maintains lock-free atomic counters (`EthCalls`, `Reconnects`, `Fallbacks`)
+  snapshotted and emitted to a log channel every 10 minutes via `LogMetrics`
 
+**Key types**
+- `RPCClient` — minimal interface (`CallCtx`, `Subscribe`) over `w3.Client`;
+  the seam used for all unit tests
+- `ConnectorMetrics` — three `atomic.Uint64` counters; `Snapshot()` resets and
+  returns all three atomically for periodic reporting
+- `Connector` — holds the three clients behind an `sync.RWMutex`; only the WS
+  pointer is ever swapped post-construction (during reconnect)
 
 **Testing**
- - Force deconnection and swich on ClientHTTPFallback
- - Timeout
- - Mock the RPC transport, drop the connection mid-flight, assert reconnection to ClientHTTPFallback within N seconds
- - Inject a context timeout, assert the connector surfaces the error cleanly and doesn't leak goroutines (check with goleak)
+- Inject two `mockRPCClient` implementations via `newWithClients`; make the
+  primary return a retryable error and assert the fallback is called and
+  `Metrics.Fallbacks == 1`
+- Inject a context timeout shorter than the rate-limiter wait; assert the call
+  returns `ErrRateLimited` and no goroutines leak (verify with `goleak`)
+- Drop the WS connection mid-flight by closing the mock subscription error
+  channel; assert `reconnectWS` is called, `dialWS` is invoked, and
+  `Metrics.Reconnects == 1` within a bounded timeout
+- Cancel the context while `watchLogs` is blocked on a live subscription;
+  assert the loop exits and `Unsubscribe` is called exactly once
 
 ---
 

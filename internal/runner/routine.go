@@ -33,7 +33,7 @@ func (r *Runner) LiquidationRoutine(ctx context.Context) {
 		Cache:     r.Cache.Markets,
 		MarketMap: r.Cache.MarketMap,
 		Logger:    r.Logger,
-		Signer:    r.Config.Signer,
+		Config:    r.Config,
 		Ch:        r.LiquidateCh,
 	}
 	consumer.Run(ctx)
