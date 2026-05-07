@@ -8,14 +8,13 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 
-	"github.com/Stupnikjs/liquid/internal/state"
 	"github.com/Stupnikjs/liquid/pkg/config"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-func ProcessEvents(c state.MarketReader, log *types.Log) {
+func ProcessEvents(c cache.MarketReader, log *types.Log) {
 	switch log.Topics[0] {
 	case config.EventAccrueInterest.Topic0:
 		AccrueInterestEventProcess(c, log)
@@ -36,7 +35,7 @@ func ProcessEvents(c state.MarketReader, log *types.Log) {
 	}
 }
 
-func BorrowEventProcess(c state.MarketReader, log *types.Log) {
+func BorrowEventProcess(c cache.MarketReader, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -76,7 +75,7 @@ func BorrowEventProcess(c state.MarketReader, log *types.Log) {
 
 }
 
-func RepayEventProcess(c state.MarketReader, log *types.Log) {
+func RepayEventProcess(c cache.MarketReader, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -107,7 +106,7 @@ func RepayEventProcess(c state.MarketReader, log *types.Log) {
 
 }
 
-func LiquidateEventProcess(c state.MarketReader, log *types.Log) {
+func LiquidateEventProcess(c cache.MarketReader, log *types.Log) {
 	var (
 		id            [32]byte
 		caller        common.Address
@@ -145,7 +144,7 @@ func LiquidateEventProcess(c state.MarketReader, log *types.Log) {
 
 }
 
-func AccrueInterestEventProcess(c state.MarketReader, log *types.Log) {
+func AccrueInterestEventProcess(c cache.MarketReader, log *types.Log) {
 	var (
 		id             [32]byte
 		prevBorrowRate big.Int
@@ -175,7 +174,7 @@ func AccrueInterestEventProcess(c state.MarketReader, log *types.Log) {
 
 }
 
-func SupplyCollateralEventProcess(c state.MarketReader, log *types.Log) {
+func SupplyCollateralEventProcess(c cache.MarketReader, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address

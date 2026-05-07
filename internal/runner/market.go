@@ -15,13 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-/*
-    One routine per market with dynamic interval based on distance to liquidation (HF = 1)
-	Hold Liquidation logic
-
-*/
-
-// Dans runner.go — local à la routine, pas dans Market
+// One routine per market with dynamic interval based on distance to liquidation (HF = 1)
+// Hold Liquidation logic
 type marketState struct {
 	ignoreMap map[common.Address]int
 	tickCount int

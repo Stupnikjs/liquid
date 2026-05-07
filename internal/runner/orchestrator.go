@@ -4,6 +4,8 @@ import (
 	"context"
 )
 
+// logs ethcalls missing
+
 func (r *Runner) Run(ctx context.Context) {
 	go r.SubscribePositionRoutine(ctx)
 	go r.OnChainRefreshRoutine(ctx)

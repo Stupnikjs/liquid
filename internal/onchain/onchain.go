@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/cache"
 	market "github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/internal/state"
 	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -73,7 +73,7 @@ func refresh(
 // OnChainRefresh fetches both the market state and the oracle price.
 func OnChainRefresh(
 	conn *connector.Connector, ctx context.Context,
-	c state.MarketReader, mParam morpho.MarketParams,
+	c cache.MarketReader, mParam morpho.MarketParams,
 	id [32]byte, morphoAddr common.Address,
 ) error {
 	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
@@ -96,7 +96,7 @@ func OnChainRefresh(
 // OnChainOracleRefresh fetches only the oracle price.
 func OnChainOracleRefresh(
 	conn *connector.Connector, ctx context.Context,
-	c state.MarketReader, mParam morpho.MarketParams,
+	c cache.MarketReader, mParam morpho.MarketParams,
 	id [32]byte, morphoAddr common.Address,
 ) error {
 	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
