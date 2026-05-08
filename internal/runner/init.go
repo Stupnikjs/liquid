@@ -46,7 +46,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Logger <- "Api call init"
 	r.OnChainRefreshAll(ctx)
 	r.Logger <- "Refresh all markets for init"
-
+	r.FindSwapRoutes()
 	r.Logger <- "Quoting over "
 	r.LogMarkets()
 

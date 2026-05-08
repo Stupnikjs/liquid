@@ -19,9 +19,7 @@ func (r *Runner) FindSwapRoutes() {
 	for _, id := range r.Cache.Markets.Ids() {
 		morphoM := r.Cache.GetMorphoMarketFromId(id)
 		routes := graph.FindRoutes(morphoM.CollateralToken, morphoM.LoanToken, 1)
-		if len(routes) == 0 {
 
-		}
 		r.Cache.Markets.Update(id, func(m *cache.Market) {
 			if len(routes) == 0 {
 				m.Canceled = true
