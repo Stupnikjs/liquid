@@ -196,6 +196,26 @@ func (c *Connector) EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) e
 	return err
 }
 
+// using alchemy as fallback for now
+func (c *Connector) FallBackEthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error {
+	if err := c.limiter.Wait(ctx); err != nil {
+		return fmt.Errorf("%w: %v", ErrRateLimited, err)
+	}
+
+	c.mu.RLock()
+	primary := c.primary
+	fallback := c.fallback
+	c.mu.RUnlock()
+
+	c.Metrics.Fallbacks.Add(uint64(len(calls)))
+	err := fallback.CallCtx(ctx, calls...)
+	if err != nil && isRetryable(err) {
+		c.Metrics.EthCalls.Add(1)
+		return primary.CallCtx(ctx, calls...)
+	}
+	return err
+}
+
 // SubscribeToEventPos starts the WS log subscription for all Morpho position
 // events. It blocks until ctx is cancelled.
 func (c *Connector) SubscribeToEventPos(ctx context.Context, conf config.Config) {

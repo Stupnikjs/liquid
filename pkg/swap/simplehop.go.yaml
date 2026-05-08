@@ -52,7 +52,7 @@ type SingleQuoterFunc func(
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	fee uint32,
-) (*QuoteResult, error)
+) (*PoolEdge, error)
 
 // ---------------------------------------------------------------------------
 // ABI Uniswap QuoterV2
@@ -89,12 +89,12 @@ func NewQuoterWithFunc(fn SingleQuoterFunc) *Quoter {
 
 // Quote cherche le meilleur fee tier avec un slippage acceptable.
 // Si le montant est trop grand, il est divisé par 4 successivement.
-func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*PoolEdge, error) {
 	return NewQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
 // QuoteBinarySearch trouve le montant maximal swappable avec un slippage acceptable.
-func QuoteBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*QuoteResult, error) {
+func QuoteBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (*PoolEdge, error) {
 	return NewQuoter().QuoteBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
@@ -109,7 +109,7 @@ func (q *Quoter) Quote(
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
-) (*QuoteResult, error) {
+) (*PoolEdge, error) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
 	current := new(big.Int).Set(amountIn)
 
@@ -134,12 +134,12 @@ func (q *Quoter) QuoteBinarySearch(
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
-) (*QuoteResult, error) {
+) (PoolEdge, error) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
 
 	lo := big.NewInt(1)
 	hi := new(big.Int).Set(amountIn)
-	var best *QuoteResult
+	var best PoolEdge
 
 	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
 		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
@@ -156,7 +156,7 @@ func (q *Quoter) QuoteBinarySearch(
 	if best == nil {
 		fmt.Println(fmt.Errorf("no acceptable slippage found for %s -> %s ",
 			marketp.CollateralTokenStr, marketp.LoanTokenStr))
-		return nil, fmt.Errorf("no acceptable slippage found for %s -> %s",
+		return PoolEdge{}, fmt.Errorf("no acceptable slippage found for %s -> %s",
 			marketp.CollateralTokenStr, marketp.LoanTokenStr)
 	}
 	fmt.Printf("acceptable slippage found for %s -> %s  %f \n",
@@ -173,16 +173,17 @@ func (q *Quoter) bestFeeTier(
 	amountIn, oraclePrice *big.Int,
 	maxSlippage float64,
 	rateLimit time.Duration,
-) *QuoteResult {
-	var best *QuoteResult
+) *PoolEdge {
+	var best *PoolEdge
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
 		result, err := q.quoteSingle(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
 		if err != nil || result == nil {
 			continue
 		}
-		if result.Slippage <= maxSlippage {
-			if best == nil || result.AmountOut.Cmp(best.AmountOut) > 0 {
+		if result.WCSlippage <= maxSlippage {
+
+			if best == nil || result.WCAmountIn.Cmp(best.WCAmountIn) > 0 {
 				best = result
 			}
 		}

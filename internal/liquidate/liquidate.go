@@ -21,6 +21,7 @@ import (
 
 type EthCaller interface {
 	EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
+	FallBackEthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
 }
 
 type Liquidable struct {
@@ -119,7 +120,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 
 	var callResult []byte
 
-	if err := c.Conn.EthCallCtx(ctx, []w3types.RPCCaller{
+	if err := c.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
 		eth.Call(&msg, nil, nil).Returns(&callResult),
 		eth.EstimateGas(&msg, nil).Returns(&gasVal),
 	}); err != nil {
@@ -238,7 +239,7 @@ func (c *Consumer) SendSignedTx(ctx context.Context, params TxParams) (common.Ha
 	var nonce uint64
 	var gasPrice *big.Int
 
-	if err := c.Conn.EthCallCtx(ctx, []w3types.RPCCaller{
+	if err := c.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
 		eth.Nonce(c.Config.Addresses.Wallet, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
 	}); err != nil {

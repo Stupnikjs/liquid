@@ -71,6 +71,8 @@ func BorrowEventProcess(c cache.MarketReader, log *types.Log) {
 			m.InsertPositionUnsafe(toInsert)
 
 		}
+		// totalborrowshares cant be nil
+		m.Stats.TotalBorrowShares.Add(m.Stats.TotalBorrowShares, &shares)
 	})
 
 }
@@ -101,6 +103,7 @@ func RepayEventProcess(c cache.MarketReader, log *types.Log) {
 		if p.BorrowShares.Sign() <= 0 {
 			m.RemovePosition(onBehalf)
 		}
+		m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, &shares)
 
 	})
 
@@ -138,6 +141,11 @@ func LiquidateEventProcess(c cache.MarketReader, log *types.Log) {
 		if p.BorrowShares.Sign() <= 0 {
 			fmt.Println("borrow liquidated :", p.Address)
 			m.RemovePosition(borrower)
+		}
+		if m.Stats.TotalBorrowShares != nil {
+			m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, &repaidShares)
+			// badDebtShares aussi réduisent le total
+			m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, &badDebtShares)
 		}
 
 	})
@@ -210,3 +218,5 @@ func SupplyCollateralEventProcess(c cache.MarketReader, log *types.Log) {
 	})
 
 }
+
+func WithdrawCollateralEventProcess(c cache.MarketReader, log *types.Log) {}

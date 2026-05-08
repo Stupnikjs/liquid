@@ -95,7 +95,7 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 
 	_, interval := r.SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms)
-	latency := (start - time.Now().UnixNano()) / 1_000_000
+	latency := (time.Now().UnixNano() - start) / 1_000_000
 	r.log(fmt.Sprintf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF())))
 	return interval
 }
@@ -184,15 +184,15 @@ func (r *Runner) Swap(id [32]byte) {
 		return
 	}
 	morphoM := r.Cache.MarketMap[id]
-	result, err := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-	if err != nil {
+	result, found := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+	if !found {
 		r.Cache.Markets.Update(id, func(m *cache.Market) {
 			m.Canceled = true
 		})
 		return
 	}
 	r.Cache.Markets.Update(id, func(m *cache.Market) {
-		m.Stats.MaxUniSwappable = result.AmountIn
+		m.Stats.MaxUniSwappable = result.WCAmountIn
 		m.Stats.SwapFee = result.Fee
 	})
 

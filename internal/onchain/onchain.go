@@ -62,7 +62,8 @@ func refresh(
 	defer cancel()
 
 	calls, apply := callBuilder()
-	if err := conn.EthCallCtx(ctx, calls); err != nil {
+	// oracle call must be fast (alchemy)
+	if err := conn.FallBackEthCallCtx(ctx, calls); err != nil {
 		fmt.Printf("[onchain] rpc error %x: %v\n", id[:4], err)
 		return err
 	}
