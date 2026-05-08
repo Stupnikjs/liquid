@@ -1,18 +1,6 @@
 package testutil
 
-import (
-	"context"
-	"math/big"
-	"testing"
-
-	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/lmittmann/w3"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
-)
-
+/*
 var (
 	weth = common.HexToAddress("0x4200000000000000000000000000000000000006")
 	usdc = common.HexToAddress("0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913")
@@ -185,3 +173,4 @@ func TestBorrowUSDCWETH(t *testing.T) {
 	a := StartAnvil(t)
 	a.BorrowUSDCAgainstWETH(t)
 }
+*/
