@@ -1,6 +1,18 @@
 pacakge swap 
 
 
+import (
+	"context"
+	"fmt"
+	"math/big"
+	"time"
+
+	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/lmittmann/w3/module/eth"
+	"github.com/lmittmann/w3/w3types"
+)
 type Consumer struct {
 	Conn *connector.Connector 
 	Config config.Config 

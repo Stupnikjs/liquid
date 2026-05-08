@@ -15,7 +15,7 @@ import (
 )
 
 type Runner struct {
-	LiquidateConsumer liquidate.Consumer
+	LiquidateConsumer *liquidate.Consumer
 	SwapConsumer      *swap.Consumer
 	Cache             *cache.Cache
 	Conn              *connector.Connector
