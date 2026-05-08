@@ -96,7 +96,9 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 	_, interval := r.SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms)
 	latency := (time.Now().UnixNano() - start) / 1_000_000
-	r.log(fmt.Sprintf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF())))
+	if ms.tickCount%100 == 0 {
+		r.log(fmt.Sprintf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF())))
+	}
 	return interval
 }
 
