@@ -205,3 +205,33 @@ func LoadKatanaConfig() Config {
 		},
 	}
 }
+
+func LoadMonadConfig() Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	chainid := 143
+	signer, err := NewMonadSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return Config{
+		Signer: signer,
+		Addresses: Addresses{
+			Wallet:             MonadWalletAddress,
+			UniSwapRouter:      MonadUniswapV3Router,
+			Morpho:             MonadMorphoBlueAddr,
+			UniSwapQuoter:      MonadUniswapQuoterV2Addr,
+			LiquidatorContract: MonadLiquidatorAddress,
+		},
+		ChainID: uint32(chainid),
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: []string{os.Getenv("MONAD_HTTP_RPC_DRPC"), os.Getenv("MONAD_HTTP_RPC_ALCH")},
+			WS:   []string{os.Getenv("MONAD_WS_RPC_ALCH"), os.Getenv("MONAD_WS_RPC_ALCH")},
+		},
+	}
+}

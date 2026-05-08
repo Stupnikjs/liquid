@@ -8,44 +8,30 @@ import (
 // double swap slippage_final = s1 + s2 - s1 * s2
 
 type SwapManager struct {
-	Graph *LiquidityGraph
+	Graph *PoolGraph
 }
 
 func NewSwapManager() *SwapManager {
-	return &SwapManager{Graph: NewLiquidityGraph()}
+	return &SwapManager{Graph: NewPoolGraph()}
 }
 
-/*
-	type PoolEdge struct {
-		TokenIn  common.Address
-		TokenOut common.Address
-		Router   common.Address
-		Fee      uint32
-
-		// Métrique de liquidité — calibrée avec un montant "worst case"
-		WCSlippage   float64   // slippage observé pour WCAmountIn
-		WCAmountIn   *big.Int  // montant utilisé pour calibrer (ex: position max du marché)
-		CalibratedAt time.Time // pour savoir si le cache est périmé
-	}
-*/
-
 // LiquidityGraph agrège tous les pools connus
-type LiquidityGraph struct {
+type PoolGraph struct {
 	// token → liste de pools partant de ce token
 	Edges map[common.Address][]PoolEdge
 }
 
-func NewLiquidityGraph() *LiquidityGraph {
-	return &LiquidityGraph{Edges: make(map[common.Address][]PoolEdge)}
+func NewPoolGraph() *PoolGraph {
+	return &PoolGraph{Edges: make(map[common.Address][]PoolEdge)}
 }
 
-func (g *LiquidityGraph) AddPool(edge PoolEdge) {
+func (g *PoolGraph) AddPool(edge PoolEdge) {
 	g.Edges[edge.TokenIn] = append(g.Edges[edge.TokenIn], edge)
 }
 
 // FindRoutes retourne toutes les routes possibles de tokenIn à tokenOut
 // avec au maximum maxHops sauts
-func (g *LiquidityGraph) FindRoutes(
+func (g *PoolGraph) FindRoutes(
 	tokenIn, tokenOut common.Address,
 	maxHops int,
 ) [][]PoolEdge {

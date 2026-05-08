@@ -10,7 +10,6 @@ import (
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -180,22 +179,3 @@ func distanceToInterval(distance float64) time.Duration {
 // query quoter to test swaping
 // updating market if swapable
 // canceling if not
-func (r *Runner) Swap(id [32]byte) {
-	snap := r.Cache.Markets.GetSnapshot(id)
-	if snap == nil {
-		return
-	}
-	morphoM := r.Cache.MarketMap[id]
-	result, found := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-	if !found {
-		r.Cache.Markets.Update(id, func(m *cache.Market) {
-			m.Canceled = true
-		})
-		return
-	}
-	r.Cache.Markets.Update(id, func(m *cache.Market) {
-		m.Stats.MaxUniSwappable = result.WCAmountIn
-		m.Stats.SwapFee = result.Fee
-	})
-
-}

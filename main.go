@@ -29,14 +29,12 @@ func main() {
 		defer wg.Done()
 		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
 	}()
-	/*
-		go func() {
-			time.Sleep(400 * time.Second)
-			defer wg.Done()
-			Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
-		}()
 
-	*/
+	go func() {
+		time.Sleep(50 * time.Second)
+		defer wg.Done()
+		Wrapper(config.LoadMonadConfig(), baseFilter, "monad.log")
+	}()
 
 	go func() {
 		defer wg.Done()

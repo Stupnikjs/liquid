@@ -7,17 +7,21 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 )
 
 type Runner struct {
-	Cache       *cache.Cache
-	Conn        *connector.Connector
-	Logger      chan string
-	Config      config.Config
-	LiquidateCh chan cache.BorrowPosition
+	LiquidateConsumer liquidate.Consumer
+	SwapConsumer      *swap.Consumer
+	Cache             *cache.Cache
+	Conn              *connector.Connector
+	Logger            chan string
+	Config            config.Config
+	LiquidateCh       chan cache.BorrowPosition
 }
 
 func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.Config, logfile string) *Runner {
@@ -40,9 +44,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Logger <- "Api call init"
 	r.OnChainRefreshAll(ctx)
 	r.Logger <- "Refresh all markets for init"
-	for _, id := range r.Cache.Markets.Ids() {
-		r.Swap(id)
-	}
+	r.SwapConsumer.Run()
 	r.Logger <- "Quoting over "
 	r.LogMarkets()
 
@@ -50,7 +52,6 @@ func (r *Runner) Init(ctx context.Context) {
 
 func (r *Runner) LogMarkets() {
 	ids := r.Cache.Markets.Ids()
-	r.Logger <- fmt.Sprintf("── %d markets ──", len(ids))
 	for _, id := range ids {
 		m := r.Cache.GetMorphoMarketFromId(id)
 		snap := r.Cache.Markets.GetSnapshot(id)

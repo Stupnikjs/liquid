@@ -15,33 +15,12 @@ import (
 
 var UniswapFees = []uint32{100, 500, 3000, 10000}
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 type QuoteExactInputSingleParams struct {
 	TokenIn           common.Address
 	TokenOut          common.Address
 	AmountIn          *big.Int
 	Fee               *big.Int
 	SqrtPriceLimitX96 *big.Int
-}
-
-// Swaping entity to find best swap in multi hop
-type PoolEdge struct {
-	TokenIn      common.Address
-	TokenOut     common.Address
-	Router       common.Address
-	Fee          uint32
-	WCSlippage   float64
-	WCAmountIn   *big.Int
-	WCAmountOut  *big.Int
-	CalibratedAt time.Time
-}
-
-// is older than maxAge ?
-func (p PoolEdge) IsStale(maxAge time.Duration) bool {
-	return time.Since(p.CalibratedAt) > maxAge
 }
 
 // Returns false if no pool
@@ -65,10 +44,6 @@ func NewQuoter() *Quoter {
 func NewQuoterWithFunc(fn SingleQuoterFunc) *Quoter {
 	return &Quoter{quoteSingle: fn}
 }
-
-// ---------------------------------------------------------------------------
-// Fonctions package-level
-// ---------------------------------------------------------------------------
 
 func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (PoolEdge, bool) {
 	return NewQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
@@ -101,6 +76,7 @@ func (q *Quoter) Quote(
 	return PoolEdge{}, false
 }
 
+// iterate over mid amount to swap to find best slippage for max amount
 func (q *Quoter) QuoteBinarySearch(
 	conn *connector.Connector,
 	marketp morpho.MarketParams,
@@ -151,6 +127,7 @@ func (q *Quoter) bestUniFeeTier(
 
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
+		// single call with fee
 		result, ok := q.quoteSingle(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
