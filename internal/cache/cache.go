@@ -7,6 +7,7 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/pkg/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -25,6 +26,7 @@ type Market struct {
 	Canceled    bool
 	Oracle      Oracle
 	LLTV        *big.Int
+	SwapInfo    [][]types.PoolEdge
 	Stats       MarketStats
 	ActiveIndex int               // index of last pos with tracked HF
 	Positions   []*BorrowPosition // Borrow positions sorted by HF asc

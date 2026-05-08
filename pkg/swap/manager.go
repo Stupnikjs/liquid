@@ -1,53 +1,55 @@
-pacakge swap 
-
+package swap
 
 import (
-	"context"
-	"fmt"
 	"math/big"
-	"time"
 
+	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
+	"github.com/Stupnikjs/liquid/pkg/types"
 )
+
 type Consumer struct {
-	Conn *connector.Connector 
-	Config config.Config 
-    Cache cache.MarketReader
-	Logger chan string 
+	Conn      *connector.Connector
+	Config    config.Config
+	Cache     cache.MarketReader
+	MarketMap map[[32]byte]morpho.MarketParams
+	Logger    chan string
 }
 
+func NewConsumer(conn *connector.Connector, mReader cache.MarketReader, marketMap map[[32]byte]morpho.MarketParams, conf config.Config, logchan chan string) *Consumer {
+	return &Consumer{
+		Conn:      conn,
+		Config:    conf,
+		MarketMap: marketMap,
+		Logger:    logchan,
+	}
+}
 
-func (c *Consumer) Run () {
-	manager := swap.NewSwapManager()
-	// quoteSingle over markets 
-	result, found := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-    // manager.Graph.AddPool(pool)
-	for _, id := range r.Cache.Markets.Ids() {
-		morphoM := r.Cache.GetMorphoMarketFromId(id)
-		route := manager.Graph.FindRoutes(morphoM.CollateralToken, morphoM.LoanToken, 4)
+func (c *Consumer) SingleHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte]types.PoolEdge {
+	swapMap := make(map[[32]byte]types.PoolEdge, len(c.MarketMap))
+	for _, morphoM := range c.MarketMap {
+
+		result, found := QuoteBinarySearch(c.Conn, morphoM, c.Config.Addresses.UniSwapQuoter, MaxCollateralPos, OraclePrice)
+		if found {
+			swapMap[morphoM.ID] = result
+		}
 
 	}
+	return swapMap
+}
 
-	// liquidgraph
-	snap := r.Cache.Markets.GetSnapshot(id)
-	if snap == nil {
-		return
+func (c *Consumer) MultiHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte][][]types.PoolEdge {
+	returnMap := make(map[[32]byte][][]types.PoolEdge, len(c.MarketMap))
+	swapMap := c.SingleHop(MaxCollateralPos, OraclePrice)
+	graph := NewPoolGraph()
+	for _, v := range swapMap {
+		graph.AddPool(v)
 	}
-	morphoM := r.Cache.MarketMap[id]
-	
-	if !found {
-		r.Cache.Markets.Update(id, func(m *cache.Market) {
-			m.Canceled = true
-		})
-		return
+	for id, m := range c.MarketMap {
+		route := graph.FindRoutes(m.CollateralToken, m.LoanToken, 1)
+		returnMap[id] = route
 	}
-	r.Cache.Markets.Update(id, func(m *cache.Market) {
-		m.Stats.MaxUniSwappable = result.WCAmountIn
-		m.Stats.SwapFee = result.Fee
-	})
-
+	return returnMap
 }

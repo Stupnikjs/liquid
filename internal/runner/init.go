@@ -25,14 +25,16 @@ type Runner struct {
 }
 
 func NewRunner(initedCache *cache.Cache, conn *connector.Connector, conf config.Config, logfile string) *Runner {
-
+	liquidateCh := make(chan cache.BorrowPosition, 1)
 	logger := utils.NewLogger(context.Background(), logfile)
 	return &Runner{
-		Cache:       initedCache,
-		Conn:        conn,
-		Logger:      logger,
-		Config:      conf,
-		LiquidateCh: make(chan cache.BorrowPosition, 1),
+		LiquidateConsumer: liquidate.NewConsumer(conn, initedCache.Markets, initedCache.MarketMap, conf, logger, liquidateCh),
+		SwapConsumer:      swap.NewConsumer(conn, initedCache.Markets, initedCache.MarketMap, conf, logger),
+		Cache:             initedCache,
+		Conn:              conn,
+		Logger:            logger,
+		Config:            conf,
+		LiquidateCh:       liquidateCh,
 	}
 }
 
@@ -44,7 +46,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Logger <- "Api call init"
 	r.OnChainRefreshAll(ctx)
 	r.Logger <- "Refresh all markets for init"
-	r.SwapConsumer.Run()
+
 	r.Logger <- "Quoting over "
 	r.LogMarkets()
 

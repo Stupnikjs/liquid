@@ -1,0 +1,52 @@
+package runner
+
+import (
+	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/pkg/swap"
+	"github.com/Stupnikjs/liquid/pkg/types"
+)
+
+// swap  in:token address out:token address slippage
+// double swap slippage_final = s1 + s2 - s1 * s2
+
+func (r *Runner) FindSwapRoutes() {
+
+	swapMap := r.SingleHop()
+	graph := swap.NewPoolGraph()
+	for _, v := range swapMap {
+		graph.AddPool(v)
+	}
+	for _, id := range r.Cache.Markets.Ids() {
+		morphoM := r.Cache.GetMorphoMarketFromId(id)
+		routes := graph.FindRoutes(morphoM.CollateralToken, morphoM.LoanToken, 1)
+		if len(routes) == 0 {
+
+		}
+		r.Cache.Markets.Update(id, func(m *cache.Market) {
+			if len(routes) == 0 {
+				m.Canceled = true
+				return
+			}
+
+			m.SwapInfo = routes
+		})
+	}
+}
+
+func (r *Runner) SingleHop() []types.PoolEdge {
+	arr := make([]types.PoolEdge, len(r.Cache.Markets.Ids()))
+	for _, id := range r.Cache.Markets.Ids() {
+		snap := r.Cache.Markets.GetSnapshot(id)
+		if snap == nil {
+			continue
+		}
+		morphoM := r.Cache.GetMorphoMarketFromId(id)
+		result, found := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		if found {
+			arr = append(arr, result)
+		}
+
+	}
+	return arr
+
+}
