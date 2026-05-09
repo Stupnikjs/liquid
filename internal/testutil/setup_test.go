@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/liquidate"
+	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -282,13 +283,24 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	a.WrapETH(t, oneETH)
 
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
-	amount := new(big.Int).Mul(market.LLTV, big.NewInt(2300))
+	amount := new(big.Int).Mul(market.Lltv, big.NewInt(2300))
 	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
 	// juste tester la liquidation ici
 	// liquidate consumer
 	consumer := LiquidateConsumer(loadBaseTestConfig(a.RPCURL, a.WSURL))
-	liqArg := liquidate.LiquidateArgs{}
-	consumer.LiquidateCall(context.Background())
+	fee := big.NewInt(100)
+	minOut := big.NewInt(1000)
+	liqArg := liquidate.LiquidateArgs{
+		MarketParams: market,
+		Borrower:     common.HexToAddress(FundedAccounts[0]),
+		SeizedAssets: utils.WAD,
+		RepaidShares: big.NewInt(0),
+		SwapRouter:   consumer.Config.Addresses.UniSwapRouter,
+		PoolFee:      fee,
+		MinOut:       minOut,
+	}
+	gasEst := ethereum.GasEstimator(ctx, msg)
+	consumer.LiquidateCall(context.Background(), liqArg, gasEstimate)
 }

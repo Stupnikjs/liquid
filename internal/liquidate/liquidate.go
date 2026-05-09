@@ -228,8 +228,8 @@ func (c *Consumer) LiquidateCall(ctx context.Context, args LiquidateArgs, gasEst
 	}
 
 	_, err = c.SendSignedTx(ctx, TxParams{
-  // c.Config.Address.LiquidatorAddr
-		To:          &config.BaseLiqu,
+		// c.Config.Address.LiquidatorAddr
+		To:          &c.Config.Addresses.LiquidatorContract,
 		Calldata:    calldata,
 		GasEstimate: gasEstimate,
 	})

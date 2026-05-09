@@ -14,6 +14,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -43,12 +44,12 @@ var (
 // depositData retourne le calldata de deposit() : sélecteur 0xd0e30db0
 var depositCalldata = []byte{0xd0, 0xe3, 0x0d, 0xb0}
 
-var market = MarketParams{
+var market = morpho.MarketContractParams{
 	LoanToken:       usdc,
 	CollateralToken: weth,
 	Oracle:          common.HexToAddress("0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4"),
 	Irm:             common.HexToAddress("0x46415998764C29aB2a25CbeA6254146D50D22687"),
-	LLTV:            big.NewInt(860000000000000000),
+	Lltv:            big.NewInt(860000000000000000),
 }
 
 type MarketParams struct {
