@@ -24,4 +24,18 @@ var (
 // depositData retourne le calldata de deposit() : sélecteur 0xd0e30db0
 var depositCalldata = []byte{0xd0, 0xe3, 0x0d, 0xb0}
 
+var market = MarketParams{
+	LoanToken:       usdc,
+	CollateralToken: weth,
+	Oracle:          common.HexToAddress("0x2DC205F24BCb6B311E5cdf0745B0741648Aebd3d"),
+	Irm:             common.HexToAddress("0x4647B8FfC145fF3D82BDAf0222B869bDAa6072bE"),
+	LLTV:            big.NewInt(860000000000000000),
+}
 
+type MarketParams struct {
+	LoanToken       common.Address
+	CollateralToken common.Address
+	Oracle          common.Address
+	Irm             common.Address
+	LLTV            *big.Int
+}
