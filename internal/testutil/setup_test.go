@@ -33,6 +33,8 @@ var (
 
 	// borrow((address,address,address,address,uint256),uint256,uint256,address,address)
 	borrowSelector = []byte{0x50, 0xd8, 0xcd, 0x4b}
+
+	balanceOfSelector = []byte{0x70, 0xa0, 0x82, 0x31}
 )
 
 // depositData retourne le calldata de deposit() : sélecteur 0xd0e30db0
@@ -115,6 +117,7 @@ func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
 	t.Logf("deposit txHash: %s", signed.Hash())
 
 	// Attendre le minage (Anvil mine toutes les secondes)
+	// une func dediée 
 	var receipt *types.Receipt
 	for i := 0; i < 20; i++ {
 		time.Sleep(300 * time.Millisecond)
@@ -126,6 +129,7 @@ func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
 	if receipt == nil {
 		t.Fatalf("receipt non trouvé après timeout")
 	}
+	
 	t.Log(receipt)
 	if receipt.Status != types.ReceiptStatusSuccessful {
 		t.Fatalf("tx revertée, status: %d", receipt.Status)
@@ -134,8 +138,7 @@ func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
 	// Vérifier le solde WETH via balanceOf(address)
 	// ABI encode : sélecteur + adresse paddée à 32 bytes
 	calldata := make([]byte, 4+32)
-	// sélecteur balanceOf(address) : 0x70a08231
-	copy(calldata[:4], []byte{0x70, 0xa0, 0x82, 0x31})
+	copy(calldata[:4], balanceOfSelector)
 	copy(calldata[4+12:], me.Bytes()) // adresse = 12 bytes de padding + 20 bytes
 
 	result, err := client.CallContract(ctx, ethereum.CallMsg{
@@ -160,13 +163,10 @@ func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
 }
 
 func TestWrapETH(t *testing.T) {
-
 	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
 	oneETH := new(big.Int).Mul(big.NewInt(1), big.NewInt(1e18))
 	a.WrapETH(t, oneETH)
 }
-
-var ()
 
 var market = MarketParams{
 	LoanToken:       usdc,
