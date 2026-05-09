@@ -57,7 +57,7 @@ query {
 // FIND INFO ABOUT MARKET ID 
 query {
   marketByUniqueKey(
-    uniqueKey: "0x214c2bf3c899c913efda9c4a49adff23f77bbc2dc525af7c05be7ec93f32d561"
+    uniqueKey: "0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda"
     chainId: 8453
   ) {
     lltv

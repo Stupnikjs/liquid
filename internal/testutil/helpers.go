@@ -1,6 +1,25 @@
 package testutil
 
+import (
+	"context"
+	"crypto/ecdsa"
+	"fmt"
+	"log"
+	"math/big"
+	"testing"
+	"time"
 
+	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/internal/liquidate"
+	"github.com/Stupnikjs/liquid/pkg/api"
+	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/joho/godotenv"
+)
 
 var (
 	weth = common.HexToAddress("0x4200000000000000000000000000000000000006")
@@ -27,8 +46,8 @@ var depositCalldata = []byte{0xd0, 0xe3, 0x0d, 0xb0}
 var market = MarketParams{
 	LoanToken:       usdc,
 	CollateralToken: weth,
-	Oracle:          common.HexToAddress("0x2DC205F24BCb6B311E5cdf0745B0741648Aebd3d"),
-	Irm:             common.HexToAddress("0x4647B8FfC145fF3D82BDAf0222B869bDAa6072bE"),
+	Oracle:          common.HexToAddress("0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4"),
+	Irm:             common.HexToAddress("0x46415998764C29aB2a25CbeA6254146D50D22687"),
 	LLTV:            big.NewInt(860000000000000000),
 }
 
@@ -40,7 +59,6 @@ type MarketParams struct {
 	LLTV            *big.Int
 }
 
-
 func encodeMarketParams(m MarketParams) []byte {
 	buf := make([]byte, 5*32)
 	copy(buf[12:32], m.LoanToken.Bytes())
@@ -51,6 +69,7 @@ func encodeMarketParams(m MarketParams) []byte {
 	return buf
 }
 
+// send transaction and wait for it
 func sendAndWait(t *testing.T, client *ethclient.Client, ctx context.Context,
 	nonce uint64, gasPrice *big.Int, chainID *big.Int,
 	to common.Address, value *big.Int, data []byte,
@@ -106,3 +125,44 @@ func sendAndWait(t *testing.T, client *ethclient.Client, ctx context.Context,
 	return receipt
 }
 
+func loadBaseTestConfig(anvilUrl, anvilWs string) config.Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	chainid := int64(8453)
+	signer, err := config.NewBaseSigner(chainid)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return config.Config{
+		Signer: signer,
+		Addresses: config.Addresses{
+			UniSwapRouter:      config.BaseUniswapV3Router,
+			UniSwapQuoter:      config.BaseUniswapQuoterV2Addr,
+			LiquidatorContract: config.BaseLiquidatorUni,
+			Morpho:             config.MorphoMain,
+			Wallet:             config.BaseWalletAddr,
+		},
+		ChainID: uint32(chainid),
+
+		RPC: struct {
+			HTTP []string
+			WS   []string
+		}{
+			HTTP: []string{anvilUrl, anvilUrl},
+			WS:   []string{anvilWs, anvilWs},
+		},
+	}
+}
+
+func LiquidateConsumer(conf config.Config) *liquidate.Consumer {
+	conn := connector.New(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
+	filter := api.MarketFilters{}
+	mockMarketReader := cache.NewCache(conf, filter)
+	return &liquidate.Consumer{
+		Conn:   conn,
+		Cache:  mockMarketReader.Markets,
+		Config: conf,
+	}
+}

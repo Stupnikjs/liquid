@@ -1,12 +1,9 @@
 package main
 
 import (
-	"context"
 	"sync"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/runner"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/config"
@@ -27,7 +24,7 @@ func main() {
 	go func() {
 		time.Sleep(400 * time.Second)
 		defer wg.Done()
-		Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
+		runner.Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
 	}()
 	/*
 		go func() {
@@ -39,22 +36,13 @@ func main() {
 	go func() {
 		defer wg.Done()
 		time.Sleep(200 * time.Second) // to avoid too much logs at the same time
-		Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
+		runner.Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
 	}()
 
 	go func() {
 		defer wg.Done()
-		Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+		runner.Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
 	}()
 
 	wg.Wait()
-}
-
-func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
-	conn := connector.New(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
-	cached := cache.NewCache(conf, filters)
-	runn := runner.NewRunner(cached, conn, conf, logfile)
-	runn.Init(context.Background())
-	runn.Run(context.Background())
-
 }
