@@ -236,6 +236,8 @@ func (c *Consumer) LiquidateCall(ctx context.Context, args LiquidateArgs, gasEst
 	return err
 }
 
+// a decoupler de consumer 
+// pour réutiliser meme dans les test 
 func (c *Consumer) SendSignedTx(ctx context.Context, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
