@@ -8,7 +8,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
@@ -25,7 +29,7 @@ func TestMain(m *testing.M) {
 
 // WrapETH wrappe `amount` wei en WETH puis vérifie le solde.
 func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
-	txCtx := a.newTxCtx(t)
+	txCtx, _ := a.newTxCtx(t, anvil_pk0)
 	ctx := context.Background()
 	receipt := sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID, weth, amount, depositCalldata, txCtx.privKey)
 
@@ -74,7 +78,7 @@ func TestWrapETH(t *testing.T) {
 func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowAmount *big.Int) {
 	t.Helper()
 	ctx := context.Background()
-	txCtx := a.newTxCtx(t)
+	txCtx, _ := a.newTxCtx(t, anvil_pk0)
 
 	// 1. Approve WETH → Morpho
 	{
@@ -167,25 +171,24 @@ func TestBorrowUSDC(t *testing.T) {
 
 }
 
-/*
-func TestBorrowUSDCAndLiquidate(t *testing.T) {
-
-	// Compte 1 d'Anvil comme liquidateur
-	liquidator := common.HexToAddress(FundedAccounts[1])
-	liquidatorKey := "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
-	baseLiquidator := config.BaseLiquidatorUni
-	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
-
+func (a *AnvilInstance) LiquidationSetup(t *testing.T) {
 	oneETH := new(big.Int).Mul(big.NewInt(1), big.NewInt(1e18))
-
 	// D'abord wrap ETH → WETH
 	a.WrapETH(t, oneETH)
-
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
-	amount := new(big.Int).Mul(market.Lltv, big.NewInt(2300))
+	// passer le prix de l'eth en usdc
+	amount := new(big.Int).Mul(market.Lltv, big.NewInt(2328))
 	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
+}
+func TestBorrowUSDCAndLiquidate(t *testing.T) {
+
+	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
+	a.LiquidationSetup(t)
+
+	// txCtx du liquidateur (compte 1, pas compte 0)
+	txCtx, _ := a.newTxCtx(t, os.Getenv("BASE_PK"))
 
 	liqArg := lqtypes.LiquidateArgs{
 		MarketParams: market,
@@ -198,14 +201,23 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	}
 
 	calldata, err := lqtypes.EncodeLiquidateCalldata(liqArg)
-
-	msg := ethereum.CallMsg{
-		From:  config.BaseWalletAddr,
-		To:    &config.BaseLiquidatorUni,
-		Value: big.NewInt(0),
-		Data:  config.FuncLiquidate.Selector[:],
+	if err != nil {
+		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
-	gasEst, err := ethereum.
-		consumer.LiquidateCall(context.Background(), liqArg, gasEst)
+
+	receipt := sendAndWait(
+		t,
+		txCtx.client,
+		context.Background(),
+		txCtx.nonce,
+		txCtx.gasPrice,
+		txCtx.chainID,
+		config.BaseLiquidatorUni, // to: le contrat liquidateur
+		big.NewInt(0),            // value: 0 ETH
+		calldata,                 // data: calldata encodé
+		txCtx.privKey,
+	)
+
+	t.Logf("liquidation txHash: %s, status: %d", receipt.TxHash, receipt.Status)
+
 }
-*/

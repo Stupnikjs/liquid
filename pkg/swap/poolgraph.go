@@ -1,7 +1,7 @@
 package swap
 
 import (
-	"github.com/Stupnikjs/liquid/pkg/types"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -16,14 +16,14 @@ func NewSwapManager() *SwapManager {
 // LiquidityGraph agrège tous les pools connus
 type PoolGraph struct {
 	// token → liste de pools partant de ce token
-	Edges map[common.Address][]types.PoolEdge
+	Edges map[common.Address][]lqtypes.PoolEdge
 }
 
 func NewPoolGraph() *PoolGraph {
-	return &PoolGraph{Edges: make(map[common.Address][]types.PoolEdge)}
+	return &PoolGraph{Edges: make(map[common.Address][]lqtypes.PoolEdge)}
 }
 
-func (g *PoolGraph) AddPool(edge types.PoolEdge) {
+func (g *PoolGraph) AddPool(edge lqtypes.PoolEdge) {
 	g.Edges[edge.TokenIn] = append(g.Edges[edge.TokenIn], edge)
 }
 
@@ -32,18 +32,18 @@ func (g *PoolGraph) AddPool(edge types.PoolEdge) {
 func (g *PoolGraph) FindRoutes(
 	tokenIn, tokenOut common.Address,
 	maxHops int,
-) [][]types.PoolEdge {
-	var results [][]types.PoolEdge
+) [][]lqtypes.PoolEdge {
+	var results [][]lqtypes.PoolEdge
 	visited := make(map[common.Address]bool)
 
-	var dfs func(current common.Address, path []types.PoolEdge)
-	dfs = func(current common.Address, path []types.PoolEdge) {
+	var dfs func(current common.Address, path []lqtypes.PoolEdge)
+	dfs = func(current common.Address, path []lqtypes.PoolEdge) {
 		if len(path) > maxHops {
 			return
 		}
 
 		if current == tokenOut && len(path) > 0 {
-			route := make([]types.PoolEdge, len(path))
+			route := make([]lqtypes.PoolEdge, len(path))
 			copy(route, path)
 			results = append(results, route)
 			return
