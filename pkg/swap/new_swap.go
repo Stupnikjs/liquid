@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/Stupnikjs/liquid/pkg/types"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
@@ -31,7 +32,7 @@ type SingleQuoterFunc func(
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	fee uint32,
-) (types.PoolEdge, bool)
+) (lqtypes.PoolEdge, bool)
 
 type Quoter struct {
 	quoteSingle SingleQuoterFunc
@@ -46,11 +47,11 @@ func NewQuoterWithFunc(fn SingleQuoterFunc) *Quoter {
 	return &Quoter{quoteSingle: fn}
 }
 
-func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (types.PoolEdge, bool) {
+func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
 	return NewQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
-func QuoteBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (types.PoolEdge, bool) {
+func QuoteBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
 	return NewQuoter().QuoteBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
@@ -60,7 +61,7 @@ func (q *Quoter) Quote(
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
-) (types.PoolEdge, bool) {
+) (lqtypes.PoolEdge, bool) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
 	current := new(big.Int).Set(amountIn)
 
@@ -74,7 +75,7 @@ func (q *Quoter) Quote(
 		current.Div(current, big.NewInt(4))
 	}
 
-	return types.PoolEdge{}, false
+	return lqtypes.PoolEdge{}, false
 }
 
 // iterate over mid amount to swap to find best slippage for max amount
@@ -83,12 +84,12 @@ func (q *Quoter) QuoteBinarySearch(
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
-) (types.PoolEdge, bool) {
+) (lqtypes.PoolEdge, bool) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
 
 	lo := big.NewInt(1)
 	hi := new(big.Int).Set(amountIn)
-	var best types.PoolEdge
+	var best lqtypes.PoolEdge
 	found := false
 
 	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
@@ -107,7 +108,7 @@ func (q *Quoter) QuoteBinarySearch(
 	if !found {
 		fmt.Printf("no acceptable slippage found for %s -> %s\n",
 			marketp.CollateralTokenStr, marketp.LoanTokenStr)
-		return types.PoolEdge{}, false
+		return lqtypes.PoolEdge{}, false
 	}
 
 	fmt.Printf("acceptable slippage found for %s -> %s  %.4f%%\n",
@@ -122,8 +123,8 @@ func (q *Quoter) bestUniFeeTier(
 	amountIn, oraclePrice *big.Int,
 	maxSlippage float64,
 	rateLimit time.Duration,
-) (types.PoolEdge, bool) {
-	var best types.PoolEdge
+) (lqtypes.PoolEdge, bool) {
+	var best lqtypes.PoolEdge
 	found := false
 
 	for _, fee := range UniswapFees {
@@ -153,7 +154,7 @@ func RPCQuoteSingle(
 	uniswapQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	fee uint32,
-) (types.PoolEdge, bool) {
+) (lqtypes.PoolEdge, bool) {
 	params := QuoteExactInputSingleParams{
 		TokenIn:           marketp.CollateralToken,
 		TokenOut:          marketp.LoanToken,
@@ -177,10 +178,10 @@ func RPCQuoteSingle(
 			&gasEstimate,
 		)},
 	); err != nil {
-		return types.PoolEdge{}, false
+		return lqtypes.PoolEdge{}, false
 	}
 
-	return types.PoolEdge{
+	return lqtypes.PoolEdge{
 		TokenIn:      marketp.CollateralToken,
 		TokenOut:     marketp.LoanToken,
 		Router:       uniswapQuoterAddr,

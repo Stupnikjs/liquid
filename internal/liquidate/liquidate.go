@@ -3,18 +3,17 @@ package liquidate
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/big"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -22,7 +21,6 @@ import (
 // mockable dans testutil
 type EthCaller interface {
 	EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
-	FallBackEthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
 }
 
 type Liquidable struct {
@@ -35,17 +33,7 @@ type Liquidable struct {
 	SimulatedAt  time.Time
 	SimErr       error
 	IsLiquidable bool
-	Args         LiquidateArgs
-}
-
-type LiquidateArgs struct {
-	MarketParams morpho.MarketContractParams
-	Borrower     common.Address
-	SeizedAssets *big.Int
-	RepaidShares *big.Int
-	SwapRouter   common.Address
-	PoolFee      *big.Int
-	MinOut       *big.Int
+	Args         lqtypes.LiquidateArgs
 }
 
 func NewConsumer(conn *connector.Connector, marketReader cache.MarketReader, marketMap map[[32]byte]morpho.MarketParams, config config.Config, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
@@ -60,19 +48,12 @@ func NewConsumer(conn *connector.Connector, marketReader cache.MarketReader, mar
 }
 
 type Consumer struct {
-	Conn      EthCaller
+	Conn      lqtypes.EthCaller
 	Cache     cache.MarketReader
 	MarketMap map[[32]byte]morpho.MarketParams
 	Config    config.Config
 	Logger    chan string
 	Ch        <-chan cache.BorrowPosition
-}
-
-type TxParams struct {
-	To          *common.Address
-	Calldata    []byte
-	Value       *big.Int
-	GasEstimate uint64
 }
 
 func (c *Consumer) log(msg string) {
@@ -83,30 +64,19 @@ func (c *Consumer) log(msg string) {
 }
 
 // Pure math, zero RPC — unit testable
-func (c *Consumer) ToLiquidationArg(l *Liquidable, snap *cache.MarketSnapshot, params morpho.MarketParams, minOut *big.Int) LiquidateArgs {
-	return LiquidateArgs{
-		*params.ToMarketContractParams(),
-		l.Pos.Address,
-		l.SeizeAssets,
-		big.NewInt(0),
-		c.Config.Addresses.UniSwapRouter,
-		big.NewInt(int64(snap.Stats.SwapFee)),
-		minOut,
+func (c *Consumer) ToLiquidationArg(l *Liquidable, snap *cache.MarketSnapshot, params morpho.MarketParams, minOut *big.Int) lqtypes.LiquidateArgs {
+	return lqtypes.LiquidateArgs{
+		MarketParams: *params.ToMarketContractParams(),
+		Borrower:     l.Pos.Address,
+		SeizedAssets: l.SeizeAssets,
+		RepaidShares: big.NewInt(0),
+		SwapRouter:   c.Config.Addresses.UniSwapRouter,
+		PoolFee:      big.NewInt(int64(snap.Stats.SwapFee)),
+		MinOut:       minOut,
 	}
 }
 
 // ABI encode — testable isolément
-func encodeLiquidateCalldata(args LiquidateArgs) ([]byte, error) {
-	return config.FuncLiquidate.EncodeArgs(
-		args.MarketParams,
-		args.Borrower,
-		args.SeizedAssets,
-		args.RepaidShares,
-		args.SwapRouter,
-		args.PoolFee,
-		args.MinOut,
-	)
-}
 
 // dryRun performs a batched eth_call + gas estimation against the liquidator
 // contract without submitting a transaction. Returns the gas estimate on
@@ -189,7 +159,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader cache.Ma
 	)
 	out.RepayShares = repayShares
 
- // changer pour le multihop
+	// changer pour le multihop
 	if seizeAssets.Cmp(snap.Stats.MaxUniSwappable) > 0 {
 		seizeAssets = snap.Stats.MaxUniSwappable
 	}
@@ -200,7 +170,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader cache.Ma
 	out.MinOut = minOut
 
 	args := c.ToLiquidationArg(out, snap, params, minOut)
-	data, err := encodeLiquidateCalldata(args)
+	data, err := lqtypes.EncodeLiquidateCalldata(args)
 
 	if err != nil {
 		out.SimErr = fmt.Errorf("encode: %w", err)
@@ -223,57 +193,16 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader cache.Ma
 
 	return out
 }
-func (c *Consumer) LiquidateCall(ctx context.Context, args LiquidateArgs, gasEstimate uint64) error {
-	calldata, err := encodeLiquidateCalldata(args)
+func (c *Consumer) LiquidateCall(ctx context.Context, args lqtypes.LiquidateArgs, gasEstimate uint64) error {
+	calldata, err := lqtypes.EncodeLiquidateCalldata(args)
 	if err != nil {
 		c.log(fmt.Errorf("LiquidateCall: encode: %w", err).Error())
 	}
-
-	_, err = c.SendSignedTx(ctx, TxParams{
-		// c.Config.Address.LiquidatorAddr
+	tx := onchain.TxParams{
 		To:          &c.Config.Addresses.LiquidatorContract,
 		Calldata:    calldata,
 		GasEstimate: gasEstimate,
-	})
+	}
+	_, err = onchain.SendSignedTx(ctx, c.Conn, c.Config.Addresses.Wallet, c.Config.Signer, tx)
 	return err
-}
-
-// a decoupler de consumer 
-// pour réutiliser meme dans les test 
-// signer et conn seulement utiliser dans 
-func SendSignedTx(ctx context.Context,caller EthCaller,signer *config.Signer params TxParams) (common.Hash, error) {
-	var nonce uint64
-	var gasPrice *big.Int
-
-	if err := c.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
-		eth.Nonce(c.Config.Addresses.Wallet, nil).Returns(&nonce),
-		eth.GasPrice().Returns(&gasPrice),
-	}); err != nil {
-		return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", err)
-	}
-
-	tx := types.NewTx(&types.DynamicFeeTx{
-		Nonce:     nonce,
-		To:        params.To,
-		Data:      params.Calldata,
-		Value:     params.Value,
-		Gas:       params.GasEstimate * 12 / 10,
-		GasTipCap: big.NewInt(1e9),
-		GasFeeCap: new(big.Int).Add(gasPrice, big.NewInt(1e9)),
-	})
-
-	signedTx, err := c.Config.Signer.Sign(tx)
-	if err != nil {
-		return common.Hash{}, fmt.Errorf("SendSignedTx: sign: %w", err)
-	}
-
-	var receipt common.Hash
-	if err := c.Conn.EthCallCtx(ctx, []w3types.RPCCaller{
-		eth.SendTx(signedTx).Returns(&receipt),
-	}); err != nil {
-		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
-	}
-
-	log.Printf("[tx] sent: %s", receipt.Hex())
-	return receipt, nil
 }

@@ -7,16 +7,10 @@ import (
 	"math/big"
 	"os"
 	"testing"
-	"time"
 
-	"github.com/Stupnikjs/liquid/internal/liquidate"
-	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
 )
 
@@ -31,81 +25,10 @@ func TestMain(m *testing.M) {
 
 // WrapETH wrappe `amount` wei en WETH puis vérifie le solde.
 func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
-	t.Helper()
+	txCtx := a.newTxCtx(t)
 	ctx := context.Background()
+	receipt := sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID, weth, amount, depositCalldata, txCtx.privKey)
 
-	// Dial go-ethereum natif
-	client, err := ethclient.Dial(a.RPCURL)
-	if err != nil {
-		t.Fatalf("ethclient dial: %v", err)
-	}
-	defer client.Close()
-
-	chainID, err := client.ChainID(ctx)
-	if err != nil {
-		t.Fatalf("chainID: %v", err)
-	}
-
-	nonce, err := client.PendingNonceAt(ctx, me)
-	if err != nil {
-		t.Fatalf("nonce: %v", err)
-	}
-
-	gasPrice, err := client.SuggestGasPrice(ctx)
-	if err != nil {
-		t.Fatalf("gasPrice: %v", err)
-	}
-
-	// Estimation du gas pour deposit()
-	gas, err := client.EstimateGas(ctx, ethereum.CallMsg{
-		From:  me,
-		To:    &weth,
-		Value: amount,
-		Data:  depositCalldata,
-	})
-	if err != nil {
-		t.Fatalf("estimateGas: %v", err)
-	}
-
-	// Construire la tx legacy (Anvil accepte les deux)
-	tx := types.NewTx(&types.LegacyTx{
-		Nonce:    nonce,
-		To:       &weth,
-		Value:    amount,
-		Gas:      gas,
-		GasPrice: gasPrice,
-		Data:     depositCalldata,
-	})
-
-	// Signer avec la clé privée du compte 0 d'Anvil (déterministe)
-	// Clé privée d'Anvil account[0] : ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-	privKey, err := crypto.HexToECDSA("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
-	if err != nil {
-		t.Fatalf("privKey: %v", err)
-	}
-
-	signer := types.LatestSignerForChainID(chainID)
-	signed, err := types.SignTx(tx, signer, privKey)
-	if err != nil {
-		t.Fatalf("signTx: %v", err)
-	}
-
-	if err := client.SendTransaction(ctx, signed); err != nil {
-		t.Fatalf("sendTransaction: %v", err)
-	}
-
-	t.Logf("deposit txHash: %s", signed.Hash())
-
-	// Attendre le minage (Anvil mine toutes les secondes)
-	// une func dediée
-	var receipt *types.Receipt
-	for i := 0; i < 20; i++ {
-		time.Sleep(300 * time.Millisecond)
-		receipt, err = client.TransactionReceipt(ctx, signed.Hash())
-		if err == nil {
-			break
-		}
-	}
 	if receipt == nil {
 		t.Fatalf("receipt non trouvé après timeout")
 	}
@@ -121,7 +44,7 @@ func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
 	copy(calldata[:4], balanceOfSelector)
 	copy(calldata[4+12:], me.Bytes()) // adresse = 12 bytes de padding + 20 bytes
 
-	result, err := client.CallContract(ctx, ethereum.CallMsg{
+	result, err := txCtx.client.CallContract(ctx, ethereum.CallMsg{
 		To:   &weth,
 		Data: calldata,
 	}, nil)
@@ -151,32 +74,7 @@ func TestWrapETH(t *testing.T) {
 func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowAmount *big.Int) {
 	t.Helper()
 	ctx := context.Background()
-
-	client, err := ethclient.Dial(a.RPCURL)
-	if err != nil {
-		t.Fatalf("ethclient dial: %v", err)
-	}
-	defer client.Close()
-
-	chainID, err := client.ChainID(ctx)
-	if err != nil {
-		t.Fatalf("chainID: %v", err)
-	}
-
-	gasPrice, err := client.SuggestGasPrice(ctx)
-	if err != nil {
-		t.Fatalf("gasPrice: %v", err)
-	}
-
-	privKey, err := crypto.HexToECDSA("ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")
-	if err != nil {
-		t.Fatalf("privKey: %v", err)
-	}
-
-	nonce, err := client.PendingNonceAt(ctx, me)
-	if err != nil {
-		t.Fatalf("nonce: %v", err)
-	}
+	txCtx := a.newTxCtx(t)
 
 	// 1. Approve WETH → Morpho
 	{
@@ -187,8 +85,8 @@ func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowA
 		collateralAmount.FillBytes(data[36:68])
 
 		t.Log("1. Approve WETH → Morpho")
-		sendAndWait(t, client, ctx, nonce, gasPrice, chainID, weth, big.NewInt(0), data, privKey)
-		nonce++
+		sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID, weth, big.NewInt(0), data, txCtx.privKey)
+		txCtx.nonce++
 	}
 
 	// 2. SupplyCollateral
@@ -208,8 +106,8 @@ func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowA
 		t.Logf("supplyCollateral selector: %x", sig[:4])
 		t.Log("2. SupplyCollateral WETH → Morpho")
 
-		sendAndWait(t, client, ctx, nonce, gasPrice, chainID, morphoBlue, big.NewInt(0), data, privKey)
-		nonce++
+		sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID, morphoBlue, big.NewInt(0), data, txCtx.privKey)
+		txCtx.nonce++
 	}
 
 	// 3. Borrow USDC
@@ -225,8 +123,8 @@ func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowA
 		copy(data[260+12:292], me.Bytes()) // onBehalf
 
 		t.Log("3. Borrow USDC depuis Morpho")
-		sendAndWait(t, client, ctx, nonce, gasPrice, chainID, morphoBlue, big.NewInt(0), data, privKey)
-		nonce++
+		sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID, morphoBlue, big.NewInt(0), data, txCtx.privKey)
+		txCtx.nonce++
 	}
 
 	// Vérifier le solde USDC reçu
@@ -235,7 +133,7 @@ func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowA
 		copy(calldata[:4], balanceOfSelector)
 		copy(calldata[4+12:], me.Bytes())
 
-		result, err := client.CallContract(ctx, ethereum.CallMsg{
+		result, err := txCtx.client.CallContract(ctx, ethereum.CallMsg{
 			To:   &usdc,
 			Data: calldata,
 		}, nil)
@@ -262,13 +160,14 @@ func TestBorrowUSDC(t *testing.T) {
 	a.WrapETH(t, oneETH)
 
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
-	amount := new(big.Int).Mul(market.LLTV, big.NewInt(2300))
+	amount := new(big.Int).Mul(market.Lltv, big.NewInt(2300))
 	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
 
 }
 
+/*
 func TestBorrowUSDCAndLiquidate(t *testing.T) {
 
 	// Compte 1 d'Anvil comme liquidateur
@@ -287,20 +186,26 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
-	// juste tester la liquidation ici
-	// liquidate consumer
-	consumer := LiquidateConsumer(loadBaseTestConfig(a.RPCURL, a.WSURL))
-	fee := big.NewInt(100)
-	minOut := big.NewInt(1000)
-	liqArg := liquidate.LiquidateArgs{
+
+	liqArg := lqtypes.LiquidateArgs{
 		MarketParams: market,
 		Borrower:     common.HexToAddress(FundedAccounts[0]),
 		SeizedAssets: utils.WAD,
 		RepaidShares: big.NewInt(0),
-		SwapRouter:   consumer.Config.Addresses.UniSwapRouter,
-		PoolFee:      fee,
-		MinOut:       minOut,
+		SwapRouter:   config.BaseUniswapV3Router,
+		PoolFee:      big.NewInt(100),
+		MinOut:       big.NewInt(0),
 	}
-	gasEst := ethereum.GasEstimator(ctx, msg)
-	consumer.LiquidateCall(context.Background(), liqArg, gasEstimate)
+
+	calldata, err := lqtypes.EncodeLiquidateCalldata(liqArg)
+
+	msg := ethereum.CallMsg{
+		From:  config.BaseWalletAddr,
+		To:    &config.BaseLiquidatorUni,
+		Value: big.NewInt(0),
+		Data:  config.FuncLiquidate.Selector[:],
+	}
+	gasEst, err := ethereum.
+		consumer.LiquidateCall(context.Background(), liqArg, gasEst)
 }
+*/

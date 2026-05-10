@@ -6,8 +6,8 @@ import (
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/Stupnikjs/liquid/pkg/types"
 )
 
 type Consumer struct {
@@ -27,8 +27,8 @@ func NewConsumer(conn *connector.Connector, mReader cache.MarketReader, marketMa
 	}
 }
 
-func (c *Consumer) SingleHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte]types.PoolEdge {
-	swapMap := make(map[[32]byte]types.PoolEdge, len(c.MarketMap))
+func (c *Consumer) SingleHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte]lqtypes.PoolEdge {
+	swapMap := make(map[[32]byte]lqtypes.PoolEdge, len(c.MarketMap))
 	for _, morphoM := range c.MarketMap {
 
 		result, found := QuoteBinarySearch(c.Conn, morphoM, c.Config.Addresses.UniSwapQuoter, MaxCollateralPos, OraclePrice)
@@ -40,8 +40,8 @@ func (c *Consumer) SingleHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byt
 	return swapMap
 }
 
-func (c *Consumer) MultiHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte][][]types.PoolEdge {
-	returnMap := make(map[[32]byte][][]types.PoolEdge, len(c.MarketMap))
+func (c *Consumer) MultiHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte][][]lqtypes.PoolEdge {
+	returnMap := make(map[[32]byte][][]lqtypes.PoolEdge, len(c.MarketMap))
 	swapMap := c.SingleHop(MaxCollateralPos, OraclePrice)
 	graph := NewPoolGraph()
 	for _, v := range swapMap {

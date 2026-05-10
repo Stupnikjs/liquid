@@ -6,8 +6,8 @@ import (
 
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-	"github.com/Stupnikjs/liquid/pkg/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -20,19 +20,22 @@ type MarketStore struct {
 	mu      sync.RWMutex
 	markets map[[32]byte]*Market
 }
+type MarketReader interface {
+	Ids() [][32]byte
+	GetSnapshot(id [32]byte) *MarketSnapshot
+	Update(id [32]byte, fn func(m *Market))
+}
 
 type Market struct {
 	Mu          sync.RWMutex
 	Canceled    bool
 	Oracle      Oracle
 	LLTV        *big.Int
-	SwapInfo    [][]types.PoolEdge
+	SwapInfo    [][]lqtypes.PoolEdge
 	Stats       MarketStats
 	ActiveIndex int               // index of last pos with tracked HF
 	Positions   []*BorrowPosition // Borrow positions sorted by HF asc
 }
-
-
 
 type Oracle struct {
 	Price   *big.Int

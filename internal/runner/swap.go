@@ -2,8 +2,8 @@ package runner
 
 import (
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/swap"
-	"github.com/Stupnikjs/liquid/pkg/types"
 )
 
 // swap  in:token address out:token address slippage
@@ -31,8 +31,8 @@ func (r *Runner) FindSwapRoutes() {
 	}
 }
 
-func (r *Runner) SingleHop() []types.PoolEdge {
-	arr := make([]types.PoolEdge, len(r.Cache.Markets.Ids()))
+func (r *Runner) SingleHop() []lqtypes.PoolEdge {
+	arr := make([]lqtypes.PoolEdge, len(r.Cache.Markets.Ids()))
 	for _, id := range r.Cache.Markets.Ids() {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
