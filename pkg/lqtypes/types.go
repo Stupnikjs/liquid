@@ -30,6 +30,7 @@ type LiquidateArgs struct {
 	MinOut       *big.Int
 }
 
+// encode liquidate args after selector
 func EncodeLiquidateCalldata(args LiquidateArgs) ([]byte, error) {
 	return config.FuncLiquidate.EncodeArgs(
 		args.MarketParams,

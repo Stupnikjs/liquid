@@ -20,14 +20,6 @@ type AnvilInstance struct {
 	WSURL  string
 }
 
-// StartAnvil launches a local Anvil node, waits until its RPC is ready,
-// and registers a cleanup that kills the process when the test ends.
-// Calls t.Fatal if Anvil is not in PATH or fails to become ready.
-func StartAnvil(t *testing.T) *AnvilInstance {
-	t.Helper()
-	return StartAnvilFork(t, "", 0)
-}
-
 // StartAnvilFork launches Anvil forked from forkURL at the given block number.
 // Pass an empty forkURL to start a blank chain. Pass 0 for forkBlock to fork
 // at the latest block.

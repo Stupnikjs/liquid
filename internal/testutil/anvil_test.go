@@ -37,7 +37,6 @@ func (a *AnvilInstance) WrapETH(t *testing.T, amount *big.Int) {
 		t.Fatalf("receipt non trouvé après timeout")
 	}
 
-	t.Log(receipt)
 	if receipt.Status != types.ReceiptStatusSuccessful {
 		t.Fatalf("tx revertée, status: %d", receipt.Status)
 	}
@@ -171,24 +170,33 @@ func TestBorrowUSDC(t *testing.T) {
 
 }
 
-func (a *AnvilInstance) LiquidationSetup(t *testing.T) {
+func (a *AnvilInstance) LiquidationSetup(t *testing.T, ethprice *big.Int) {
 	oneETH := new(big.Int).Mul(big.NewInt(1), big.NewInt(1e18))
 	// D'abord wrap ETH → WETH
 	a.WrapETH(t, oneETH)
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
 	// passer le prix de l'eth en usdc
-	amount := new(big.Int).Mul(market.Lltv, big.NewInt(2328))
-	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
+	amount := new(big.Int).Mul(market.Lltv, ethprice)
+	borrowAmount := new(big.Int).Div(amount, utils.TenPowInt(24))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
 }
 func TestBorrowUSDCAndLiquidate(t *testing.T) {
 
 	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
-	a.LiquidationSetup(t)
+	ctx := context.Background()
+	txCtx, _ := a.newTxCtx(t, anvil_pk0)
+	// lire le prix depuis l'oracle Morpho (retourne price avec 36 decimales)
+	calldata := crypto.Keccak256([]byte("price()"))[:4]
+	result, err := txCtx.client.CallContract(ctx, ethereum.CallMsg{
+		To:   &market.Oracle,
+		Data: calldata,
+	}, nil)
+	t.Log(err)
+	price := new(big.Int).SetBytes(result)
+	a.LiquidationSetup(t, price)
 
 	// txCtx du liquidateur (compte 1, pas compte 0)
-	txCtx, _ := a.newTxCtx(t, os.Getenv("BASE_PK"))
 
 	liqArg := lqtypes.LiquidateArgs{
 		MarketParams: market,
@@ -200,10 +208,12 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 		MinOut:       big.NewInt(0),
 	}
 
-	calldata, err := lqtypes.EncodeLiquidateCalldata(liqArg)
+	calldata, err = lqtypes.EncodeLiquidateCalldata(liqArg)
 	if err != nil {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
+
+	// time wrap or oracle manipulation
 
 	receipt := sendAndWait(
 		t,

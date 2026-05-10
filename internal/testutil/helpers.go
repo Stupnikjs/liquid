@@ -3,24 +3,16 @@ package testutil
 import (
 	"context"
 	"crypto/ecdsa"
-	"fmt"
-	"log"
 	"math/big"
 	"testing"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/internal/liquidate"
-	"github.com/Stupnikjs/liquid/pkg/api"
-	"github.com/Stupnikjs/liquid/pkg/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/joho/godotenv"
 )
 
 type MarketParams struct {
@@ -132,46 +124,4 @@ func encodeMarketParams(m morpho.MarketContractParams) []byte {
 	copy(buf[96+12:128], m.Irm.Bytes())
 	m.Lltv.FillBytes(buf[128:160])
 	return buf
-}
-
-func loadBaseTestConfig(anvilUrl, anvilWs string) config.Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("no .env file found, using system env")
-	}
-	chainid := int64(8453)
-	signer, err := config.NewBaseSigner(chainid)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return config.Config{
-		Signer: signer,
-		Addresses: config.Addresses{
-			UniSwapRouter:      config.BaseUniswapV3Router,
-			UniSwapQuoter:      config.BaseUniswapQuoterV2Addr,
-			LiquidatorContract: config.BaseLiquidatorUni,
-			Morpho:             config.MorphoMain,
-			Wallet:             config.BaseWalletAddr,
-		},
-		ChainID: uint32(chainid),
-
-		RPC: struct {
-			HTTP []string
-			WS   []string
-		}{
-			HTTP: []string{anvilUrl, anvilUrl},
-			WS:   []string{anvilWs, anvilWs},
-		},
-	}
-}
-
-func LiquidateConsumer(conf config.Config) *liquidate.Consumer {
-	conn := connector.New(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
-	filter := api.MarketFilters{}
-	mockMarketReader := cache.NewCache(conf, filter)
-	return &liquidate.Consumer{
-		Conn:   conn,
-		Cache:  mockMarketReader.Markets,
-		Config: conf,
-	}
 }
