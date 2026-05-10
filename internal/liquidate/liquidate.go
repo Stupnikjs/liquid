@@ -189,6 +189,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader cache.Ma
 	)
 	out.RepayShares = repayShares
 
+ // changer pour le multihop
 	if seizeAssets.Cmp(snap.Stats.MaxUniSwappable) > 0 {
 		seizeAssets = snap.Stats.MaxUniSwappable
 	}
