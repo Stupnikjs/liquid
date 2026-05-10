@@ -19,6 +19,7 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+// mockable dans testutil
 type EthCaller interface {
 	EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
 	FallBackEthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
