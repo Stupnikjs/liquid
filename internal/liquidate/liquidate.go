@@ -238,7 +238,8 @@ func (c *Consumer) LiquidateCall(ctx context.Context, args LiquidateArgs, gasEst
 
 // a decoupler de consumer 
 // pour réutiliser meme dans les test 
-func (c *Consumer) SendSignedTx(ctx context.Context, params TxParams) (common.Hash, error) {
+// signer et conn seulement utiliser dans 
+func SendSignedTx(ctx context.Context,caller EthCaller,signer *config.Signer params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
 
