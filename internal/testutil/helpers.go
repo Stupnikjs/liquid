@@ -69,7 +69,7 @@ func sendAndWait(t *testing.T, client *ethclient.Client, ctx context.Context,
 	t.Helper()
 
 	gas, err := client.EstimateGas(ctx, ethereum.CallMsg{
-		From:  me,
+		From:  crypto.PubkeyToAddress(privKey.PublicKey),
 		To:    &to,
 		Value: value,
 		Data:  data,

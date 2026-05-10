@@ -176,8 +176,9 @@ func (a *AnvilInstance) LiquidationSetup(t *testing.T, ethprice *big.Int) {
 	a.WrapETH(t, oneETH)
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
 	// passer le prix de l'eth en usdc
+
 	amount := new(big.Int).Mul(market.Lltv, ethprice)
-	borrowAmount := new(big.Int).Div(amount, utils.TenPowInt(24))
+	borrowAmount := new(big.Int).Div(amount, utils.TenPowInt(42))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
 }
@@ -185,7 +186,18 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 
 	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
 	ctx := context.Background()
-	txCtx, _ := a.newTxCtx(t, anvil_pk0)
+	txCtx, err := a.newTxCtx(t, os.Getenv("BASE_PK")[2:])
+	privKey, _ := crypto.HexToECDSA(os.Getenv("BASE_PK")[2:])
+	sender := crypto.PubkeyToAddress(privKey.PublicKey)
+	t.Logf("sender: %s", sender.Hex())
+
+	ownerSel := crypto.Keccak256([]byte("owner()"))[:4]
+	res, _ := txCtx.client.CallContract(ctx, ethereum.CallMsg{
+		To:   &config.BaseLiquidatorUni,
+		Data: ownerSel,
+	}, nil)
+	t.Logf("owner:  0x%x", res[12:32])
+	t.Log(err)
 	// lire le prix depuis l'oracle Morpho (retourne price avec 36 decimales)
 	calldata := crypto.Keccak256([]byte("price()"))[:4]
 	result, err := txCtx.client.CallContract(ctx, ethereum.CallMsg{
@@ -196,7 +208,15 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	price := new(big.Int).SetBytes(result)
 	a.LiquidationSetup(t, price)
 
-	// txCtx du liquidateur (compte 1, pas compte 0)
+	// Après LiquidationSetup, avant d'envoyer la liquidation
+	err = txCtx.client.Client().CallContext(ctx, nil, "evm_increaseTime", 240*60*24*180) // 6 mois en secondes
+	if err != nil {
+		t.Fatalf("evm_increaseTime: %v", err)
+	}
+	err = txCtx.client.Client().CallContext(ctx, nil, "evm_mine", nil)
+	if err != nil {
+		t.Fatalf("evm_mine: %v", err)
+	}
 
 	liqArg := lqtypes.LiquidateArgs{
 		MarketParams: market,
