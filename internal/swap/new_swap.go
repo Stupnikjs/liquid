@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/pkg/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 
 	"github.com/ethereum/go-ethereum/common"

@@ -4,7 +4,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/liquid/pkg/config"
+	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -28,6 +29,12 @@ type LiquidateArgs struct {
 	SwapRouter   common.Address
 	PoolFee      *big.Int
 	MinOut       *big.Int
+}
+
+type MarketReader interface {
+	Ids() [][32]byte
+	GetSnapshot(id [32]byte) *cache.MarketSnapshot
+	Update(id [32]byte, fn func(m *cache.Market))
 }
 
 // encode liquidate args after selector

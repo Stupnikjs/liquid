@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/config"
-	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/lmittmann/w3/module/eth"
@@ -36,7 +36,7 @@ type Liquidable struct {
 	Args         lqtypes.LiquidateArgs
 }
 
-func NewConsumer(conn *connector.Connector, marketReader cache.MarketReader, marketMap map[[32]byte]morpho.MarketParams, config config.Config, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(conn *connector.Connector, marketReader lqtypes.MarketReader, marketMap map[[32]byte]morpho.MarketParams, config config.Config, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
 		Conn:      conn,
 		Cache:     marketReader,
@@ -49,7 +49,7 @@ func NewConsumer(conn *connector.Connector, marketReader cache.MarketReader, mar
 
 type Consumer struct {
 	Conn      lqtypes.EthCaller
-	Cache     cache.MarketReader
+	Cache     lqtypes.MarketReader
 	MarketMap map[[32]byte]morpho.MarketParams
 	Config    config.Config
 	Logger    chan string
@@ -112,7 +112,7 @@ func (c *Consumer) Run(ctx context.Context) {
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, mReader cache.MarketReader, p *cache.BorrowPosition) {
+func (c *Consumer) liquidateWrapper(ctx context.Context, mReader lqtypes.MarketReader, p *cache.BorrowPosition) {
 	result := c.SimulateAndPreComputeTx(ctx, mReader, p)
 	if result.SimErr != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
@@ -139,7 +139,7 @@ func ComputeMinOut(seizedAssets, collateralPrice, loanPrice *big.Int) *big.Int {
 	return valueInLoan
 }
 
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader cache.MarketReader, p *cache.BorrowPosition) *Liquidable {
+func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader lqtypes.MarketReader, p *cache.BorrowPosition) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
 	snap := mReader.GetSnapshot(p.MarketID)

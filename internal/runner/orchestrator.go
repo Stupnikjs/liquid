@@ -2,11 +2,12 @@ package runner
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/pkg/api"
-	"github.com/Stupnikjs/liquid/pkg/config"
 )
 
 // logs ethcalls missing
@@ -22,7 +23,13 @@ func (r *Runner) Run(ctx context.Context) {
 
 func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
 	conn := connector.New(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
-	cached := cache.NewCache(conf, filters)
+	result, err := api.QueryMarkets(conf.ChainID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	markets := api.FilterMarket(result, filters, conf.ChainID)
+	cached := cache.NewCache(conf, markets, filters)
 	runn := NewRunner(cached, conn, conf, logfile)
 	runn.Init(context.Background())
 	runn.Run(context.Background())

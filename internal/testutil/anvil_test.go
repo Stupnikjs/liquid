@@ -8,9 +8,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/config"
-	"github.com/Stupnikjs/liquid/pkg/lqtypes"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"

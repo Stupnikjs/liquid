@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/onchain"
+	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/config"
-	"github.com/Stupnikjs/liquid/pkg/swap"
 )
 
 type Runner struct {

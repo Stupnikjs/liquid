@@ -11,8 +11,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/config"
 	"golang.org/x/time/rate"
 
 	"github.com/ethereum/go-ethereum"

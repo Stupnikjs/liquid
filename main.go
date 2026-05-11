@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/runner"
 	"github.com/Stupnikjs/liquid/pkg/api"
-	"github.com/Stupnikjs/liquid/pkg/config"
 )
 
 func main() {

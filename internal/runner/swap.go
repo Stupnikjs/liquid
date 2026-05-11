@@ -2,8 +2,8 @@ package runner
 
 import (
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/pkg/lqtypes"
-	"github.com/Stupnikjs/liquid/pkg/swap"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/swap"
 )
 
 // swap  in:token address out:token address slippage
@@ -25,8 +25,7 @@ func (r *Runner) FindSwapRoutes() {
 				m.Canceled = true
 				return
 			}
-
-			m.SwapInfo = routes
+			// need to put routes somewhere
 		})
 	}
 }
