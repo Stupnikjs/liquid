@@ -6,8 +6,8 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/Stupnikjs/liquid/pkg/config"
-	"github.com/Stupnikjs/liquid/pkg/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/lmittmann/w3/module/eth"
