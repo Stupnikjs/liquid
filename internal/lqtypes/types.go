@@ -2,13 +2,24 @@ package lqtypes
 
 import (
 	"math/big"
+	"sync"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
+
+type Infra struct {
+	Conn   *connector.Connector
+	Config config.Config
+}
+
+type Store struct {
+	MarketReader MarketReader
+	MarketMap    map[[32]byte]morpho.MarketParams
+}
 
 type PoolEdge struct {
 	TokenIn      common.Address
@@ -21,6 +32,22 @@ type PoolEdge struct {
 	CalibratedAt time.Time
 }
 
+type Route struct {
+	Edges    []PoolEdge
+	TokenIn  common.Address
+	TokenOut common.Address
+}
+
+type RouteCache struct {
+	Mu     sync.RWMutex
+	Routes map[RouteKey]Route
+}
+
+type RouteKey struct {
+	TokenIn  common.Address
+	TokenOut common.Address
+}
+
 type LiquidateArgs struct {
 	MarketParams morpho.MarketContractParams
 	Borrower     common.Address
@@ -31,14 +58,8 @@ type LiquidateArgs struct {
 	MinOut       *big.Int
 }
 
-type MarketReader interface {
-	Ids() [][32]byte
-	GetSnapshot(id [32]byte) *cache.MarketSnapshot
-	Update(id [32]byte, fn func(m *cache.Market))
-}
-
 // encode liquidate args after selector
-func EncodeLiquidateCalldata(args LiquidateArgs) ([]byte, error) {
+func (args LiquidateArgs) EncodeLiquidateCalldata() ([]byte, error) {
 	return config.FuncLiquidate.EncodeArgs(
 		args.MarketParams,
 		args.Borrower,

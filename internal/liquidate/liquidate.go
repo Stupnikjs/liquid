@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/config"
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
@@ -36,24 +34,20 @@ type Liquidable struct {
 	Args         lqtypes.LiquidateArgs
 }
 
-func NewConsumer(conn *connector.Connector, marketReader lqtypes.MarketReader, marketMap map[[32]byte]morpho.MarketParams, config config.Config, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, store *lqtypes.Store, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
-		Conn:      conn,
-		Cache:     marketReader,
-		MarketMap: marketMap,
-		Config:    config,
-		Logger:    logger,
-		Ch:        ch,
+		Infra:  infra,
+		Store:  store,
+		Logger: logger,
+		Ch:     ch,
 	}
 }
 
 type Consumer struct {
-	Conn      lqtypes.EthCaller
-	Cache     lqtypes.MarketReader
-	MarketMap map[[32]byte]morpho.MarketParams
-	Config    config.Config
-	Logger    chan string
-	Ch        <-chan cache.BorrowPosition
+	Infra  *lqtypes.Infra
+	Store  *lqtypes.Store
+	Logger chan string
+	Ch     <-chan cache.BorrowPosition
 }
 
 func (c *Consumer) log(msg string) {
@@ -70,7 +64,7 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, snap *cache.MarketSnapshot, p
 		Borrower:     l.Pos.Address,
 		SeizedAssets: l.SeizeAssets,
 		RepaidShares: big.NewInt(0),
-		SwapRouter:   c.Config.Addresses.UniSwapRouter,
+		SwapRouter:   c.Infra.Config.Addresses.UniSwapRouter,
 		PoolFee:      big.NewInt(int64(snap.Stats.SwapFee)),
 		MinOut:       minOut,
 	}
@@ -84,14 +78,14 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, snap *cache.MarketSnapshot, p
 func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err error) {
 
 	msg := w3types.Message{
-		From:  c.Config.Addresses.Wallet,
-		To:    &c.Config.Addresses.LiquidatorContract,
+		From:  c.Infra.Config.Addresses.Wallet,
+		To:    &c.Infra.Config.Addresses.LiquidatorContract,
 		Input: data,
 	}
 
 	var callResult []byte
 
-	if err := c.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
+	if err := c.Infra.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
 		eth.Call(&msg, nil, nil).Returns(&callResult),
 		eth.EstimateGas(&msg, nil).Returns(&gasVal),
 	}); err != nil {
@@ -107,7 +101,7 @@ func (c *Consumer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			c.liquidateWrapper(ctx, c.Cache, &pos)
+			c.liquidateWrapper(ctx, c.Store.MarketReader, &pos)
 		}
 	}
 }
@@ -122,7 +116,7 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, mReader lqtypes.MarketR
 		c.log("[liq] not profitable")
 		return
 	}
-	market := c.MarketMap[p.MarketID]
+	market := c.Store.MarketMap[p.MarketID]
 	c.log(fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair()))
 
 	err := c.LiquidateCall(ctx, result.Args, result.GasEstimate)
@@ -148,7 +142,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader lqtypes.
 		return out
 	}
 
-	params := c.MarketMap[p.MarketID]
+	params := c.Store.MarketMap[p.MarketID]
 
 	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
@@ -170,7 +164,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader lqtypes.
 	out.MinOut = minOut
 
 	args := c.ToLiquidationArg(out, snap, params, minOut)
-	data, err := lqtypes.EncodeLiquidateCalldata(args)
+	data, err := args.EncodeLiquidateCalldata()
 
 	if err != nil {
 		out.SimErr = fmt.Errorf("encode: %w", err)
@@ -194,15 +188,15 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader lqtypes.
 	return out
 }
 func (c *Consumer) LiquidateCall(ctx context.Context, args lqtypes.LiquidateArgs, gasEstimate uint64) error {
-	calldata, err := lqtypes.EncodeLiquidateCalldata(args)
+	calldata, err := args.EncodeLiquidateCalldata()
 	if err != nil {
 		c.log(fmt.Errorf("LiquidateCall: encode: %w", err).Error())
 	}
 	tx := onchain.TxParams{
-		To:          &c.Config.Addresses.LiquidatorContract,
+		To:          &c.Infra.Config.Addresses.LiquidatorContract,
 		Calldata:    calldata,
 		GasEstimate: gasEstimate,
 	}
-	_, err = onchain.SendSignedTx(ctx, c.Conn, c.Config.Addresses.Wallet, c.Config.Signer, tx)
+	_, err = onchain.SendSignedTx(ctx, c.Infra.Conn, c.Infra.Config.Addresses.Wallet, c.Infra.Config.Signer, tx)
 	return err
 }

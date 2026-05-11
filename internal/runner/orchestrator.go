@@ -7,6 +7,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/api"
 )
 
@@ -30,7 +31,15 @@ func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
 	}
 	markets := api.FilterMarket(result, filters, conf.ChainID)
 	cached := cache.NewCache(conf, markets, filters)
-	runn := NewRunner(cached, conn, conf, logfile)
+	infra := &lqtypes.Infra{
+		Conn:   conn,
+		Config: conf,
+	}
+	store := &lqtypes.Store{
+		MarketReader: cached.Markets,
+		MarketMap:    cached.MarketMap,
+	}
+	runn := NewRunner(infra, store, logfile)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
 

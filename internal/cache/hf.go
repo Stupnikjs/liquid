@@ -62,6 +62,7 @@ func (m *Market) SortAllPositionsByHFUnsafe() {
 
 }
 
+// assume (risky) positions is sorted
 func (s *MarketSnapshot) GetFirstHF() *big.Int {
 	for _, p := range s.Positions {
 		if p.CachedHF != nil {

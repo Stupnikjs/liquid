@@ -7,7 +7,8 @@ import (
 )
 
 func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
-	r.Conn.SubscribeToEventPos(ctx, r.Config)
+	// need conn + config
+	r.Infra.Conn.SubscribeToEventPos(ctx, r.Infra.Config)
 }
 
 func (r *Runner) EventListener(ctx context.Context) {
@@ -16,11 +17,11 @@ func (r *Runner) EventListener(ctx context.Context) {
 		case <-ctx.Done():
 			return
 
-		case event, ok := <-r.Conn.LogsCh():
+		case event, ok := <-r.Infra.Conn.LogsCh():
 			if !ok {
 				return
 			}
-			onchain.ProcessEvents(r.Cache.Markets, event)
+			onchain.ProcessEvents(r.Store.MarketReader, event)
 		}
 	}
 }

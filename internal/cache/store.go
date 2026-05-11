@@ -1,33 +1,11 @@
 package cache
 
 import (
-	"fmt"
 	"math/big"
-	"strings"
-	"sync"
-
-	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 )
 
 // changer map par array avec HF triée
 
-func NewStore(markets []morpho.MarketParams) *MarketStore {
-	marketsMap := make(map[[32]byte]*Market, len(markets))
-	for _, m := range markets {
-
-		market := &Market{
-			// might inizialize array
-			Positions: make([]*BorrowPosition, 0),
-		}
-		marketsMap[m.ID] = market
-	}
-
-	return &MarketStore{
-		mu:      sync.RWMutex{},
-		markets: marketsMap,
-	}
-}
 func (s *MarketStore) AllPosLen() int {
 	s.mu.RLock()
 	sum := 0
@@ -57,12 +35,6 @@ func (s *MarketStore) Ids() [][32]byte {
 	s.mu.RUnlock()
 	return ids
 
-}
-
-func (s *MarketStore) Upsert(id [32]byte, m *Market) {
-	s.mu.Lock()
-	s.markets[id] = m
-	s.mu.Unlock()
 }
 
 func (s *MarketStore) Update(id [32]byte, fn func(m *Market)) {
@@ -125,31 +97,4 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 	}
 
 	return snap
-}
-
-func GetMarketLog(snap MarketSnapshot, id [32]byte, morphoM morpho.MarketParams) string {
-
-	var sb strings.Builder
-	marketPair := fmt.Sprintf("%s/%s ", morphoM.CollateralTokenStr, morphoM.LoanTokenStr)
-
-	fmt.Fprintf(&sb, "%s %d pos ", marketPair, len(snap.Positions))
-	priceStr := "nil"
-	if snap.Oracle.Price != nil {
-		priceStr = utils.FormatDecimals(
-			snap.Oracle.Price,
-			int(36+morphoM.LoanTokenDecimals-morphoM.CollateralTokenDecimals),
-		)
-	}
-	limit := min(len(snap.Positions), 1)
-	for i := range limit {
-		pos := snap.Positions[i]
-		fmt.Fprintf(&sb,
-			"BorrowShares=%s, Collateral=%s, Oracle=%s  , HF=%s\n",
-			utils.FormatDecimals(pos.BorrowShares, 18),
-			utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
-			priceStr,
-			utils.FormatDecimals(pos.CachedHF, 18),
-		)
-	}
-	return sb.String()
 }

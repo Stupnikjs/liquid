@@ -31,13 +31,13 @@ func (r *Runner) FindSwapRoutes() {
 }
 
 func (r *Runner) SingleHop() []lqtypes.PoolEdge {
-	arr := make([]lqtypes.PoolEdge, len(r.Cache.Markets.Ids()))
-	for _, id := range r.Cache.Markets.Ids() {
-		snap := r.Cache.Markets.GetSnapshot(id)
+	arr := make([]lqtypes.PoolEdge, len(r.Store.MarketReader.Ids()))
+	for _, id := range r.Store.MarketReader.Ids() {
+		snap := r.Store.MarketReader.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
-		morphoM := r.Cache.GetMorphoMarketFromId(id)
+		morphoM := r.Store.MarketMap[id]
 		result, found := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
 			arr = append(arr, result)

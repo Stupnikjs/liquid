@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3"
 )
 
 var (
@@ -18,12 +17,6 @@ var (
 	BaseLiquidatorOdosContract = common.HexToAddress("")
 
 	IRM = common.HexToAddress("0x46415998764C29aB2a25CbeA6254146D50D22687")
-	// Mainnet Addresses
-	MainLiquidatorAddr     = common.HexToAddress("")
-	MainMorphoBlueAddr     = w3.A("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb")
-	MainWalletAddr         = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
-	MainLiquidatorOdosAddr = common.HexToAddress("")
-	MainUniswapV3Router    = common.HexToAddress("0xE592427A0AEce92De3Edee1F18E0157C05861564")
 
 	// Arbitrum Addresses
 	ArbitrumMorphoBlueAddr      = common.HexToAddress("0x6c247b1F6182318877311737BaC0844bAa518F5e")

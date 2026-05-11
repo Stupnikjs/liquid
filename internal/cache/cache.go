@@ -10,6 +10,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+/*
+Cache package holds storage logic
+Cache Init
+Snapshot
+
+# HF calculation
+
+Pos insert / update / delete logic
+*/
 type Cache struct {
 	Markets   *MarketStore
 	MarketMap map[[32]byte]morpho.MarketParams
@@ -49,6 +58,23 @@ type MarketSnapshot struct {
 	LLTV      *big.Int
 	Stats     MarketStats
 	Positions []BorrowPosition
+}
+
+func NewStore(markets []morpho.MarketParams) *MarketStore {
+	marketsMap := make(map[[32]byte]*Market, len(markets))
+	for _, m := range markets {
+
+		market := &Market{
+			// might inizialize array
+			Positions: make([]*BorrowPosition, 0),
+		}
+		marketsMap[m.ID] = market
+	}
+
+	return &MarketStore{
+		mu:      sync.RWMutex{},
+		markets: marketsMap,
+	}
 }
 
 func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.MarketFilters) *Cache {

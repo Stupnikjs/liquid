@@ -228,7 +228,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 		MinOut:       big.NewInt(0),
 	}
 
-	calldata, err = lqtypes.EncodeLiquidateCalldata(liqArg)
+	calldata, err = liqArg.EncodeLiquidateCalldata()
 	if err != nil {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
