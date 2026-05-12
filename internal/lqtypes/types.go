@@ -2,7 +2,6 @@ package lqtypes
 
 import (
 	"math/big"
-	"sync"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/config"
@@ -30,22 +29,6 @@ type PoolEdge struct {
 	WCAmountIn   *big.Int
 	WCAmountOut  *big.Int
 	CalibratedAt time.Time
-}
-
-type Route struct {
-	Edges    []PoolEdge
-	TokenIn  common.Address
-	TokenOut common.Address
-}
-
-type RouteCache struct {
-	Mu     sync.RWMutex
-	Routes map[RouteKey]Route
-}
-
-type RouteKey struct {
-	TokenIn  common.Address
-	TokenOut common.Address
 }
 
 type LiquidateArgs struct {

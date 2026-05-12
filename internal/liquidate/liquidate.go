@@ -56,10 +56,6 @@ func (c *Consumer) log(msg string) {
 	}
 }
 
-// Pure math, zero RPC — unit testable
-
-// ABI encode — testable isolément
-
 func (c *Consumer) Run(ctx context.Context) {
 	for {
 		select {

@@ -39,6 +39,7 @@ func (c *Consumer) SingleHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byt
 	return swapMap
 }
 
+/*
 func (c *Consumer) MultiHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte][][]lqtypes.PoolEdge {
 	returnMap := make(map[[32]byte][][]lqtypes.PoolEdge, len(c.MarketMap))
 	swapMap := c.SingleHop(MaxCollateralPos, OraclePrice)
@@ -52,3 +53,4 @@ func (c *Consumer) MultiHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte
 	}
 	return returnMap
 }
+*/

@@ -1,13 +1,15 @@
 package swap
 
 import (
+	"sync"
+
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 type SwapManager struct {
 	Graph *PoolGraph
-	Cache lqtypes.RouteCache
+	Cache RouteCache
 }
 
 func NewSwapManager() *SwapManager {
@@ -62,23 +64,36 @@ func (g *PoolGraph) FindRoutes(
 	return results
 }
 
-func (sm *SwapManager) BestRoute(tokenIn, tokenOut common.Address) (lqtypes.Route, bool) {
+func (sm *SwapManager) BestRoute(tokenIn, tokenOut common.Address) ([]lqtypes.PoolEdge, bool) {
 	sm.Cache.Mu.RLock()
 	defer sm.Cache.Mu.RUnlock()
 
-	r, ok := sm.Cache.Routes[lqtypes.RouteKey{
+	r, ok := sm.Cache.Routes[RouteKey{
 		TokenIn:  tokenIn,
 		TokenOut: tokenOut,
 	}]
 	return r, ok
 }
 
-func (sm *SwapManager) StoreRoute(r lqtypes.Route) {
-	sm.Cache.Mu.Lock()
-	defer sm.Cache.Mu.Unlock()
+type RouteKey struct {
+	TokenIn  common.Address
+	TokenOut common.Address
+}
 
-	sm.Cache.Routes[lqtypes.RouteKey{
-		TokenIn:  r.TokenIn,
-		TokenOut: r.TokenOut,
-	}] = r
+type RouteCache struct {
+	Mu     sync.RWMutex
+	Routes map[RouteKey][]lqtypes.PoolEdge
+}
+
+func (rc *RouteCache) StoreRoute(r []lqtypes.PoolEdge) {
+	if len(r) == 0 {
+		return
+	}
+	k := RouteKey{
+		TokenIn:  r[0].TokenIn,
+		TokenOut: r[len(r)-1].TokenOut,
+	}
+	rc.Mu.Lock()
+	defer rc.Mu.Unlock()
+	rc.Routes[k] = r
 }

@@ -9,12 +9,14 @@ import (
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
+	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
 type Runner struct {
 	LiquidateConsumer *liquidate.Consumer
 	Store             lqtypes.Store
+	SwapRoutes        *swap.RouteCache
 	Infra             *lqtypes.Infra
 	Logger            chan string
 	LiquidateCh       chan cache.BorrowPosition
@@ -26,9 +28,12 @@ func NewRunner(infra *lqtypes.Infra, store lqtypes.Store, logfile string) *Runne
 	return &Runner{
 		LiquidateConsumer: liquidate.NewConsumer(infra, store, logger, liquidateCh),
 		Store:             store,
-		Infra:             infra,
-		Logger:            logger,
-		LiquidateCh:       liquidateCh,
+		SwapRoutes: &swap.RouteCache{
+			Routes: make(map[swap.RouteKey][]lqtypes.PoolEdge, len(store.MarketMap)),
+		},
+		Infra:       infra,
+		Logger:      logger,
+		LiquidateCh: liquidateCh,
 	}
 }
 
@@ -40,7 +45,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Logger <- "Api call init"
 	r.OnChainRefreshAll(ctx)
 	r.Logger <- "Refresh all markets for init"
-	r.FindSwapRoutes()
+	r.SingleHop()
 	r.Logger <- "Quoting over "
 	r.LogMarkets()
 

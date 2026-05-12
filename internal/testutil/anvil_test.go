@@ -245,4 +245,11 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 func TestIntegration(t *testing.T) {
 	// faire un cache avec 1 seul pos
 
+	// lancer le runner sur anvil sans call api ni websocket
+
+	// borrow
+
+	// Crash l'oracle
+
+	// laisser le bot liquidate
 }

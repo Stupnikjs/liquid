@@ -1,49 +1,55 @@
 package runner
 
 import (
-	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/swap"
 )
 
 // swap  in:token address out:token address slippage
 // double swap slippage_final = s1 + s2 - s1 * s2
-
+/*
 func (r *Runner) FindSwapRoutes() {
 
-	swapMap := r.SingleHop()
+	singleHop := r.SingleHop()
 	graph := swap.NewPoolGraph()
-	for _, v := range swapMap {
+
+	for _, v := range singleHop {
 		graph.AddPool(v)
 	}
 	for _, id := range r.Store.MarketReader.Ids() {
 		morphoM := r.Store.MarketMap[id]
+		k := lqtypes.RouteKey{
+			TokenIn:  morphoM.CollateralToken,
+			TokenOut: morphoM.LoanToken,
+		}
 		routes := graph.FindRoutes(morphoM.CollateralToken, morphoM.LoanToken, 1)
+		r.SwapRoutes.Routes[k] = routes
 
-		r.Store.MarketReader.Update(id, func(m *cache.Market) {
-			if len(routes) == 0 {
-				m.Canceled = true
-				return
-			}
-			// need to put routes somewhere
-		})
 	}
 }
+*/
 
-func (r *Runner) SingleHop() []lqtypes.PoolEdge {
-	arr := make([]lqtypes.PoolEdge, len(r.Store.MarketReader.Ids()))
+func (r *Runner) SingleHop() {
+
 	for _, id := range r.Store.MarketReader.Ids() {
+		arr := make([]lqtypes.PoolEdge, 1)
 		snap := r.Store.MarketReader.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
 		morphoM := r.Store.MarketMap[id]
-		result, found := swap.QuoteBinarySearch(r.Conn, morphoM, r.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		result, found := swap.QuoteBinarySearch(r.Infra.Conn, morphoM, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
 			arr = append(arr, result)
 		}
+		k := swap.RouteKey{
+			TokenIn:  morphoM.CollateralToken,
+			TokenOut: morphoM.LoanToken,
+		}
+		r.SwapRoutes.Mu.Lock()
+		r.SwapRoutes.Routes[k] = arr
+		r.SwapRoutes.Mu.Unlock()
 
 	}
-	return arr
 
 }
