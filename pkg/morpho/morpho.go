@@ -82,3 +82,9 @@ func ComputeLiquidationAmounts(BorrowShares, TotalBorrowAssets, TotalBorrowShare
 
 	return repayShares, seizeAssets
 }
+
+func ComputeMinOut(seizedAssets, collateralPrice, loanPrice *big.Int) *big.Int {
+	valueInLoan := new(big.Int).Mul(seizedAssets, collateralPrice)
+	valueInLoan.Div(valueInLoan, loanPrice)
+	return valueInLoan
+}

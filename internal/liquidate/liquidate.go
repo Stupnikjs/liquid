@@ -10,9 +10,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
 
@@ -31,7 +29,7 @@ type Liquidable struct {
 	SimulatedAt  time.Time
 	SimErr       error
 	IsLiquidable bool
-	Args         lqtypes.LiquidateArgs
+	CallData     []byte
 }
 
 func NewConsumer(infra *lqtypes.Infra, store *lqtypes.Store, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
@@ -58,42 +56,8 @@ func (c *Consumer) log(msg string) {
 }
 
 // Pure math, zero RPC — unit testable
-func (c *Consumer) ToLiquidationArg(l *Liquidable, snap *cache.MarketSnapshot, params morpho.MarketParams, minOut *big.Int) lqtypes.LiquidateArgs {
-	return lqtypes.LiquidateArgs{
-		MarketParams: *params.ToMarketContractParams(),
-		Borrower:     l.Pos.Address,
-		SeizedAssets: l.SeizeAssets,
-		RepaidShares: big.NewInt(0),
-		SwapRouter:   c.Infra.Config.Addresses.UniSwapRouter,
-		PoolFee:      big.NewInt(int64(snap.Stats.SwapFee)),
-		MinOut:       minOut,
-	}
-}
 
 // ABI encode — testable isolément
-
-// dryRun performs a batched eth_call + gas estimation against the liquidator
-// contract without submitting a transaction. Returns the gas estimate on
-// success, or an error if the call reverts (position not liquidable).
-func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err error) {
-
-	msg := w3types.Message{
-		From:  c.Infra.Config.Addresses.Wallet,
-		To:    &c.Infra.Config.Addresses.LiquidatorContract,
-		Input: data,
-	}
-
-	var callResult []byte
-
-	if err := c.Infra.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
-		eth.Call(&msg, nil, nil).Returns(&callResult),
-		eth.EstimateGas(&msg, nil).Returns(&gasVal),
-	}); err != nil {
-		return 0, fmt.Errorf("dryRun: %w", err)
-	}
-
-	return gasVal, nil
-}
 
 func (c *Consumer) Run(ctx context.Context) {
 	for {
@@ -101,13 +65,18 @@ func (c *Consumer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			c.liquidateWrapper(ctx, c.Store.MarketReader, &pos)
+			snap := c.Store.GetSnapshot(pos.MarketID)
+			if snap == nil {
+				out.SimErr = fmt.Errorf("snap nil")
+				return out
+			}
+			c.liquidateWrapper(ctx, snap, &pos)
 		}
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, mReader lqtypes.MarketReader, p *cache.BorrowPosition) {
-	result := c.SimulateAndPreComputeTx(ctx, mReader, p)
+func (c *Consumer) liquidateWrapper(ctx context.Context, snap market.Snapshot, p *cache.BorrowPosition) {
+	result := c.SimulateAndPreComputeTx(ctx, snap, p)
 	if result.SimErr != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
 		return
@@ -119,7 +88,7 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, mReader lqtypes.MarketR
 	market := c.Store.MarketMap[p.MarketID]
 	c.log(fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair()))
 
-	err := c.LiquidateCall(ctx, result.Args, result.GasEstimate)
+	err := c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
 		c.log(fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err))
 		return
@@ -127,71 +96,7 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, mReader lqtypes.MarketR
 	c.log(fmt.Sprintf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address))
 }
 
-func ComputeMinOut(seizedAssets, collateralPrice, loanPrice *big.Int) *big.Int {
-	valueInLoan := new(big.Int).Mul(seizedAssets, collateralPrice)
-	valueInLoan.Div(valueInLoan, loanPrice)
-	return valueInLoan
-}
-
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, mReader lqtypes.MarketReader, p *cache.BorrowPosition) *Liquidable {
-	out := &Liquidable{}
-	out.Pos = p
-	snap := mReader.GetSnapshot(p.MarketID)
-	if snap == nil {
-		out.SimErr = fmt.Errorf("snap nil")
-		return out
-	}
-
-	params := c.Store.MarketMap[p.MarketID]
-
-	// 1. Math pure — pas de RPC
-	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
-		p.BorrowShares,
-		snap.Stats.TotalBorrowAssets,
-		snap.Stats.TotalBorrowShares,
-		snap.LLTV,
-	)
-	out.RepayShares = repayShares
-
-	// changer pour le multihop
-	if seizeAssets.Cmp(snap.Stats.MaxUniSwappable) > 0 {
-		seizeAssets = snap.Stats.MaxUniSwappable
-	}
-
-	// 2. MinOut off-chain selon la liquidité du marché
-
-	minOut := ComputeMinOut(seizeAssets, snap.Oracle.Price, snap.Oracle.Price)
-	out.MinOut = minOut
-
-	args := c.ToLiquidationArg(out, snap, params, minOut)
-	data, err := args.EncodeLiquidateCalldata()
-
-	if err != nil {
-		out.SimErr = fmt.Errorf("encode: %w", err)
-		return out
-	}
-	out.Args = args
-
-	gasVal, err := c.dryRun(ctx, data)
-	if err != nil {
-		out.SimErr = fmt.Errorf("eth_call failed: %w", err)
-		out.IsLiquidable = false
-		return out
-	}
-	out.GasEstimate = gasVal
-
-	out.SeizeAssets = seizeAssets
-	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(out.SeizeAssets, int(params.CollateralTokenDecimals)), utils.FormatWAD(out.Pos.CachedHF)))
-	out.SimulatedAt = time.Now()
-	out.IsLiquidable = true
-
-	return out
-}
-func (c *Consumer) LiquidateCall(ctx context.Context, args lqtypes.LiquidateArgs, gasEstimate uint64) error {
-	calldata, err := args.EncodeLiquidateCalldata()
-	if err != nil {
-		c.log(fmt.Errorf("LiquidateCall: encode: %w", err).Error())
-	}
+func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {
 	tx := onchain.TxParams{
 		To:          &c.Infra.Config.Addresses.LiquidatorContract,
 		Calldata:    calldata,

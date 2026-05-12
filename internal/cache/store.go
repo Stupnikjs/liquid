@@ -86,8 +86,8 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 			TotalBorrowAssets: new(big.Int).Set(market.Stats.TotalBorrowAssets),
 			TotalBorrowShares: new(big.Int).Set(market.Stats.TotalBorrowShares),
 			MaxCollateralPos:  new(big.Int).Set(market.Stats.MaxCollateralPos),
-			MaxUniSwappable:   new(big.Int).Set(market.Stats.MaxUniSwappable),
-			SwapFee:           market.Stats.SwapFee,
+			MaxUniSwappable:   new(big.Int).Set(market.Stats.MaxUniSwappable), // migrate to swap manager
+			SwapFee:           market.Stats.SwapFee,                           // migrate to swap route
 		},
 		Positions: make([]BorrowPosition, 0, len(market.Positions)),
 	}

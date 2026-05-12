@@ -208,16 +208,6 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	price := new(big.Int).SetBytes(result)
 	a.LiquidationSetup(t, price)
 
-	// Après LiquidationSetup, avant d'envoyer la liquidation
-	err = txCtx.client.Client().CallContext(ctx, nil, "evm_increaseTime", 240*60*24*180) // 6 mois en secondes
-	if err != nil {
-		t.Fatalf("evm_increaseTime: %v", err)
-	}
-	err = txCtx.client.Client().CallContext(ctx, nil, "evm_mine", nil)
-	if err != nil {
-		t.Fatalf("evm_mine: %v", err)
-	}
-
 	liqArg := lqtypes.LiquidateArgs{
 		MarketParams: market,
 		Borrower:     common.HexToAddress(FundedAccounts[0]),
@@ -249,5 +239,10 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	)
 
 	t.Logf("liquidation txHash: %s, status: %d", receipt.TxHash, receipt.Status)
+
+}
+
+func TestIntegration(t *testing.T) {
+	// faire un cache avec 1 seul pos
 
 }
