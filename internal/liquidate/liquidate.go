@@ -33,10 +33,11 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(infra *lqtypes.Infra, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
 		Infra:  infra,
 		Logger: logger,
+		Store:  strore,
 		Ch:     ch,
 	}
 }
@@ -44,6 +45,7 @@ func NewConsumer(infra *lqtypes.Infra, logger chan string, ch <-chan cache.Borro
 type Consumer struct {
 	Infra  *lqtypes.Infra
 	Logger chan string
+	Store  *lqtypes.Store
 	Ch     <-chan cache.BorrowPosition
 }
 
@@ -58,14 +60,14 @@ func (c *Consumer) log(msg string) {
 
 // ABI encode — testable isolément
 
-func (c *Consumer) Run(ctx context.Context, store *lqtypes.Store) {
+func (c *Consumer) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			snap := store.GetSnapshot(pos.MarketID)
-			m := marketMap[pos.MarketID]
+			snap := c.Store.GetSnapshot(pos.MarketID)
+			m := c.Store.MarketMap[pos.MarketID]
 			if snap == nil {
 				c.log(fmt.Sprintf("[liq] no snapshot for market %s", pos.MarketID))
 				continue
