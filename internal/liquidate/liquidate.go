@@ -10,6 +10,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -32,10 +33,9 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(infra *lqtypes.Infra, store *lqtypes.Store, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
 		Infra:  infra,
-		Store:  store,
 		Logger: logger,
 		Ch:     ch,
 	}
@@ -43,7 +43,6 @@ func NewConsumer(infra *lqtypes.Infra, store *lqtypes.Store, logger chan string,
 
 type Consumer struct {
 	Infra  *lqtypes.Infra
-	Store  *lqtypes.Store
 	Logger chan string
 	Ch     <-chan cache.BorrowPosition
 }
@@ -59,24 +58,25 @@ func (c *Consumer) log(msg string) {
 
 // ABI encode — testable isolément
 
-func (c *Consumer) Run(ctx context.Context) {
+func (c *Consumer) Run(ctx context.Context, store *lqtypes.Store) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			snap := c.Store.GetSnapshot(pos.MarketID)
+			snap := store.GetSnapshot(pos.MarketID)
+			m := marketMap[pos.MarketID]
 			if snap == nil {
-				out.SimErr = fmt.Errorf("snap nil")
-				return out
+				c.log(fmt.Sprintf("[liq] no snapshot for market %s", pos.MarketID))
+				continue
 			}
-			c.liquidateWrapper(ctx, snap, &pos)
+			c.liquidateWrapper(ctx, snap, m, &pos)
 		}
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, snap market.Snapshot, p *cache.BorrowPosition) {
-	result := c.SimulateAndPreComputeTx(ctx, snap, p)
+func (c *Consumer) liquidateWrapper(ctx context.Context, snap market.Snapshot, market morpho.MarketParams, p *cache.BorrowPosition) {
+	result := c.SimulateAndPreComputeTx(ctx, market, snap, p)
 	if result.SimErr != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
 		return
@@ -85,9 +85,7 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, snap market.Snapshot, p
 		c.log("[liq] not profitable")
 		return
 	}
-	market := c.Store.MarketMap[p.MarketID]
 	c.log(fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair()))
-
 	err := c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
 		c.log(fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err))
