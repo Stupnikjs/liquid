@@ -16,11 +16,11 @@ func (r *Runner) FindSwapRoutes() {
 	for _, v := range swapMap {
 		graph.AddPool(v)
 	}
-	for _, id := range r.Cache.Markets.Ids() {
-		morphoM := r.Cache.GetMorphoMarketFromId(id)
+	for _, id := range r.Store.MarketReader.Ids() {
+		morphoM := r.Store.MarketMap[id]
 		routes := graph.FindRoutes(morphoM.CollateralToken, morphoM.LoanToken, 1)
 
-		r.Cache.Markets.Update(id, func(m *cache.Market) {
+		r.Store.MarketReader.Update(id, func(m *cache.Market) {
 			if len(routes) == 0 {
 				m.Canceled = true
 				return

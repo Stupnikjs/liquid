@@ -37,7 +37,7 @@ func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, logger chan string, 
 	return &Consumer{
 		Infra:  infra,
 		Logger: logger,
-		Store:  strore,
+		Store:  store,
 		Ch:     ch,
 	}
 }
@@ -45,7 +45,7 @@ func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, logger chan string, 
 type Consumer struct {
 	Infra  *lqtypes.Infra
 	Logger chan string
-	Store  *lqtypes.Store
+	Store  lqtypes.Store
 	Ch     <-chan cache.BorrowPosition
 }
 
@@ -66,19 +66,19 @@ func (c *Consumer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			snap := c.Store.GetSnapshot(pos.MarketID)
+			snap := c.Store.MarketReader.GetSnapshot(pos.MarketID)
 			m := c.Store.MarketMap[pos.MarketID]
 			if snap == nil {
 				c.log(fmt.Sprintf("[liq] no snapshot for market %s", pos.MarketID))
 				continue
 			}
-			c.liquidateWrapper(ctx, snap, m, &pos)
+			c.liquidateWrapper(ctx, *snap, m, &pos)
 		}
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, snap market.Snapshot, market morpho.MarketParams, p *cache.BorrowPosition) {
-	result := c.SimulateAndPreComputeTx(ctx, market, snap, p)
+func (c *Consumer) liquidateWrapper(ctx context.Context, snap cache.MarketSnapshot, market morpho.MarketParams, p *cache.BorrowPosition) {
+	result := c.SimulateAndPreComputeTx(ctx, market, int64(snap.Stats.SwapFee), p)
 	if result.SimErr != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
 		return
@@ -102,6 +102,6 @@ func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstima
 		Calldata:    calldata,
 		GasEstimate: gasEstimate,
 	}
-	_, err = onchain.SendSignedTx(ctx, c.Infra.Conn, c.Infra.Config.Addresses.Wallet, c.Infra.Config.Signer, tx)
+	_, err := onchain.SendSignedTx(ctx, c.Infra.Conn, c.Infra.Config.Addresses.Wallet, c.Infra.Config.Signer, tx)
 	return err
 }

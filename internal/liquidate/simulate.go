@@ -3,9 +3,11 @@ package liquidate
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/lmittmann/w3/module/eth"
@@ -39,7 +41,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 // Compute liquidation values
 // Encode args
 // Simulate with eth_call
-func (c *Consumer) ComuteAmounts(p *market.BorrowPosition) *Liquidable {
+func (c *Consumer) ComputeAmounts(p *cache.BorrowPosition) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
 	snap := c.Store.MarketReader.GetSnapshot(p.MarketID)
@@ -65,40 +67,41 @@ func (c *Consumer) ComuteAmounts(p *market.BorrowPosition) *Liquidable {
 	out.SeizeAssets = seizeAssets
 	minOut := morpho.ComputeMinOut(seizeAssets, snap.Oracle.Price, snap.Oracle.Price)
 	out.MinOut = minOut
+	return out
 }
 
-func (c *Consumer) ToLiquidationArg(l *Liquidable, fee uint32, params morpho.MarketParams) lqtypes.LiquidateArgs {
+func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.MarketParams) lqtypes.LiquidateArgs {
 	return lqtypes.LiquidateArgs{
 		MarketParams: *params.ToMarketContractParams(),
 		Borrower:     l.Pos.Address,
 		SeizedAssets: l.SeizeAssets,
 		RepaidShares: big.NewInt(0),
 		SwapRouter:   c.Infra.Config.Addresses.UniSwapRouter,
-		PoolFee:      fee,
+		PoolFee:      big.NewInt(int64(fee)),
 		MinOut:       l.MinOut,
 	}
 }
 
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, p *cache.BorrowPosition) *Liquidable {
+func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, fee int64, p *cache.BorrowPosition) *Liquidable {
 	l := c.ComputeAmounts(p)
-	args := c.ToLiquidationArg(l, snap, params)
+	args := c.ToLiquidationArg(l, fee, m)
 	params := c.Store.MarketMap[p.MarketID]
 	data, err := args.EncodeLiquidateCalldata()
 	if err != nil {
-		out.SimErr = fmt.Errorf("encode: %w", err)
-		return out
+		l.SimErr = fmt.Errorf("encode: %w", err)
+		return l
 	}
-	out.CallData = data
+	l.CallData = data
 
 	gasVal, err := c.dryRun(ctx, data)
-	out.SimulatedAt = time.Now()
+	l.SimulatedAt = time.Now()
 	if err != nil {
-		out.SimErr = fmt.Errorf("eth_call failed: %w", err)
-		out.IsLiquidable = false
-		return out
+		l.SimErr = fmt.Errorf("eth_call failed: %w", err)
+		l.IsLiquidable = false
+		return l
 	}
-	out.GasEstimate = gasVal
-	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(out.SeizeAssets, int(params.CollateralTokenDecimals)), utils.FormatWAD(out.Pos.CachedHF)))
-	out.IsLiquidable = true
-	return out
+	l.GasEstimate = gasVal
+	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(params.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF)))
+	l.IsLiquidable = true
+	return l
 }

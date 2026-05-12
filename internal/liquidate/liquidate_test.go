@@ -1,29 +1,24 @@
-package liquidate 
-
-
-package liquidate_test
+package liquidate
 
 import (
 	"math/big"
 	"testing"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/pkg/market"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 )
 
 // helpers
 func bigInt(n int64) *big.Int { return big.NewInt(n) }
 
-func baseSnap() market.Snapshot {
-	return market.Snapshot{
-		Stats: market.Stats{
+func baseSnap() cache.MarketSnapshot {
+	return cache.MarketSnapshot{
+		Stats: cache.MarketStats{
 			TotalBorrowAssets: bigInt(1_000_000),
 			TotalBorrowShares: bigInt(1_000_000),
 			MaxUniSwappable:   bigInt(999_999_999),
 		},
 		LLTV:   bigInt(860_000_000_000_000_000), // 86%
-		Oracle: market.OracleData{Price: bigInt(1e18)},
+		Oracle: cache.Oracle{Price: bigInt(1e18)},
 	}
 }
 
@@ -41,7 +36,7 @@ func baseConsumer() *Consumer {
 // SeizeAssets et MinOut doivent être positifs sur une position normale
 func TestComputeAmounts_HappyPath(t *testing.T) {
 	c := baseConsumer()
-	l := c.ComputeAmounts(baseSnap(), basePos())
+	l := c.ComputeAmounts(basePos())
 
 	if l.SimErr != nil {
 		t.Fatalf("unexpected SimErr: %v", l.SimErr)
@@ -63,7 +58,7 @@ func TestComputeAmounts_CappedByMaxUniSwappable(t *testing.T) {
 	snap := baseSnap()
 	snap.Stats.MaxUniSwappable = bigInt(1) // cap très bas
 
-	l := c.ComputeAmounts(snap, basePos())
+	l := c.ComputeAmounts(basePos())
 
 	if l.SimErr != nil {
 		t.Fatalf("unexpected SimErr: %v", l.SimErr)
@@ -79,7 +74,7 @@ func TestComputeAmounts_ZeroBorrowShares(t *testing.T) {
 	pos := basePos()
 	pos.BorrowShares = bigInt(0)
 
-	l := c.ComputeAmounts(baseSnap(), pos)
+	l := c.ComputeAmounts(pos)
 
 	if l.SimErr != nil {
 		t.Fatalf("unexpected SimErr: %v", l.SimErr)

@@ -35,7 +35,7 @@ func Wrapper(conf config.Config, filters api.MarketFilters, logfile string) {
 		Conn:   conn,
 		Config: conf,
 	}
-	store := &lqtypes.Store{
+	store := lqtypes.Store{
 		MarketReader: cached.Markets,
 		MarketMap:    cached.MarketMap,
 	}

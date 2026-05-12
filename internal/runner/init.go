@@ -14,13 +14,13 @@ import (
 
 type Runner struct {
 	LiquidateConsumer *liquidate.Consumer
-	Store             *lqtypes.Store
+	Store             lqtypes.Store
 	Infra             *lqtypes.Infra
 	Logger            chan string
 	LiquidateCh       chan cache.BorrowPosition
 }
 
-func NewRunner(infra *lqtypes.Infra, store *lqtypes.Store, logfile string) *Runner {
+func NewRunner(infra *lqtypes.Infra, store lqtypes.Store, logfile string) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
 	logger := utils.NewLogger(context.Background(), logfile)
 	return &Runner{
