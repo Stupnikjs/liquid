@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/swap"
 )
@@ -42,19 +43,11 @@ func (r *Runner) SingleHop() {
 		if found {
 			arr = append(arr, result)
 		} else {
-// cancel market 
-} 
-		k := swap.RouteKey{
-			TokenIn:  morphoM.CollateralToken,
-			TokenOut: morphoM.LoanToken,
+			r.Store.MarketReader.Update(morphoM.ID, func(m *cache.Market) {
+				m.Canceled = true
+			})
 		}
-		r.SwapRoutes.Mu.Lock()
-		r.SwapRoutes.Routes[k] = arr
-		r.SwapRoutes.Mu.Unlock()
-
+		r.SwapRoutes.StoreRoute(arr)
 	}
-
-// need to select viable route 
-// and cancel bot viable route 
 
 }

@@ -1,8 +1,6 @@
 package swap
 
 import (
-	"math/big"
-
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
@@ -24,19 +22,6 @@ func NewConsumer(conn *connector.Connector, mReader lqtypes.MarketReader, market
 		MarketMap: marketMap,
 		Logger:    logchan,
 	}
-}
-
-func (c *Consumer) SingleHop(MaxCollateralPos, OraclePrice *big.Int) map[[32]byte]lqtypes.PoolEdge {
-	swapMap := make(map[[32]byte]lqtypes.PoolEdge, len(c.MarketMap))
-	for _, morphoM := range c.MarketMap {
-
-		result, found := QuoteBinarySearch(c.Conn, morphoM, c.Config.Addresses.UniSwapQuoter, MaxCollateralPos, OraclePrice)
-		if found {
-			swapMap[morphoM.ID] = result
-		}
-
-	}
-	return swapMap
 }
 
 /*
