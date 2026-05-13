@@ -26,10 +26,11 @@ type QuoteExactInputSingleParams struct {
 }
 
 // Returns false if no pool
+// Works with any swap abi
 type SingleQuoterFunc func(
 	conn *connector.Connector,
 	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
+	routerQuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	fee uint32,
 ) (lqtypes.PoolEdge, bool)
@@ -38,8 +39,12 @@ type Quoter struct {
 	quoteSingle SingleQuoterFunc
 }
 
-func NewQuoter() *Quoter {
-	return &Quoter{quoteSingle: RPCQuoteSingle}
+func NewUniQuoter() *Quoter {
+	return &Quoter{quoteSingle: UniQuoteSingle}
+}
+
+func NewAeroQuoter() *Quoter {
+	return &Quoter{quoteSingle: AerodromeQuoteSingle}
 }
 
 // inject a quoter func
@@ -48,11 +53,11 @@ func NewQuoterWithFunc(fn SingleQuoterFunc) *Quoter {
 }
 
 func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+	return NewUniQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
-func QuoteBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewQuoter().QuoteBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
+	return NewUniQuoter().QuoteUniBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
 // binary search way more effective
@@ -79,7 +84,7 @@ func (q *Quoter) Quote(
 }
 
 // iterate over mid amount to swap to find best slippage for max amount
-func (q *Quoter) QuoteBinarySearch(
+func (q *Quoter) QuoteUniBinarySearch(
 	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
@@ -148,7 +153,7 @@ func (q *Quoter) bestUniFeeTier(
 // Implémentation RPC réelle
 // ---------------------------------------------------------------------------
 
-func RPCQuoteSingle(
+func UniQuoteSingle(
 	conn *connector.Connector,
 	marketp morpho.MarketParams,
 	uniswapQuoterAddr common.Address,
@@ -191,6 +196,16 @@ func RPCQuoteSingle(
 		WCAmountOut:  amountOut,
 		CalibratedAt: time.Now(),
 	}, true
+}
+
+func AerodromeQuoteSingle(
+	conn *connector.Connector,
+	marketp morpho.MarketParams,
+	uniswapQuoterAddr common.Address,
+	amountIn, oraclePrice *big.Int,
+	fee uint32,
+) (lqtypes.PoolEdge, bool) {
+	return lqtypes.PoolEdge{}, false
 }
 
 // ---------------------------------------------------------------------------

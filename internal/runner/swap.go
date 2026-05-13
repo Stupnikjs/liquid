@@ -29,9 +29,9 @@ func (r *Runner) FindSwapRoutes() {
 	}
 }
 */
-
+// maxPos enable WorstCase for slippage so Max amount
+// then QuoteBinary search test smaller pos if slippage is too big
 func (r *Runner) SingleHop() {
-
 	for _, id := range r.Store.MarketReader.Ids() {
 		arr := make([]lqtypes.PoolEdge, 1)
 		snap := r.Store.MarketReader.GetSnapshot(id)
@@ -39,11 +39,39 @@ func (r *Runner) SingleHop() {
 			continue
 		}
 		morphoM := r.Store.MarketMap[id]
-		result, found := swap.QuoteBinarySearch(r.Infra.Conn, morphoM, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+
+		result, found := swap.QuoteUniBinarySearch(r.Infra.Conn, morphoM, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
 			arr = append(arr, result)
 		} else {
 			r.Store.MarketReader.Update(morphoM.ID, func(m *cache.Market) {
+				m.Canceled = true
+			})
+		}
+		r.SwapRoutes.StoreRoute(arr)
+	}
+
+}
+
+func (r *Runner) MultiHop() {
+
+	for id, m := range r.Store.MarketMap {
+		arr := make([]lqtypes.PoolEdge, 1)
+		snap := r.Store.MarketReader.GetSnapshot(id)
+		if snap == nil {
+			continue
+		}
+        // quote Params 
+		// iterate over []quote func based on chain id  
+		result, found := swap.QuoteUniBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		if found {
+			arr = append(arr, result)
+		} 
+		result ,found := swap.AerodromeQuoteSingle(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Pric)
+			
+		
+		
+		r.Store.MarketReader.Update(m.ID, func(m *cache.Market) {
 				m.Canceled = true
 			})
 		}

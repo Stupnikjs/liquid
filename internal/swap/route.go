@@ -17,7 +17,9 @@ type RouteKey struct {
 
 type RouteCache struct {
 	Mu     sync.RWMutex
-	Routes map[RouteKey]Route
+	Pools  []lqtypes.PoolEdge
+	Graph  PoolGraph
+	Routes map[RouteKey]Route // change by pool graph
 }
 
 type Route struct {
