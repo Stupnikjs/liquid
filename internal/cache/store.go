@@ -1,9 +1,5 @@
 package cache
 
-import (
-	"math/big"
-)
-
 // changer map par array avec HF triée
 
 func (s *MarketStore) AllPosLen() int {
@@ -49,45 +45,4 @@ func (s *MarketStore) Update(id [32]byte, fn func(m *Market)) {
 	m.Mu.Lock()
 	fn(m)
 	m.Mu.Unlock()
-}
-
-func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
-	s.mu.RLock()
-	market := s.markets[id]
-	s.mu.RUnlock()
-
-	if market == nil {
-		return nil
-	}
-
-	market.Mu.RLock()
-	defer market.Mu.RUnlock()
-	if market.Canceled ||
-		market.Oracle.Price == nil ||
-		market.LLTV == nil ||
-		market.Stats.TotalBorrowAssets == nil ||
-		market.Stats.TotalBorrowShares == nil || market.Stats.MaxCollateralPos == nil {
-		return nil
-	}
-
-	snap := &MarketSnapshot{
-		ID: id,
-		Oracle: Oracle{
-			Price:   new(big.Int).Set(market.Oracle.Price),
-			Address: market.Oracle.Address,
-		},
-		LLTV: new(big.Int).Set(market.LLTV),
-		Stats: MarketStats{
-			TotalBorrowAssets: new(big.Int).Set(market.Stats.TotalBorrowAssets),
-			TotalBorrowShares: new(big.Int).Set(market.Stats.TotalBorrowShares),
-			MaxCollateralPos:  new(big.Int).Set(market.Stats.MaxCollateralPos),
-		},
-		Positions: make([]BorrowPosition, 0, len(market.Positions)),
-	}
-	// anyway to avoid loop
-	for _, p := range market.Positions {
-		snap.Positions = append(snap.Positions, *p)
-	}
-
-	return snap
 }

@@ -98,6 +98,7 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 	if ms.tickCount%100 == 0 {
 		r.log(fmt.Sprintf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF())))
 	}
+	r.log(snap.Analysis().String())
 	return interval
 }
 
