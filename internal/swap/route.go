@@ -62,6 +62,7 @@ func (rc *RouteCache) GetRoute(tokenIn, tokenOut common.Address) (Route, bool) {
 		TokenOut: tokenOut,
 	}
 	rc.Mu.RLock()
+	defer rc.Mu.RUnlock()
 	route, ok := rc.Routes[k]
 	if !ok {
 		return Route{}, false
@@ -69,7 +70,6 @@ func (rc *RouteCache) GetRoute(tokenIn, tokenOut common.Address) (Route, bool) {
 	hops := make([]lqtypes.PoolEdge, len(route.Hops))
 	copy(hops, route.Hops)
 
-	defer rc.Mu.RUnlock()
 	return Route{
 		Hops:        hops,
 		WCAmountOut: new(big.Int).Set(route.WCAmountOut),
