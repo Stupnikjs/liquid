@@ -41,7 +41,9 @@ func (r *Runner) SingleHop() {
 		result, found := swap.QuoteBinarySearch(r.Infra.Conn, morphoM, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
 			arr = append(arr, result)
-		}
+		} else {
+// cancel market 
+} 
 		k := swap.RouteKey{
 			TokenIn:  morphoM.CollateralToken,
 			TokenOut: morphoM.LoanToken,
