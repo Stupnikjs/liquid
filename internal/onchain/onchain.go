@@ -80,7 +80,7 @@ func OnChainRefresh(
 	return refresh(infra.Conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
 		res := newResult(id)
 		calls := []w3types.RPCCaller{
-			marketCall(infra.Config.Morpho, id, res),
+			marketCall(infra.Config.Addresses.Morpho, id, res),
 			oracleCall(mParam.Oracle, res),
 		}
 		apply := func() {

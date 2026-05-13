@@ -7,8 +7,10 @@ import (
 var (
 	WADX11       = new(big.Int).Mul(WAD, big.NewInt(11))
 	WADX13       = new(big.Int).Mul(WAD, big.NewInt(13))
+	WADX15       = new(big.Int).Mul(WAD, big.NewInt(15))
 	WAD1DOT1     = new(big.Int).Div(WADX11, big.NewInt(10)) // 1.1 WAD
 	WAD1DOT3     = new(big.Int).Div(WADX13, big.NewInt(10)) // 1.3 WAD
+	WAD1DOT5     = new(big.Int).Div(WADX15, big.NewInt(10)) // 1.3 WAD
 	WADON10      = new(big.Int).Div(WAD, big.NewInt(10))    // 0.1 WAD
 	WAD          = TenPowInt(18)
 	HALF_WAD     = new(big.Int).Div(WAD, big.NewInt(2))

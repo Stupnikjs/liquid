@@ -18,24 +18,26 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-
 	wg.Add(4)
 
 	go func() {
-		time.Sleep(400 * time.Second)
+		time.Sleep(200 * time.Second)
 		defer wg.Done()
-		runner.Wrapper(config.LoadKatanaConfig(), baseFilter, "katana.log")
-	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(200 * time.Second) // to avoid too much logs at the same time
+		// to avoid too much logs at the same time
 		runner.Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
 	}()
 
 	go func() {
 		defer wg.Done()
+		// to avoid too much logs at the same time
 		runner.Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+	}()
+
+	go func() {
+		time.Sleep(500 * time.Second)
+		defer wg.Done()
+		// to avoid too much logs at the same time
+		runner.Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
 	}()
 
 	wg.Wait()

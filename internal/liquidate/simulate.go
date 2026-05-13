@@ -41,7 +41,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 // Compute liquidation values
 // Encode args
 // Simulate with eth_call
-func (c *Consumer) ComputeAmounts(p *cache.BorrowPosition) *Liquidable {
+func (c *Consumer) ComputeAmounts(m morpho.MarketParams, p *cache.BorrowPosition) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
 	snap := c.Store.MarketReader.GetSnapshot(p.MarketID)
@@ -60,8 +60,13 @@ func (c *Consumer) ComputeAmounts(p *cache.BorrowPosition) *Liquidable {
 	out.RepayShares = repayShares
 
 	// changer pour le multihop
-	if seizeAssets.Cmp(snap.Stats.MaxUniSwappable) > 0 {
-		seizeAssets = snap.Stats.MaxUniSwappable // chercher a terme le swap manager ici
+	route, ok := c.SwapCache.GetRoute(m.CollateralToken, m.LoanToken)
+	if !ok {
+		return out
+	}
+	maxSwapAmout := route.WCAmountOut
+	if seizeAssets.Cmp(maxSwapAmout) > 0 {
+		seizeAssets = maxSwapAmout // chercher a terme le swap manager ici
 	}
 
 	out.SeizeAssets = seizeAssets
@@ -83,9 +88,8 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.Mark
 }
 
 func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, fee int64, p *cache.BorrowPosition) *Liquidable {
-	l := c.ComputeAmounts(p)
+	l := c.ComputeAmounts(m, p)
 	args := c.ToLiquidationArg(l, fee, m)
-	params := c.Store.MarketMap[p.MarketID]
 	data, err := args.EncodeLiquidateCalldata()
 	if err != nil {
 		l.SimErr = fmt.Errorf("encode: %w", err)
@@ -101,7 +105,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketP
 		return l
 	}
 	l.GasEstimate = gasVal
-	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(params.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF)))
+	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(m.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF)))
 	l.IsLiquidable = true
 	return l
 }

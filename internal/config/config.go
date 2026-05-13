@@ -20,7 +20,6 @@ type Addresses struct {
 type Config struct {
 	Signer    *Signer
 	Addresses Addresses
-	Morpho    common.Address
 	ChainID   uint32
 	RPC       struct {
 		HTTP []string

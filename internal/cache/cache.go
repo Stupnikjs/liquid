@@ -47,9 +47,9 @@ type Oracle struct {
 // MaxCollateralPos is used for quoting max slipage
 // within api refresh time bigest borrow might be over swappable amount if liquidated fast
 type MarketStats struct {
-	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos, MaxUniSwappable *big.Int
-	SwapFee                                                                             uint32
-	LastUpdate                                                                          int64
+	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos *big.Int
+	SwapFee                                                            uint32
+	LastUpdate                                                         int64
 }
 
 type MarketSnapshot struct {

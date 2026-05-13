@@ -7,7 +7,6 @@ import (
 )
 
 func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
-	// need conn + config
 	r.Infra.Conn.SubscribeToEventPos(ctx, r.Infra.Config)
 }
 

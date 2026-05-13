@@ -22,18 +22,16 @@ type Runner struct {
 	LiquidateCh       chan cache.BorrowPosition
 }
 
-func NewRunner(infra *lqtypes.Infra, store lqtypes.Store, logfile string) *Runner {
+func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, store lqtypes.Store, logfile string) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
 	logger := utils.NewLogger(context.Background(), logfile)
 	return &Runner{
-		LiquidateConsumer: liquidate.NewConsumer(infra, store, logger, liquidateCh),
+		LiquidateConsumer: liquidate.NewConsumer(infra, store, routeCache, logger, liquidateCh),
 		Store:             store,
-		SwapRoutes: &swap.RouteCache{
-			Routes: make(map[swap.RouteKey][]lqtypes.PoolEdge, len(store.MarketMap)),
-		},
-		Infra:       infra,
-		Logger:      logger,
-		LiquidateCh: liquidateCh,
+		SwapRoutes:        routeCache,
+		Infra:             infra,
+		Logger:            logger,
+		LiquidateCh:       liquidateCh,
 	}
 }
 
@@ -73,7 +71,11 @@ func (r *Runner) OnChainRefreshAll(ctx context.Context) {
 		go func(id [32]byte) {
 			m := r.Store.MarketMap[id]
 			defer wg.Done()
-			onchain.OnChainRefresh(r.Infra, ctx, r.Store.MarketReader, m, id)
+			err := onchain.OnChainRefresh(r.Infra, ctx, r.Store.MarketReader, m, id)
+			if err != nil {
+				fmt.Println(err)
+			}
+
 		}(id)
 	}
 

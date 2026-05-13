@@ -9,6 +9,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
+	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -33,20 +34,22 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, swapCache *swap.RouteCache, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
-		Infra:  infra,
-		Logger: logger,
-		Store:  store,
-		Ch:     ch,
+		Infra:     infra,
+		Logger:    logger,
+		SwapCache: swapCache,
+		Store:     store,
+		Ch:        ch,
 	}
 }
 
 type Consumer struct {
-	Infra  *lqtypes.Infra
-	Logger chan string
-	Store  lqtypes.Store
-	Ch     <-chan cache.BorrowPosition
+	Infra     *lqtypes.Infra
+	Logger    chan string
+	SwapCache *swap.RouteCache
+	Store     lqtypes.Store
+	Ch        <-chan cache.BorrowPosition
 }
 
 func (c *Consumer) log(msg string) {
@@ -62,19 +65,20 @@ func (c *Consumer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			snap := c.Store.MarketReader.GetSnapshot(pos.MarketID)
 			m := c.Store.MarketMap[pos.MarketID]
-			if snap == nil {
-				c.log(fmt.Sprintf("[liq] no snapshot for market %s", pos.MarketID))
-				continue
-			}
-			c.liquidateWrapper(ctx, *snap, m, &pos)
+			c.liquidateWrapper(ctx, m, &pos)
 		}
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, snap cache.MarketSnapshot, market morpho.MarketParams, p *cache.BorrowPosition) {
-	result := c.SimulateAndPreComputeTx(ctx, market, int64(snap.Stats.SwapFee), p)
+func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, p *cache.BorrowPosition) {
+	route, ok := c.SwapCache.GetRoute(market.CollateralToken, market.LoanToken)
+	if !ok {
+		c.log("no route found in cache for these tokens")
+		return
+	}
+	fee := route.Hops[0].Fee // change for multihop
+	result := c.SimulateAndPreComputeTx(ctx, market, int64(fee), p)
 	if result.SimErr != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
 		return

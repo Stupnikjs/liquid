@@ -21,6 +21,8 @@ type TxParams struct {
 	GasEstimate uint64
 }
 
+// First Get Nonce and Gas price
+// Then Send signed Tx
 func SendSignedTx(ctx context.Context, client lqtypes.EthCaller, msgsender common.Address, signer *config.Signer, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
