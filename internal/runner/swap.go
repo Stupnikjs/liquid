@@ -54,4 +54,7 @@ func (r *Runner) SingleHop() {
 
 	}
 
+// need to select viable route 
+// and cancel bot viable route 
+
 }
