@@ -60,6 +60,10 @@ func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams
 	return NewUniQuoter().QuoteUniBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
 }
 
+func QuoteAeroBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
+	return NewAeroQuoter().QuoteAeroBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+}
+
 // binary search way more effective
 func (q *Quoter) Quote(
 	conn *connector.Connector,
@@ -119,6 +123,14 @@ func (q *Quoter) QuoteUniBinarySearch(
 	fmt.Printf("acceptable slippage found for %s -> %s  %.4f%%\n",
 		marketp.CollateralTokenStr, marketp.LoanTokenStr, best.WCSlippage)
 	return best, true
+}
+
+func (q *Quoter) QuoteAeroBinarySearch(conn *connector.Connector,
+	marketp morpho.MarketParams,
+	uniswapQuoterAddr common.Address,
+	amountIn, oraclePrice *big.Int,
+) (lqtypes.PoolEdge, bool) {
+	return lqtypes.PoolEdge{}, false
 }
 
 func (q *Quoter) bestUniFeeTier(

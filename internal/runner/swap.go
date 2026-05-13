@@ -56,26 +56,26 @@ func (r *Runner) SingleHop() {
 func (r *Runner) MultiHop() {
 
 	for id, m := range r.Store.MarketMap {
-		arr := make([]lqtypes.PoolEdge, 1)
+		arr := make([]lqtypes.PoolEdge, 2)
 		snap := r.Store.MarketReader.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
-        // quote Params 
-		// iterate over []quote func based on chain id  
+		// quote Params
+		// iterate over []quote func based on chain id
 		result, found := swap.QuoteUniBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
 			arr = append(arr, result)
-		} 
-		result ,found := swap.AerodromeQuoteSingle(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Pric)
-			
-		
-		
-		r.Store.MarketReader.Update(m.ID, func(m *cache.Market) {
-				m.Canceled = true
-			})
 		}
+		result, found = swap.QuoteAeroBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		if found {
+			arr = append(arr, result)
+		}
+
+		r.Store.MarketReader.Update(m.ID, func(m *cache.Market) {
+			m.Canceled = true
+		})
+
 		r.SwapRoutes.StoreRoute(arr)
 	}
-
 }

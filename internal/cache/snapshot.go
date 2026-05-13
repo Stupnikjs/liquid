@@ -64,6 +64,9 @@ func (s *MarketSnapshot) Analysis() MarketAnalysis {
 	sup := []BorrowPosition{}
 	totalUsdAtRisk := new(big.Int)
 	for _, p := range s.Positions {
+		if p.CachedHF == nil || p.CachedHF.Sign() == 0 {
+			continue
+		}
 		if p.CachedHF.Cmp(utils.WAD1DOT1) < 0 {
 			onedot1 = append(onedot1, p)
 			if p.BorrowAssetsUsd == nil {
