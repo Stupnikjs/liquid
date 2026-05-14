@@ -90,7 +90,7 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.Mark
 func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, fee int64, p *cache.BorrowPosition) *Liquidable {
 	l := c.ComputeAmounts(m, p)
 	args := c.ToLiquidationArg(l, fee, m)
-	data, err := args.EncodeLiquidateCalldata()
+	data, err := EncodeLiquidateCalldata(args)
 	if err != nil {
 		l.SimErr = fmt.Errorf("encode: %w", err)
 		return l

@@ -5,42 +5,23 @@ import (
 	"log"
 	"os"
 
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/joho/godotenv"
 )
 
-type Addresses struct {
-	LiquidatorContract common.Address
-	UniSwapRouter      common.Address
-	UniSwapQuoter      common.Address
-	Wallet             common.Address
-	Morpho             common.Address
-}
-
-type Config struct {
-	Signer    *Signer
-	Addresses Addresses
-	ChainID   uint32
-	RPC       struct {
-		HTTP []string
-		WS   []string
-	}
-	Quoters []DexParams
-}
-
-func LoadBaseConfig() Config {
+func LoadBaseConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := int64(8453)
-	signer, err := NewBaseSigner(chainid)
+	signer, err := lqtypes.NewBaseSigner(chainid)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return Config{
+	return lqtypes.Config{
 		Signer: signer,
-		Addresses: Addresses{
+		Addresses: lqtypes.Addresses{
 			UniSwapRouter:      BaseUniswapV3Router,
 			UniSwapQuoter:      BaseUniswapQuoterV2Addr,
 			LiquidatorContract: BaseLiquidatorUni,
@@ -59,19 +40,19 @@ func LoadBaseConfig() Config {
 	}
 }
 
-func LoadArbitrumConfig() Config {
+func LoadArbitrumConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := 42161
-	signer, err := NewArbitrumSigner(int64(chainid))
+	signer, err := lqtypes.NewArbitrumSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return Config{
+	return lqtypes.Config{
 		Signer: signer,
-		Addresses: Addresses{
+		Addresses: lqtypes.Addresses{
 			Wallet:             ArbitrumWalletAddress,
 			UniSwapRouter:      ArbitrumUniswapV3Router,
 			Morpho:             ArbitrumMorphoBlueAddr,
@@ -89,20 +70,20 @@ func LoadArbitrumConfig() Config {
 	}
 }
 
-func LoadOptimismConfig() Config {
+func LoadOptimismConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := 10
-	signer, err := NewOptimismSigner(int64(chainid))
+	signer, err := lqtypes.NewOptimismSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return Config{
+	return lqtypes.Config{
 		Signer: signer,
 		// Change here
-		Addresses: Addresses{
+		Addresses: lqtypes.Addresses{
 			Wallet:             OptimismWalletAddress,
 			UniSwapRouter:      OptimismUniswapV3Router,
 			UniSwapQuoter:      OptimismUniswapQuoterV2Addr,
@@ -120,19 +101,19 @@ func LoadOptimismConfig() Config {
 	}
 }
 
-func LoadUnichainConfig() Config {
+func LoadUnichainConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := 130
-	signer, err := NewUniChainSigner(int64(chainid))
+	signer, err := lqtypes.NewUniChainSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return Config{
+	return lqtypes.Config{
 		Signer: signer,
-		Addresses: Addresses{
+		Addresses: lqtypes.Addresses{
 			Wallet:             UnichainWalletAddress,
 			UniSwapRouter:      UnichainUniswapV3Router,
 			Morpho:             UnichainMorphoBlueAddr,
@@ -150,15 +131,15 @@ func LoadUnichainConfig() Config {
 	}
 }
 
-func LoadWorldChainConfig() Config {
+func LoadWorldChainConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := 480
-	signer, _ := NewWorldChainSigner(int64(chainid))
-	return Config{
+	signer, _ := lqtypes.NewWorldChainSigner(int64(chainid))
+	return lqtypes.Config{
 		Signer: signer,
-		Addresses: Addresses{
+		Addresses: lqtypes.Addresses{
 			Wallet:             WorldChainWalletAddress,
 			UniSwapRouter:      WorldChainUniswapV3Router,
 			Morpho:             WorldChainMorphoBlueAddr,
@@ -176,19 +157,19 @@ func LoadWorldChainConfig() Config {
 	}
 }
 
-func LoadKatanaConfig() Config {
+func LoadKatanaConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := 747474
-	signer, err := NewKatanaSigner(int64(chainid))
+	signer, err := lqtypes.NewKatanaSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return Config{
+	return lqtypes.Config{
 		Signer: signer,
-		Addresses: Addresses{
+		Addresses: lqtypes.Addresses{
 			Wallet:             KatanaWalletAddress,
 			UniSwapRouter:      KatanaUniswapV3Router,
 			Morpho:             KatanaMorphoBlueAddr,
@@ -202,36 +183,6 @@ func LoadKatanaConfig() Config {
 		}{
 			HTTP: []string{os.Getenv("KATANA_HTTP_RPC_DRPC"), os.Getenv("KATANA_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("KATANA_WS_RPC_ALCH"), os.Getenv("KATANA_WS_RPC_ALCH")},
-		},
-	}
-}
-
-func LoadMonadConfig() Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("no .env file found, using system env")
-	}
-	chainid := 143
-	signer, err := NewMonadSigner(int64(chainid))
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return Config{
-		Signer: signer,
-		Addresses: Addresses{
-			Wallet:             MonadWalletAddress,
-			UniSwapRouter:      MonadUniswapV3Router,
-			Morpho:             MonadMorphoBlueAddr,
-			UniSwapQuoter:      MonadUniswapQuoterV2Addr,
-			LiquidatorContract: MonadLiquidatorAddress,
-		},
-		ChainID: uint32(chainid),
-		RPC: struct {
-			HTTP []string
-			WS   []string
-		}{
-			HTTP: []string{os.Getenv("MONAD_HTTP_RPC_DRPC"), os.Getenv("MONAD_HTTP_RPC_ALCH")},
-			WS:   []string{os.Getenv("MONAD_WS_RPC_ALCH"), os.Getenv("MONAD_WS_RPC_ALCH")},
 		},
 	}
 }

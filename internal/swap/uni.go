@@ -6,9 +6,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
@@ -25,43 +23,12 @@ type QuoteExactInputSingleParams struct {
 }
 
 type Quoter struct {
-	QuoteSingle lqtypes.SingleQuoterFunc
+	QuoterFunc lqtypes.QuoterFunc
 }
 
-func NewUniQuoter() *Quoter {
-	return &Quoter{QuoteSingle: UniQuoteSingle}
-}
-
-func NewAeroQuoter() *Quoter {
-	return &Quoter{QuoteSingle: AerodromeQuoteSingle}
-}
-
-func NewQuoterWithFunc(fn lqtypes.SingleQuoterFunc) *Quoter {
-	return &Quoter{QuoteSingle: fn}
-}
-
-// Helpers publics — *connector.Connector et morpho.MarketParams satisfont les interfaces
-func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, quoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewUniQuoter().QuoteBinarySearch(conn, &marketp, quoterAddr, amountIn, oraclePrice)
-}
-
-func QuoteAeroBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, quoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewAeroQuoter().QuoteBinarySearch(conn, &marketp, quoterAddr, amountIn, oraclePrice)
-}
-
-func NewUniDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
-	return lqtypes.DexParams{
-		QuoterAddr: quoterAddr,
-		RouterAddr: routerAddr,
-		QuoterFunc: UniQuoteSingle,
-	}
-}
-
-func NewAeroDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
-	return lqtypes.DexParams{
-		QuoterAddr: quoterAddr,
-		RouterAddr: routerAddr,
-		QuoterFunc: AerodromeQuoteSingle,
+func NewQuoter(fn lqtypes.QuoterFunc) *Quoter {
+	return &Quoter{
+		QuoterFunc: fn,
 	}
 }
 
@@ -69,6 +36,7 @@ func NewAeroDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
 // Binary search
 // ---------------------------------------------------------------------------
 
+// satisfy SingleQuote Interface
 func (q *Quoter) QuoteBinarySearch(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
@@ -87,7 +55,7 @@ func (q *Quoter) QuoteBinarySearch(
 	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
 		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
 
-		result, ok := q.bestFeeTier(conn, marketp, quoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond)
+		result, ok := q.bestFeeTier(conn, marketp, quoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond, UniQuoteSingle)
 		if ok {
 			best = result
 			found = true
@@ -114,13 +82,14 @@ func (q *Quoter) bestFeeTier(
 	oraclePrice *big.Int,
 	maxSlippage float64,
 	rateLimit time.Duration,
+	quoteSingle lqtypes.QuotSingleFunc,
 ) (lqtypes.PoolEdge, bool) {
 	var best lqtypes.PoolEdge
 	found := false
 
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
-		result, ok := q.QuoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
+		result, ok := UniQuoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}

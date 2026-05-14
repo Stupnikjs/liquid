@@ -1,18 +1,42 @@
 package lqtypes
 
 import (
+	"crypto/ecdsa"
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type Infra struct {
 	Conn   *connector.Connector
-	Config config.Config
+	Config Config
+}
+
+type Addresses struct {
+	LiquidatorContract common.Address
+	UniSwapRouter      common.Address
+	UniSwapQuoter      common.Address
+	Wallet             common.Address
+	Morpho             common.Address
+}
+type Signer struct {
+	key    *ecdsa.PrivateKey
+	signer types.Signer
+}
+
+type Config struct {
+	Signer    *Signer
+	Addresses Addresses
+	ChainID   uint32
+	RPC       struct {
+		HTTP []string
+		WS   []string
+	}
+	Quoters []DexParams
 }
 
 type Store struct {
@@ -31,18 +55,25 @@ type PoolEdge struct {
 	CalibratedAt time.Time
 }
 
-type SingleQuoterFunc func(
+type QuoterFunc func(
 	conn EthCaller,
 	marketp MorphoMarket,
 	QuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
+) (PoolEdge, bool)
+
+type QuotSingleFunc func(conn EthCaller,
+	marketp MorphoMarket,
+	quoterAddr common.Address,
+	amountIn *big.Int,
+	oraclePrice *big.Int,
 	fee uint32,
 ) (PoolEdge, bool)
 
 type DexParams struct {
 	QuoterAddr common.Address
 	RouterAddr common.Address
-	QuoterFunc SingleQuoterFunc
+	QuoterFunc QuoterFunc
 }
 
 type LiquidateArgs struct {
@@ -53,17 +84,4 @@ type LiquidateArgs struct {
 	SwapRouter   common.Address
 	PoolFee      *big.Int
 	MinOut       *big.Int
-}
-
-// encode liquidate args after selector
-func (args LiquidateArgs) EncodeLiquidateCalldata() ([]byte, error) {
-	return config.FuncLiquidate.EncodeArgs(
-		args.MarketParams,
-		args.Borrower,
-		args.SeizedAssets,
-		args.RepaidShares,
-		args.SwapRouter,
-		args.PoolFee,
-		args.MinOut,
-	)
 }

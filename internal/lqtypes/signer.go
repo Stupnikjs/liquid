@@ -1,7 +1,6 @@
-package config
+package lqtypes
 
 import (
-	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"os"
@@ -10,11 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 )
-
-type Signer struct {
-	key    *ecdsa.PrivateKey
-	signer types.Signer
-}
 
 func NewBaseSigner(chainId int64) (*Signer, error) {
 
@@ -101,21 +95,6 @@ func NewWorldChainSigner(chainid int64) (*Signer, error) {
 }
 
 func NewKatanaSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("KATA_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__KATANA_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewMonadSigner(chainid int64) (*Signer, error) {
 	keyHex := os.Getenv("KATA_PK")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR__KATANA_PRIVATE_KEY not set")

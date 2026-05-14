@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/swap"
@@ -104,4 +105,17 @@ func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstima
 	}
 	_, err := onchain.SendSignedTx(ctx, c.Infra.Conn, c.Infra.Config.Addresses.Wallet, c.Infra.Config.Signer, tx)
 	return err
+}
+
+// encode liquidate args after selector
+func EncodeLiquidateCalldata(args lqtypes.LiquidateArgs) ([]byte, error) {
+	return config.FuncLiquidate.EncodeArgs(
+		args.MarketParams,
+		args.Borrower,
+		args.SeizedAssets,
+		args.RepaidShares,
+		args.SwapRouter,
+		args.PoolFee,
+		args.MinOut,
+	)
 }

@@ -28,7 +28,7 @@ func (c *Consumer) singleHop() {
 		}
 		// add router address to struct
 		for _, q := range c.Infra.Config.Quoters {
-			result, found := q.Fn(c.Infra.Conn, m, q.QuoterAddr, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+			result, found := q.QuoterFunc(c.Infra.Conn, &m, q.QuoterAddr, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 			if found {
 				c.RouteCache.AppendPool(result)
 			}
