@@ -32,10 +32,13 @@ type Quoter struct {
 // Returns false if no pool
 // Works with any swap abi
 
-func NewUniQuoter() *Quoter {
-	return &Quoter{QuoteSingle: UniQuoteSingle}
+func UniQuoterFuncWithFee(fee uint32) lqtypes.SingleQuoterFunc {
+	return func(conn *connector.Connector, marketp morpho.MarketParams,
+		quoterAddr common.Address, amountIn, oraclePrice *big.Int,
+	) (lqtypes.PoolEdge, bool) {
+		return UniQuoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
+	}
 }
-
 func NewAeroQuoter() *Quoter {
 	return &Quoter{QuoteSingle: AerodromeQuoteSingle}
 }
@@ -220,4 +223,20 @@ func ComputeSlippage(amountIn, amountOut *big.Int, oraclePrice *big.Int) float64
 	).Float64()
 
 	return slip * 100
+}
+
+func NewUniDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
+	return lqtypes.DexParams{
+		QuoterAddr: quoterAddr,
+		RouterAddr: routerAddr,
+		QuoterFunc: UniQuoteSingle,
+	}
+}
+
+func NewAeroDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
+	return lqtypes.DexParams{
+		QuoterAddr: quoterAddr,
+		RouterAddr: routerAddr,
+		QuoterFunc: AerodromeQuoteSingle,
+	}
 }
