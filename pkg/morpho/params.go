@@ -5,19 +5,11 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 var IRM = common.HexToAddress("0x46415998764C29aB2a25CbeA6254146D50D22687")
-
-type ChainConfig struct {
-	WalletAddress        common.Address
-	LiquidatorAddress    common.Address
-	UniswapRouterAddress common.Address
-	Signer               *config.Signer
-	Name                 string
-}
 
 type MarketParams struct {
 	ID              [32]byte       // 32
@@ -35,16 +27,9 @@ type MarketParams struct {
 	CollateralTokenDecimals uint16   // 2
 	// 3 padding
 }
-type MarketContractParams struct {
-	LoanToken       common.Address
-	CollateralToken common.Address
-	Oracle          common.Address
-	Irm             common.Address
-	Lltv            *big.Int
-}
 
-func (m *MarketParams) ToMarketContractParams() *MarketContractParams {
-	return &MarketContractParams{
+func (m *MarketParams) ToMarketContractParams() *lqtypes.MarketContractParams {
+	return &lqtypes.MarketContractParams{
 		LoanToken:       m.LoanToken,
 		CollateralToken: m.CollateralToken,
 		Oracle:          m.Oracle,

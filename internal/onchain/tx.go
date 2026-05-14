@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -23,7 +22,7 @@ type TxParams struct {
 
 // First Get Nonce and Gas price
 // Then Send signed Tx
-func SendSignedTx(ctx context.Context, client lqtypes.EthCaller, msgsender common.Address, signer *config.Signer, params TxParams) (common.Hash, error) {
+func SendSignedTx(ctx context.Context, client lqtypes.EthCaller, msgsender common.Address, signer *lqtypes.Signer, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
 	if err := client.EthCallCtx(ctx, []w3types.RPCCaller{

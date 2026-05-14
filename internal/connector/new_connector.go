@@ -12,6 +12,8 @@ import (
 	"sync/atomic"
 
 	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
+
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"golang.org/x/time/rate"
 
@@ -218,7 +220,7 @@ func (c *Connector) FallBackEthCallCtx(ctx context.Context, calls []w3types.RPCC
 
 // SubscribeToEventPos starts the WS log subscription for all Morpho position
 // events. It blocks until ctx is cancelled.
-func (c *Connector) SubscribeToEventPos(ctx context.Context, conf config.Config) {
+func (c *Connector) SubscribeToEventPos(ctx context.Context, conf lqtypes.Config) {
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{conf.Addresses.Morpho},
 		Topics: [][]common.Hash{{

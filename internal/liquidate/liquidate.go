@@ -72,7 +72,7 @@ func (c *Consumer) Run(ctx context.Context) {
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, p *cache.BorrowPosition) {
+func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap cache.MarketSnapshot, p *cache.BorrowPosition) {
 	route, ok := c.SwapCache.GetRoute(market.CollateralToken, market.LoanToken)
 	if !ok {
 		c.log("no route found in cache for these tokens")

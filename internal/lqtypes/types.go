@@ -5,14 +5,12 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type Infra struct {
-	Conn   *connector.Connector
+	Conn   EthCaller
 	Config Config
 }
 
@@ -37,11 +35,6 @@ type Config struct {
 		WS   []string
 	}
 	Quoters []DexParams
-}
-
-type Store struct {
-	MarketReader MarketReader
-	MarketMap    map[[32]byte]morpho.MarketParams
 }
 
 type PoolEdge struct {
@@ -76,8 +69,16 @@ type DexParams struct {
 	QuoterFunc QuoterFunc
 }
 
+type MarketContractParams struct {
+	LoanToken       common.Address
+	CollateralToken common.Address
+	Oracle          common.Address
+	Irm             common.Address
+	Lltv            *big.Int
+}
+
 type LiquidateArgs struct {
-	MarketParams morpho.MarketContractParams
+	MarketParams MarketContractParams
 	Borrower     common.Address
 	SeizedAssets *big.Int
 	RepaidShares *big.Int

@@ -11,25 +11,28 @@ import (
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 )
 
 type Runner struct {
 	LiquidateConsumer *liquidate.Consumer
 	SwapConsumer      *swap.Consumer
-	Store             lqtypes.Store
+	MarketMap         map[[32]byte]morpho.MarketParams
+	MarketCache       *cache.Cache
 	SwapRoutes        *swap.RouteCache
 	Infra             *lqtypes.Infra
 	Logger            chan string
 	LiquidateCh       chan cache.BorrowPosition
 }
 
-func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, store lqtypes.Store, logfile string) *Runner {
+func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, marketMap map[[32]byte]morpho.MarketParams, marketCache *cache.Cache, logfile string) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
 	logger := utils.NewLogger(context.Background(), logfile)
 	return &Runner{
 		LiquidateConsumer: liquidate.NewConsumer(infra, store, routeCache, logger, liquidateCh),
 		SwapConsumer:      swap.NewConsumer(infra, store, routeCache, logger),
-		Store:             store,
+		MarketMap:         marketMap,
+		MarketCache:       marketCache,
 		SwapRoutes:        routeCache,
 		Infra:             infra,
 		Logger:            logger,
@@ -52,10 +55,10 @@ func (r *Runner) Init(ctx context.Context) {
 }
 
 func (r *Runner) LogMarkets() {
-	ids := r.Store.MarketReader.Ids()
+	ids := r.MarketCache.Markets.Ids()
 	for _, id := range ids {
-		m := r.Store.MarketMap[id]
-		snap := r.Store.MarketReader.GetSnapshot(id)
+		m := r.MarketMap[id]
+		snap := r.MarketCache.Markets.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}

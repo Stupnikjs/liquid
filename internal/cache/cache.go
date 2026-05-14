@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -19,6 +19,7 @@ Snapshot
 
 Pos insert / update / delete logic
 */
+
 type Cache struct {
 	Markets   *MarketStore
 	MarketMap map[[32]byte]morpho.MarketParams
@@ -28,7 +29,11 @@ type MarketStore struct {
 	mu      sync.RWMutex
 	markets map[[32]byte]*Market
 }
-
+type MarketReader interface {
+	Ids() [][32]byte
+	GetSnapshot(id [32]byte) *MarketSnapshot
+	Update(id [32]byte, fn func(m *Market))
+}
 type Market struct {
 	Mu          sync.RWMutex
 	Canceled    bool
@@ -77,7 +82,7 @@ func NewStore(markets []morpho.MarketParams) *MarketStore {
 	}
 }
 
-func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.MarketFilters) *Cache {
+func NewCache(conf lqtypes.Config, markets []morpho.MarketParams, filters api.MarketFilters) *Cache {
 
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
 	store := NewStore(markets)

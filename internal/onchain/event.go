@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 
 	"github.com/Stupnikjs/liquid/internal/config"
 
@@ -15,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-func ProcessEvents(c lqtypes.MarketReader, log *types.Log) {
+func ProcessEvents(c *cache.MarketStore, log *types.Log) {
 	switch log.Topics[0] {
 	case config.EventAccrueInterest.Topic0:
 		AccrueInterestEventProcess(c, log)
@@ -36,7 +35,7 @@ func ProcessEvents(c lqtypes.MarketReader, log *types.Log) {
 	}
 }
 
-func BorrowEventProcess(c lqtypes.MarketReader, log *types.Log) {
+func BorrowEventProcess(c *cache.MarketStore, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -78,7 +77,7 @@ func BorrowEventProcess(c lqtypes.MarketReader, log *types.Log) {
 
 }
 
-func RepayEventProcess(c lqtypes.MarketReader, log *types.Log) {
+func RepayEventProcess(c *cache.MarketStore, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -110,7 +109,7 @@ func RepayEventProcess(c lqtypes.MarketReader, log *types.Log) {
 
 }
 
-func LiquidateEventProcess(c lqtypes.MarketReader, log *types.Log) {
+func LiquidateEventProcess(c *cache.MarketStore, log *types.Log) {
 	var (
 		id            [32]byte
 		caller        common.Address
@@ -153,7 +152,7 @@ func LiquidateEventProcess(c lqtypes.MarketReader, log *types.Log) {
 
 }
 
-func AccrueInterestEventProcess(c lqtypes.MarketReader, log *types.Log) {
+func AccrueInterestEventProcess(c *cache.MarketStore, log *types.Log) {
 	var (
 		id             [32]byte
 		prevBorrowRate big.Int
@@ -183,7 +182,7 @@ func AccrueInterestEventProcess(c lqtypes.MarketReader, log *types.Log) {
 
 }
 
-func SupplyCollateralEventProcess(c lqtypes.MarketReader, log *types.Log) {
+func SupplyCollateralEventProcess(c *cache.MarketStore, log *types.Log) {
 	var (
 		id       [32]byte
 		caller   common.Address
@@ -220,4 +219,4 @@ func SupplyCollateralEventProcess(c lqtypes.MarketReader, log *types.Log) {
 
 }
 
-func WithdrawCollateralEventProcess(c lqtypes.MarketReader, log *types.Log) {}
+func WithdrawCollateralEventProcess(c *cache.MarketStore, log *types.Log) {}
