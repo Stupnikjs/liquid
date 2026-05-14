@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -116,7 +116,7 @@ func sendAndWait(t *testing.T, client *ethclient.Client, ctx context.Context,
 	return receipt
 }
 
-func encodeMarketParams(m morpho.MarketContractParams) []byte {
+func encodeMarketParams(m lqtypes.MarketContractParams) []byte {
 	buf := make([]byte, 5*32)
 	copy(buf[12:32], m.LoanToken.Bytes())
 	copy(buf[32+12:64], m.CollateralToken.Bytes())

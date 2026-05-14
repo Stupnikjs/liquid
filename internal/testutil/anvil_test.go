@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/ethereum/go-ethereum"
@@ -218,7 +219,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 		MinOut:       big.NewInt(0),
 	}
 
-	calldata, err = liqArg.EncodeLiquidateCalldata()
+	calldata, err = liquidate.EncodeLiquidateCalldata(liqArg)
 	if err != nil {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}

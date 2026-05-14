@@ -35,12 +35,12 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, swapCache *swap.RouteCache, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *swap.RouteCache, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
 		Infra:     infra,
 		Logger:    logger,
 		SwapCache: swapCache,
-		Store:     store,
+		Cache:     cache,
 		Ch:        ch,
 	}
 }
@@ -49,7 +49,7 @@ type Consumer struct {
 	Infra     *lqtypes.Infra
 	Logger    chan string
 	SwapCache *swap.RouteCache
-	Store     lqtypes.Store
+	Cache     *cache.Cache
 	Ch        <-chan cache.BorrowPosition
 }
 
@@ -66,20 +66,21 @@ func (c *Consumer) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			m := c.Store.MarketMap[pos.MarketID]
-			c.liquidateWrapper(ctx, m, &pos)
+			m := c.Cache.MarketMap[pos.MarketID]
+			snap := c.Cache.Markets.GetSnapshot(pos.MarketID)
+			c.liquidateWrapper(ctx, m, snap, &pos)
 		}
 	}
 }
 
-func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap cache.MarketSnapshot, p *cache.BorrowPosition) {
+func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) {
 	route, ok := c.SwapCache.GetRoute(market.CollateralToken, market.LoanToken)
 	if !ok {
 		c.log("no route found in cache for these tokens")
 		return
 	}
 	fee := route.Hops[0].Fee // change for multihop
-	result := c.SimulateAndPreComputeTx(ctx, market, int64(fee), p)
+	result := c.SimulateAndPreComputeTx(ctx, market, snap, int64(fee), p)
 	if result.SimErr != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
 		return

@@ -57,10 +57,10 @@ func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticke
 		case <-ctx.Done():
 			return nil, time.Second
 		case <-time.After(500 * time.Millisecond):
-			snap = r.Store.MarketReader.GetSnapshot(id)
+			snap = r.Cache.Markets.GetSnapshot(id)
 		}
 	}
-	morphoM := r.Store.MarketMap[id]
+	morphoM := r.Cache.MarketMap[id]
 	return r.SnapToTickerInterval(*snap, morphoM)
 
 }
@@ -85,12 +85,12 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 	ms.tickCount++
 	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
-	snap := r.Store.MarketReader.GetSnapshot(id)
+	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
 		r.log("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
-	morphoM := r.Store.MarketMap[id]
+	morphoM := r.Cache.MarketMap[id]
 
 	_, interval := r.SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms)
@@ -104,22 +104,22 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 
 // RPC Call Oracle only or Markets
 func (r *Runner) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [32]byte) {
-	morphoM := r.Store.MarketMap[id]
+	morphoM := r.Cache.MarketMap[id]
 	if ms.tickCount%20 == 0 {
 
-		if err := onchain.OnChainRefresh(r.Infra, ctx, r.Store.MarketReader, morphoM, id); err != nil {
+		if err := onchain.OnChainRefresh(r.Infra, ctx, r.Cache, morphoM, id); err != nil {
 			r.log(fmt.Sprintf("full refresh error: %v", err))
 		}
 		return
 	}
-	if err := onchain.OnChainOracleRefresh(r.Infra, ctx, r.Store.MarketReader, morphoM, id, r.Infra.Config.Addresses.Morpho); err != nil {
+	if err := onchain.OnChainOracleRefresh(r.Infra, ctx, r.Cache, morphoM, id, r.Infra.Config.Addresses.Morpho); err != nil {
 		r.log(fmt.Sprintf("oracle refresh error: %v", err))
 	}
 }
 
 // Sorting + Hf recalculate
 func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
-	r.Store.MarketReader.Update(id, func(m *market.Market) {
+	r.Cache.Markets.Update(id, func(m *market.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
@@ -141,7 +141,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 			ms.ignoreMap[pos.Address] = 999
 			continue
 		}
-		morphoM := r.Store.MarketMap[snap.ID]
+		morphoM := r.Cache.MarketMap[snap.ID]
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
 			r.log(fmt.Sprintf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
 				pos.Address,

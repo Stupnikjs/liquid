@@ -1,28 +1,29 @@
 package swap
 
 import (
+	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 )
 
 type Consumer struct {
 	Infra      *lqtypes.Infra
-	Store      lqtypes.Store
+	Cache      *cache.Cache
 	RouteCache *RouteCache
 	Logger     chan string
 }
 
-func NewConsumer(infra *lqtypes.Infra, store lqtypes.Store, swapCache *RouteCache, logger chan string) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *RouteCache, logger chan string) *Consumer {
 	return &Consumer{
 		Infra:      infra,
 		Logger:     logger,
 		RouteCache: swapCache,
-		Store:      store,
+		Cache:      cache,
 	}
 }
 
 func (c *Consumer) singleHop() {
-	for id, m := range c.Store.MarketMap {
-		snap := c.Store.MarketReader.GetSnapshot(id)
+	for id, m := range c.Cache.MarketMap {
+		snap := c.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
@@ -35,13 +36,20 @@ func (c *Consumer) singleHop() {
 
 		}
 	}
+	c.RouteCache.PoolsToGraph()
 }
 
-func (c *Consumer) RouteCacheUpdate() {
+func (c *Consumer) RouteCacheRefresh() {
 	c.singleHop()
-	for _, m := range c.Store.MarketMap {
+	for _, m := range c.Cache.MarketMap {
 		routes := c.RouteCache.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 4)
 		// select best route
+		if len(routes) == 0 {
+			c.Cache.Markets.Update(m.ID, func(m *cache.Market) {
+				m.Canceled = true
+			})
+			continue
+		}
 		c.RouteCache.StoreRoute(routes[0])
 	}
 

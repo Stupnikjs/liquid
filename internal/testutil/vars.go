@@ -3,7 +3,7 @@ package testutil
 import (
 	"math/big"
 
-	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -29,7 +29,7 @@ var (
 	// depositData retourne le calldata de deposit() : sélecteur 0xd0e30db0
 	depositCalldata = []byte{0xd0, 0xe3, 0x0d, 0xb0}
 
-	market = morpho.MarketContractParams{
+	market = lqtypes.MarketContractParams{
 		LoanToken:       usdc,
 		CollateralToken: weth,
 		Oracle:          common.HexToAddress("0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4"),

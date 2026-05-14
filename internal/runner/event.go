@@ -20,7 +20,7 @@ func (r *Runner) EventListener(ctx context.Context) {
 			if !ok {
 				return
 			}
-			onchain.ProcessEvents(r.Store.MarketReader, event)
+			onchain.ProcessEvents(r.Cache.Markets, event)
 		}
 	}
 }

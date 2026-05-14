@@ -9,6 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+// Types with no internal dep
+
 type Infra struct {
 	Conn   EthCaller
 	Config Config

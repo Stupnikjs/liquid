@@ -35,13 +35,9 @@ func Wrapper(conf lqtypes.Config, filters api.MarketFilters, logfile string) {
 		Conn:   conn,
 		Config: conf,
 	}
-	store := lqtypes.Store{
-		MarketReader: cached.Markets,
-		MarketMap:    cached.MarketMap,
-	}
 	// pass empty
 	routeCache := swap.NewRouteCache(len(markets))
-	runn := NewRunner(infra, routeCache, store, logfile)
+	runn := NewRunner(infra, routeCache, cached, logfile)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
 

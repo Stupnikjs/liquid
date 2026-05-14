@@ -15,7 +15,7 @@ import (
 )
 
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
-	for _, id := range r.Store.MarketReader.Ids() {
+	for _, id := range r.Cache.Markets.Ids() {
 		go r.MarketRoutine(ctx, id)
 	}
 }
@@ -31,7 +31,7 @@ func (r *Runner) ApiResyncRoutine(ctx context.Context) {
 func (r *Runner) LiquidationRoutine(ctx context.Context) {
 	consumer := &liquidate.Consumer{
 		Infra:  r.Infra,
-		Store:  r.Store,
+		Cache:  r.Cache,
 		Logger: r.Logger,
 		Ch:     r.LiquidateCh,
 	}
@@ -51,7 +51,7 @@ func (r *Runner) ApiCall() error {
 	var mu sync.Mutex
 	var firstErr error
 	ctx := context.Background()
-	for _, id := range r.Store.MarketReader.Ids() {
+	for _, id := range r.Cache.Markets.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
@@ -92,11 +92,11 @@ func (r *Runner) ApiCall() error {
 				return
 			}
 			// maybe sorting by collateral here
-			r.Store.MarketReader.Update(id, func(m *cache.Market) {
+			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Positions = positions
 			})
 
-			r.Store.MarketReader.Update(id, func(m *cache.Market) {
+			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
 			})
 

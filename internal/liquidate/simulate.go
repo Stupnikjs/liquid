@@ -41,14 +41,9 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 // Compute liquidation values
 // Encode args
 // Simulate with eth_call
-func (c *Consumer) ComputeAmounts(m morpho.MarketParams, p *cache.BorrowPosition) *Liquidable {
+func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
-	snap := c.Store.MarketReader.GetSnapshot(p.MarketID)
-	if snap == nil {
-		out.SimErr = fmt.Errorf("snap nil")
-		return out
-	}
 
 	// 1. Math pure — pas de RPC
 	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
@@ -87,8 +82,8 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.Mark
 	}
 }
 
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, fee int64, p *cache.BorrowPosition) *Liquidable {
-	l := c.ComputeAmounts(m, p)
+func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, fee int64, p *cache.BorrowPosition) *Liquidable {
+	l := c.ComputeAmounts(m, snap, p)
 	args := c.ToLiquidationArg(l, fee, m)
 	data, err := EncodeLiquidateCalldata(args)
 	if err != nil {

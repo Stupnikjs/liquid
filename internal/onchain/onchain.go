@@ -6,9 +6,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/cache"
 	market "github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/config"
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -53,7 +53,7 @@ func oracleCall(oracle common.Address, res *OnChainResult) w3types.RPCCaller {
 // callBuilder returns the list of RPCCallers to batch, plus a function
 // that writes the results back into the market cache.
 func refresh(
-	conn *connector.Connector,
+	conn lqtypes.EthCaller,
 	ctx context.Context,
 	id [32]byte,
 	callBuilder func() ([]w3types.RPCCaller, func()),
@@ -74,7 +74,7 @@ func refresh(
 // OnChainRefresh fetches both the market state and the oracle price.
 func OnChainRefresh(
 	infra *lqtypes.Infra, ctx context.Context,
-	c lqtypes.MarketReader, mParam morpho.MarketParams,
+	c *cache.Cache, mParam morpho.MarketParams,
 	id [32]byte,
 ) error {
 	return refresh(infra.Conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
@@ -84,7 +84,7 @@ func OnChainRefresh(
 			oracleCall(mParam.Oracle, res),
 		}
 		apply := func() {
-			c.Update(res.ID, func(m *market.Market) {
+			c.Markets.Update(res.ID, func(m *market.Market) {
 				m.Stats.TotalBorrowAssets = res.Stats.TotalBorrowAssets
 				m.Stats.TotalBorrowShares = res.Stats.TotalBorrowShares
 				m.Oracle.Price = res.OraclePrice
@@ -97,14 +97,14 @@ func OnChainRefresh(
 // OnChainOracleRefresh fetches only the oracle price.
 func OnChainOracleRefresh(
 	infra *lqtypes.Infra, ctx context.Context,
-	c lqtypes.MarketReader, mParam morpho.MarketParams,
+	c *cache.Cache, mParam morpho.MarketParams,
 	id [32]byte, morphoAddr common.Address,
 ) error {
 	return refresh(infra.Conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
 		res := newResult(id)
 		calls := []w3types.RPCCaller{oracleCall(mParam.Oracle, res)}
 		apply := func() {
-			c.Update(res.ID, func(m *market.Market) {
+			c.Markets.Update(res.ID, func(m *market.Market) {
 				// log price to debug
 				m.Oracle.Price = res.OraclePrice
 			})

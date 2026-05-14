@@ -10,12 +10,13 @@ import (
 // Graph : tokenIn -> liste de pools disponibles depuis ce token
 type PoolGraph map[common.Address][]lqtypes.PoolEdge
 
-func BuildGraph(pools []lqtypes.PoolEdge) PoolGraph {
-	g := make(PoolGraph)
-	for _, p := range pools {
-		g[p.TokenIn] = append(g[p.TokenIn], p)
+func (rc *RouteCache) PoolsToGraph() {
+	rc.Mu.Lock()
+	defer rc.Mu.Unlock()
+	rc.Graph = make(PoolGraph)
+	for _, p := range rc.Pools {
+		rc.Graph[p.TokenIn] = append(rc.Graph[p.TokenIn], p)
 	}
-	return g
 }
 
 func (g PoolGraph) FindRoutes(

@@ -89,7 +89,7 @@ func (q *Quoter) bestFeeTier(
 
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
-		result, ok := UniQuoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
+		result, ok := quoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}
