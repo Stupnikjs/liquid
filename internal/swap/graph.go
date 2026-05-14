@@ -3,6 +3,7 @@ package swap
 
 import (
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
+
 	"github.com/ethereum/go-ethereum/common"
 )
 

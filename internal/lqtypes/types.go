@@ -31,6 +31,19 @@ type PoolEdge struct {
 	CalibratedAt time.Time
 }
 
+type SingleQuoterFunc func(
+	conn *connector.Connector,
+	marketp morpho.MarketParams,
+	routerQuoterAddr common.Address,
+	amountIn, oraclePrice *big.Int,
+	fee uint32,
+) (PoolEdge, bool)
+
+type QuoteParams struct {
+	Fn     SingleQuoterFunc
+	Router common.Address
+}
+
 type LiquidateArgs struct {
 	MarketParams morpho.MarketContractParams
 	Borrower     common.Address

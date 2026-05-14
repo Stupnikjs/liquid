@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 )
@@ -25,6 +26,7 @@ type Config struct {
 		HTTP []string
 		WS   []string
 	}
+	Quoters []lqtypes.QuoteParams
 }
 
 func LoadBaseConfig() Config {

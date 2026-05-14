@@ -25,35 +25,24 @@ type QuoteExactInputSingleParams struct {
 	SqrtPriceLimitX96 *big.Int
 }
 
-// Returns false if no pool
-// Works with any swap abi
-type SingleQuoterFunc func(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	routerQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
-	fee uint32,
-) (lqtypes.PoolEdge, bool)
-
 type Quoter struct {
-	quoteSingle SingleQuoterFunc
+	QuoteSingle lqtypes.SingleQuoterFunc
 }
 
+// Returns false if no pool
+// Works with any swap abi
+
 func NewUniQuoter() *Quoter {
-	return &Quoter{quoteSingle: UniQuoteSingle}
+	return &Quoter{QuoteSingle: UniQuoteSingle}
 }
 
 func NewAeroQuoter() *Quoter {
-	return &Quoter{quoteSingle: AerodromeQuoteSingle}
+	return &Quoter{QuoteSingle: AerodromeQuoteSingle}
 }
 
 // inject a quoter func
-func NewQuoterWithFunc(fn SingleQuoterFunc) *Quoter {
-	return &Quoter{quoteSingle: fn}
-}
-
-func Quote(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewUniQuoter().Quote(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+func NewQuoterWithFunc(fn lqtypes.SingleQuoterFunc) *Quoter {
+	return &Quoter{QuoteSingle: fn}
 }
 
 func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
@@ -62,29 +51,6 @@ func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams
 
 func QuoteAeroBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
 	return NewAeroQuoter().QuoteAeroBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
-}
-
-// binary search way more effective
-func (q *Quoter) Quote(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
-) (lqtypes.PoolEdge, bool) {
-	maxSlippage := MaxSlippage(marketp.LLTV)
-	current := new(big.Int).Set(amountIn)
-
-	for current.Sign() > 0 {
-		best, ok := q.bestUniFeeTier(conn, marketp, uniswapQuoterAddr, current, oraclePrice, maxSlippage, 200*time.Millisecond)
-		if ok {
-			fmt.Printf("Pair %s/%s | source: uniswap | fee: %d | slippage: %.4f%%\n",
-				marketp.CollateralTokenStr, marketp.LoanTokenStr, best.Fee, best.WCSlippage)
-			return best, true
-		}
-		current.Div(current, big.NewInt(4))
-	}
-
-	return lqtypes.PoolEdge{}, false
 }
 
 // iterate over mid amount to swap to find best slippage for max amount
@@ -147,7 +113,7 @@ func (q *Quoter) bestUniFeeTier(
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
 		// single call with fee
-		result, ok := q.quoteSingle(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
+		result, ok := q.QuoteSingle(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}

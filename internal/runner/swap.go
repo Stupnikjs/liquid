@@ -1,9 +1,5 @@
 package runner
 
-import (
-	"github.com/Stupnikjs/liquid/internal/swap"
-)
-
 // swap  in:token address out:token address slippage
 // double swap slippage_final = s1 + s2 - s1 * s2
 /*
@@ -52,38 +48,3 @@ func (r *Runner) SingleHop() {
 
 }
 */
-
-func (r *Runner) MultiHop() {
-
-	r.singleHop()
-	for _, m := range r.Store.MarketMap {
-		routes := r.SwapRoutes.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 3)
-		// findBestRoute (to implement)
-		if len(routes) > 0 {
-			r.SwapRoutes.StoreRoute(routes[0])
-		}
-
-	}
-
-}
-
-func (r *Runner) singleHop() {
-	for id, m := range r.Store.MarketMap {
-		snap := r.Store.MarketReader.GetSnapshot(id)
-		if snap == nil {
-			continue
-		}
-		// quote Params
-		// iterate over []quote func based on chain id
-		//
-		result, found := swap.QuoteUniBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-		if found {
-			r.SwapRoutes.AppendPool(result)
-		}
-		result, found = swap.QuoteAeroBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
-		if found {
-			r.SwapRoutes.AppendPool(result)
-		}
-
-	}
-}
