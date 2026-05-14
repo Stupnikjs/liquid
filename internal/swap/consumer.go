@@ -27,8 +27,8 @@ func (c *Consumer) singleHop() {
 			continue
 		}
 		// add router address to struct
-		for _, fn := range c.Infra.Config.Quoters {
-			result, found := fn(c.Infra.Conn, m, c.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
+		for _, q := range c.Infra.Config.Quoters {
+			result, found := q.Fn(c.Infra.Conn, m, q.QuoterAddr, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 			if found {
 				c.RouteCache.AppendPool(result)
 			}
@@ -39,5 +39,10 @@ func (c *Consumer) singleHop() {
 
 func (c *Consumer) RouteCacheUpdate() {
 	c.singleHop()
+	for _, m := range c.Store.MarketMap {
+		routes := c.RouteCache.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 4)
+		// select best route
+		c.RouteCache.StoreRoute(routes[0])
+	}
 
 }

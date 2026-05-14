@@ -39,9 +39,10 @@ type SingleQuoterFunc func(
 	fee uint32,
 ) (PoolEdge, bool)
 
-type QuoteParams struct {
-	Fn     SingleQuoterFunc
-	Router common.Address
+type DexParams struct {
+	Fn         SingleQuoterFunc
+	QuoterAddr common.Address
+	RouterAddr common.Address
 }
 
 type LiquidateArgs struct {
