@@ -95,7 +95,7 @@ func (q *Quoter) QuoteUniBinarySearch(
 	amountIn, oraclePrice *big.Int,
 ) (lqtypes.PoolEdge, bool) {
 	maxSlippage := MaxSlippage(marketp.LLTV)
-
+	fmt.Printf("max slipage for %s is :%f", marketp.GetPair(), maxSlippage)
 	lo := big.NewInt(1)
 	hi := new(big.Int).Set(amountIn)
 	var best lqtypes.PoolEdge

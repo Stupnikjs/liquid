@@ -1,8 +1,6 @@
 package runner
 
 import (
-	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/swap"
 )
 
@@ -31,6 +29,7 @@ func (r *Runner) FindSwapRoutes() {
 */
 // maxPos enable WorstCase for slippage so Max amount
 // then QuoteBinary search test smaller pos if slippage is too big
+/*
 func (r *Runner) SingleHop() {
 	for _, id := range r.Store.MarketReader.Ids() {
 		arr := make([]lqtypes.PoolEdge, 1)
@@ -52,30 +51,39 @@ func (r *Runner) SingleHop() {
 	}
 
 }
+*/
 
 func (r *Runner) MultiHop() {
 
+	r.singleHop()
+	for _, m := range r.Store.MarketMap {
+		routes := r.SwapRoutes.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 3)
+		// findBestRoute (to implement)
+		if len(routes) > 0 {
+			r.SwapRoutes.StoreRoute(routes[0])
+		}
+
+	}
+
+}
+
+func (r *Runner) singleHop() {
 	for id, m := range r.Store.MarketMap {
-		arr := make([]lqtypes.PoolEdge, 2)
 		snap := r.Store.MarketReader.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
 		// quote Params
 		// iterate over []quote func based on chain id
+		//
 		result, found := swap.QuoteUniBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
-			arr = append(arr, result)
+			r.SwapRoutes.AppendPool(result)
 		}
 		result, found = swap.QuoteAeroBinarySearch(r.Infra.Conn, m, r.Infra.Config.Addresses.UniSwapQuoter, snap.Stats.MaxCollateralPos, snap.Oracle.Price)
 		if found {
-			arr = append(arr, result)
+			r.SwapRoutes.AppendPool(result)
 		}
 
-		r.Store.MarketReader.Update(m.ID, func(m *cache.Market) {
-			m.Canceled = true
-		})
-
-		r.SwapRoutes.StoreRoute(arr)
 	}
 }

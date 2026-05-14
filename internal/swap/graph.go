@@ -17,7 +17,6 @@ func BuildGraph(pools []lqtypes.PoolEdge) PoolGraph {
 	return g
 }
 
-// FindRoutes retourne toutes les routes jusqu'à maxHops sauts (DFS)
 func (g PoolGraph) FindRoutes(
 	tokenIn, tokenOut common.Address,
 	maxHops int,
@@ -27,6 +26,7 @@ func (g PoolGraph) FindRoutes(
 	visited := make(map[common.Address]bool)
 	path := make([]lqtypes.PoolEdge, 0, maxHops)
 
+	// iteration util found tokenOut
 	var dfs func(current common.Address)
 	dfs = func(current common.Address) {
 		if current == tokenOut {
@@ -39,10 +39,14 @@ func (g PoolGraph) FindRoutes(
 			return
 		}
 		visited[current] = true
+
 		for _, edge := range g[current] {
 			if !visited[edge.TokenOut] {
+				// appening token to path
 				path = append(path, edge)
+				// recursive call
 				dfs(edge.TokenOut)
+
 				path = path[:len(path)-1]
 			}
 		}

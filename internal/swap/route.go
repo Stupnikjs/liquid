@@ -33,6 +33,32 @@ func NewRouteCache(n int) *RouteCache {
 	}
 }
 
+func (rc *RouteCache) AppendPool(r lqtypes.PoolEdge) {
+	rc.Mu.Lock()
+	defer rc.Mu.Unlock()
+	rc.Pools = append(rc.Pools, r)
+}
+
+func (rc *RouteCache) GetRoute(tokenIn, tokenOut common.Address) (Route, bool) {
+	k := RouteKey{
+		TokenIn:  tokenIn,
+		TokenOut: tokenOut,
+	}
+	rc.Mu.RLock()
+	defer rc.Mu.RUnlock()
+	route, ok := rc.Routes[k]
+	if !ok {
+		return Route{}, false
+	}
+	hops := make([]lqtypes.PoolEdge, len(route.Hops))
+	copy(hops, route.Hops)
+
+	return Route{
+		Hops:        hops,
+		WCAmountOut: new(big.Int).Set(route.WCAmountOut),
+	}, true
+}
+
 func (rc *RouteCache) StoreRoute(r []lqtypes.PoolEdge) {
 	if len(r) == 0 {
 		return
@@ -56,24 +82,4 @@ func (rc *RouteCache) StoreRoute(r []lqtypes.PoolEdge) {
 		WCAmountOut: new(big.Int).Set(lastWC), // copie aussi le big.Int
 	}
 	rc.Routes[k] = route
-}
-
-func (rc *RouteCache) GetRoute(tokenIn, tokenOut common.Address) (Route, bool) {
-	k := RouteKey{
-		TokenIn:  tokenIn,
-		TokenOut: tokenOut,
-	}
-	rc.Mu.RLock()
-	defer rc.Mu.RUnlock()
-	route, ok := rc.Routes[k]
-	if !ok {
-		return Route{}, false
-	}
-	hops := make([]lqtypes.PoolEdge, len(route.Hops))
-	copy(hops, route.Hops)
-
-	return Route{
-		Hops:        hops,
-		WCAmountOut: new(big.Int).Set(route.WCAmountOut),
-	}, true
 }
