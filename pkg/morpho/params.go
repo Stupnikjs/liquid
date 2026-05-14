@@ -60,3 +60,15 @@ func (m *MarketParams) IsETHCorrelated() bool {
 func (m *MarketParams) GetPair() string {
 	return fmt.Sprintf("%s/%s", m.CollateralTokenStr, m.LoanTokenStr)
 }
+
+func (m *MarketParams) GetCollateralToken() common.Address {
+	return m.CollateralToken
+}
+
+func (m *MarketParams) GetLoanToken() common.Address {
+	return m.LoanToken
+}
+
+func (m *MarketParams) GetLLTV() *big.Int {
+	return m.LLTV
+}

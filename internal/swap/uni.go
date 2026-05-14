@@ -9,7 +9,6 @@ import (
 	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
-
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
@@ -29,42 +28,57 @@ type Quoter struct {
 	QuoteSingle lqtypes.SingleQuoterFunc
 }
 
-// Returns false if no pool
-// Works with any swap abi
-
-func UniQuoterFuncWithFee(fee uint32) lqtypes.SingleQuoterFunc {
-	return func(conn *connector.Connector, marketp morpho.MarketParams,
-		quoterAddr common.Address, amountIn, oraclePrice *big.Int,
-	) (lqtypes.PoolEdge, bool) {
-		return UniQuoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
-	}
+func NewUniQuoter() *Quoter {
+	return &Quoter{QuoteSingle: UniQuoteSingle}
 }
+
 func NewAeroQuoter() *Quoter {
 	return &Quoter{QuoteSingle: AerodromeQuoteSingle}
 }
 
-// inject a quoter func
 func NewQuoterWithFunc(fn lqtypes.SingleQuoterFunc) *Quoter {
 	return &Quoter{QuoteSingle: fn}
 }
 
-func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewUniQuoter().QuoteUniBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+// Helpers publics — *connector.Connector et morpho.MarketParams satisfont les interfaces
+func QuoteUniBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, quoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
+	return NewUniQuoter().QuoteBinarySearch(conn, &marketp, quoterAddr, amountIn, oraclePrice)
 }
 
-func QuoteAeroBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, uniswapQuoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
-	return NewAeroQuoter().QuoteAeroBinarySearch(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice)
+func QuoteAeroBinarySearch(conn *connector.Connector, marketp morpho.MarketParams, quoterAddr common.Address, amountIn, oraclePrice *big.Int) (lqtypes.PoolEdge, bool) {
+	return NewAeroQuoter().QuoteBinarySearch(conn, &marketp, quoterAddr, amountIn, oraclePrice)
 }
 
-// iterate over mid amount to swap to find best slippage for max amount
-func (q *Quoter) QuoteUniBinarySearch(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
+func NewUniDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
+	return lqtypes.DexParams{
+		QuoterAddr: quoterAddr,
+		RouterAddr: routerAddr,
+		QuoterFunc: UniQuoteSingle,
+	}
+}
+
+func NewAeroDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
+	return lqtypes.DexParams{
+		QuoterAddr: quoterAddr,
+		RouterAddr: routerAddr,
+		QuoterFunc: AerodromeQuoteSingle,
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Binary search
+// ---------------------------------------------------------------------------
+
+func (q *Quoter) QuoteBinarySearch(
+	conn lqtypes.EthCaller,
+	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
+	amountIn *big.Int,
+	oraclePrice *big.Int,
 ) (lqtypes.PoolEdge, bool) {
-	maxSlippage := MaxSlippage(marketp.LLTV)
-	fmt.Printf("max slipage for %s is :%f", marketp.GetPair(), maxSlippage)
+	maxSlippage := MaxSlippage(marketp.GetLLTV())
+	fmt.Printf("max slippage for %s is: %f\n", marketp.GetPair(), maxSlippage)
+
 	lo := big.NewInt(1)
 	hi := new(big.Int).Set(amountIn)
 	var best lqtypes.PoolEdge
@@ -73,7 +87,7 @@ func (q *Quoter) QuoteUniBinarySearch(
 	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
 		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
 
-		result, ok := q.bestUniFeeTier(conn, marketp, uniswapQuoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond)
+		result, ok := q.bestFeeTier(conn, marketp, quoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond)
 		if ok {
 			best = result
 			found = true
@@ -84,29 +98,20 @@ func (q *Quoter) QuoteUniBinarySearch(
 	}
 
 	if !found {
-		fmt.Printf("no acceptable slippage found for %s -> %s\n",
-			marketp.CollateralTokenStr, marketp.LoanTokenStr)
+		fmt.Printf("no acceptable slippage found for %s\n", marketp.GetPair())
 		return lqtypes.PoolEdge{}, false
 	}
 
-	fmt.Printf("acceptable slippage found for %s -> %s  %.4f%%\n",
-		marketp.CollateralTokenStr, marketp.LoanTokenStr, best.WCSlippage)
+	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
 	return best, true
 }
 
-func (q *Quoter) QuoteAeroBinarySearch(conn *connector.Connector,
-	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
-) (lqtypes.PoolEdge, bool) {
-	return lqtypes.PoolEdge{}, false
-}
-
-func (q *Quoter) bestUniFeeTier(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
+func (q *Quoter) bestFeeTier(
+	conn lqtypes.EthCaller,
+	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
+	amountIn *big.Int,
+	oraclePrice *big.Int,
 	maxSlippage float64,
 	rateLimit time.Duration,
 ) (lqtypes.PoolEdge, bool) {
@@ -115,8 +120,7 @@ func (q *Quoter) bestUniFeeTier(
 
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
-		// single call with fee
-		result, ok := q.QuoteSingle(conn, marketp, uniswapQuoterAddr, amountIn, oraclePrice, fee)
+		result, ok := q.QuoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}
@@ -131,19 +135,20 @@ func (q *Quoter) bestUniFeeTier(
 }
 
 // ---------------------------------------------------------------------------
-// Implémentation RPC réelle
+// Implémentations RPC — utilisent les interfaces
 // ---------------------------------------------------------------------------
 
 func UniQuoteSingle(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
+	conn lqtypes.EthCaller,
+	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
+	amountIn *big.Int,
+	oraclePrice *big.Int,
 	fee uint32,
 ) (lqtypes.PoolEdge, bool) {
 	params := QuoteExactInputSingleParams{
-		TokenIn:           marketp.CollateralToken,
-		TokenOut:          marketp.LoanToken,
+		TokenIn:           marketp.GetCollateralToken(),
+		TokenOut:          marketp.GetLoanToken(),
 		AmountIn:          amountIn,
 		Fee:               big.NewInt(int64(fee)),
 		SqrtPriceLimitX96: big.NewInt(0),
@@ -157,7 +162,7 @@ func UniQuoteSingle(
 	)
 
 	if err := conn.EthCallCtx(context.Background(),
-		[]w3types.RPCCaller{eth.CallFunc(uniswapQuoterAddr, FuncQuoteExactInputSingleV2, params).Returns(
+		[]w3types.RPCCaller{eth.CallFunc(quoterAddr, FuncQuoteExactInputSingleV2, params).Returns(
 			&amountOut,
 			&sqrtPriceX96After,
 			&initializedTicksCrossed,
@@ -168,9 +173,9 @@ func UniQuoteSingle(
 	}
 
 	return lqtypes.PoolEdge{
-		TokenIn:      marketp.CollateralToken,
-		TokenOut:     marketp.LoanToken,
-		Router:       uniswapQuoterAddr,
+		TokenIn:      marketp.GetCollateralToken(),
+		TokenOut:     marketp.GetLoanToken(),
+		Router:       quoterAddr,
 		Fee:          fee,
 		WCSlippage:   ComputeSlippage(amountIn, amountOut, oraclePrice),
 		WCAmountIn:   new(big.Int).Set(amountIn),
@@ -180,10 +185,11 @@ func UniQuoteSingle(
 }
 
 func AerodromeQuoteSingle(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	uniswapQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
+	conn lqtypes.EthCaller,
+	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
+	amountIn *big.Int,
+	oraclePrice *big.Int,
 	fee uint32,
 ) (lqtypes.PoolEdge, bool) {
 	return lqtypes.PoolEdge{}, false
@@ -201,42 +207,22 @@ func MaxSlippage(lltv *big.Int) float64 {
 	return bonus - gasCushion
 }
 
-func ComputeSlippage(amountIn, amountOut *big.Int, oraclePrice *big.Int) float64 {
+func ComputeSlippage(amountIn, amountOut, oraclePrice *big.Int) float64 {
 	if oraclePrice == nil || oraclePrice.Sign() == 0 {
 		return 0
 	}
-
 	scale := new(big.Int).Exp(big.NewInt(10), big.NewInt(36), nil)
 	expectedOut := new(big.Int).Div(
 		new(big.Int).Mul(amountIn, oraclePrice),
 		scale,
 	)
-
 	if expectedOut.Sign() == 0 {
 		return 0
 	}
-
 	diff := new(big.Int).Sub(expectedOut, amountOut)
 	slip, _ := new(big.Float).Quo(
 		new(big.Float).SetInt(diff),
 		new(big.Float).SetInt(expectedOut),
 	).Float64()
-
 	return slip * 100
-}
-
-func NewUniDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
-	return lqtypes.DexParams{
-		QuoterAddr: quoterAddr,
-		RouterAddr: routerAddr,
-		QuoterFunc: UniQuoteSingle,
-	}
-}
-
-func NewAeroDexParams(quoterAddr, routerAddr common.Address) lqtypes.DexParams {
-	return lqtypes.DexParams{
-		QuoterAddr: quoterAddr,
-		RouterAddr: routerAddr,
-		QuoterFunc: AerodromeQuoteSingle,
-	}
 }

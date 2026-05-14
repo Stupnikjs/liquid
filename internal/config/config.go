@@ -3,12 +3,8 @@ package config
 import (
 	"fmt"
 	"log"
-	"math/big"
 	"os"
 
-	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/joho/godotenv"
 )
@@ -20,18 +16,6 @@ type Addresses struct {
 	Wallet             common.Address
 	Morpho             common.Address
 }
-type DexConfig struct {
-	QuoterAddr common.Address
-	RouterAddr common.Address
-}
-
-func (d *DexParams) SingleQuoterFunc(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	routerQuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
-	fee uint32,
-) (lqtypes.PoolEdge, bool)
 
 type Config struct {
 	Signer    *Signer

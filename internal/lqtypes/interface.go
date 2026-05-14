@@ -2,8 +2,10 @@ package lqtypes
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3/w3types"
 )
 
@@ -16,4 +18,11 @@ type MarketReader interface {
 	Ids() [][32]byte
 	GetSnapshot(id [32]byte) *cache.MarketSnapshot
 	Update(id [32]byte, fn func(m *cache.Market))
+}
+
+type MorphoMarket interface {
+	GetPair() string
+	GetCollateralToken() common.Address
+	GetLoanToken() common.Address
+	GetLLTV() *big.Int
 }

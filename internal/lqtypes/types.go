@@ -6,7 +6,6 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/connector"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -33,12 +32,12 @@ type PoolEdge struct {
 }
 
 type SingleQuoterFunc func(
-	conn *connector.Connector,
-	marketp morpho.MarketParams,
-	routerQuoterAddr common.Address,
+	conn EthCaller,
+	marketp MorphoMarket,
+	QuoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	fee uint32,
-) (lqtypes.PoolEdge, bool)
+) (PoolEdge, bool)
 
 type DexParams struct {
 	QuoterAddr common.Address
