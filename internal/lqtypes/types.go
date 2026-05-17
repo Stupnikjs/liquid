@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -28,6 +29,14 @@ type Signer struct {
 	signer types.Signer
 }
 
+type QuoteExactInputSingleParams struct {
+	TokenIn           common.Address
+	TokenOut          common.Address
+	AmountIn          *big.Int
+	Fee               *big.Int
+	SqrtPriceLimitX96 *big.Int
+}
+
 type Config struct {
 	Signer    *Signer
 	Addresses Addresses
@@ -36,7 +45,7 @@ type Config struct {
 		HTTP []string
 		WS   []string
 	}
-	Quoters []DexParams
+	Dexs []swap.Dex
 }
 
 type PoolEdge struct {
@@ -48,27 +57,6 @@ type PoolEdge struct {
 	WCAmountIn   *big.Int
 	WCAmountOut  *big.Int
 	CalibratedAt time.Time
-}
-
-type QuoterFunc func(
-	conn EthCaller,
-	marketp MorphoMarket,
-	QuoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
-) (PoolEdge, bool)
-
-type QuotSingleFunc func(conn EthCaller,
-	marketp MorphoMarket,
-	quoterAddr common.Address,
-	amountIn *big.Int,
-	oraclePrice *big.Int,
-	fee uint32,
-) (PoolEdge, bool)
-
-type DexParams struct {
-	QuoterAddr common.Address
-	RouterAddr common.Address
-	QuoterFunc QuoterFunc
 }
 
 type MarketContractParams struct {

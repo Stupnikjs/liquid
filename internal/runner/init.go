@@ -48,6 +48,7 @@ func (r *Runner) Init(ctx context.Context) {
 	r.SwapConsumer.RouteCacheRefresh()
 	r.Logger <- "Quoting over "
 	r.LogMarkets()
+	fmt.Println(len(r.Cache.Markets.Ids()))
 
 }
 

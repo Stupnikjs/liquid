@@ -22,3 +22,7 @@ type MorphoMarket interface {
 	GetLoanToken() common.Address
 	GetLLTV() *big.Int
 }
+
+type Dex interface {
+	Quote(conn EthCaller, market MorphoMarket, quoterAddr common.Address, amountIn *big.Int, oraclePrice *big.Int) (PoolEdge, bool)
+}

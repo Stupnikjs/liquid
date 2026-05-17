@@ -2,7 +2,6 @@ package swap
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -12,69 +11,35 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
-var UniswapFees = []uint32{100, 500, 3000, 10000}
-
-type QuoteExactInputSingleParams struct {
-	TokenIn           common.Address
-	TokenOut          common.Address
-	AmountIn          *big.Int
-	Fee               *big.Int
-	SqrtPriceLimitX96 *big.Int
+type Dex struct {
+	QuoterAddr common.Address
+	RouterAddr common.Address
+	Quoter     QuoterFunc
 }
 
-type Quoter struct {
-	QuoterFunc lqtypes.QuoterFunc
-}
-
-func NewQuoter(fn lqtypes.QuoterFunc) *Quoter {
-	return &Quoter{
-		QuoterFunc: fn,
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Binary search
-// ---------------------------------------------------------------------------
-
-// satisfy SingleQuote Interface
-func (q *Quoter) QuoteBinarySearch(
+type QuoterFunc func(
 	conn lqtypes.EthCaller,
+	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
+	amountIn, oraclePrice *big.Int,
+	maxSlippage float64,
+	rateLimit time.Duration,
+) (lqtypes.PoolEdge, bool)
+
+type QuotSingleFunc func(conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
 	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
-) (lqtypes.PoolEdge, bool) {
-	maxSlippage := MaxSlippage(marketp.GetLLTV())
-	fmt.Printf("max slippage for %s is: %f\n", marketp.GetPair(), maxSlippage)
+	fee uint32,
+) (lqtypes.PoolEdge, bool)
 
-	lo := big.NewInt(1)
-	hi := new(big.Int).Set(amountIn)
-	var best lqtypes.PoolEdge
-	found := false
-
-	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
-		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
-
-		result, ok := q.bestFeeTier(conn, marketp, quoterAddr, mid, oraclePrice, maxSlippage, 400*time.Millisecond, UniQuoteSingle)
-		if ok {
-			best = result
-			found = true
-			lo = new(big.Int).Add(mid, big.NewInt(1))
-		} else {
-			hi = new(big.Int).Sub(mid, big.NewInt(1))
-		}
-	}
-
-	if !found {
-		fmt.Printf("no acceptable slippage found for %s\n", marketp.GetPair())
-		return lqtypes.PoolEdge{}, false
-	}
-
-	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
-	return best, true
+func (d *Dex) Quote(conn lqtypes.EthCaller, marketp lqtypes.MorphoMarket, amountIn, oraclePrice *big.Int, maxSlippage float64,
+	rateLimit time.Duration) (lqtypes.PoolEdge, bool) {
+	return d.Quoter(conn, marketp, d.QuoterAddr, amountIn, oraclePrice, maxSlippage, rateLimit)
 }
 
-func (q *Quoter) bestFeeTier(
+func UniQuote(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
 	quoterAddr common.Address,
@@ -82,14 +47,14 @@ func (q *Quoter) bestFeeTier(
 	oraclePrice *big.Int,
 	maxSlippage float64,
 	rateLimit time.Duration,
-	quoteSingle lqtypes.QuotSingleFunc,
 ) (lqtypes.PoolEdge, bool) {
 	var best lqtypes.PoolEdge
+	var UniswapFees = []uint32{100, 500, 3000, 10000}
 	found := false
 
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
-		result, ok := quoteSingle(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
+		result, ok := uniQuoteCall(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}
@@ -107,7 +72,7 @@ func (q *Quoter) bestFeeTier(
 // Implémentations RPC — utilisent les interfaces
 // ---------------------------------------------------------------------------
 
-func UniQuoteSingle(
+func uniQuoteCall(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
 	quoterAddr common.Address,
@@ -115,7 +80,7 @@ func UniQuoteSingle(
 	oraclePrice *big.Int,
 	fee uint32,
 ) (lqtypes.PoolEdge, bool) {
-	params := QuoteExactInputSingleParams{
+	params := lqtypes.QuoteExactInputSingleParams{
 		TokenIn:           marketp.GetCollateralToken(),
 		TokenOut:          marketp.GetLoanToken(),
 		AmountIn:          amountIn,
@@ -151,29 +116,6 @@ func UniQuoteSingle(
 		WCAmountOut:  amountOut,
 		CalibratedAt: time.Now(),
 	}, true
-}
-
-func AerodromeQuoteSingle(
-	conn lqtypes.EthCaller,
-	marketp lqtypes.MorphoMarket,
-	quoterAddr common.Address,
-	amountIn *big.Int,
-	oraclePrice *big.Int,
-	fee uint32,
-) (lqtypes.PoolEdge, bool) {
-	return lqtypes.PoolEdge{}, false
-}
-
-// ---------------------------------------------------------------------------
-// Helpers slippage
-// ---------------------------------------------------------------------------
-
-func MaxSlippage(lltv *big.Int) float64 {
-	lltvF, _ := new(big.Float).SetInt(lltv).Float64()
-	lltvPct := lltvF / 1e18 * 100
-	bonus := 100 - lltvPct
-	const gasCushion = 0.1
-	return bonus - gasCushion
 }
 
 func ComputeSlippage(amountIn, amountOut, oraclePrice *big.Int) float64 {

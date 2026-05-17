@@ -30,7 +30,6 @@ type Liquidable struct {
 	EstProfit    *big.Int
 	GasEstimate  uint64
 	SimulatedAt  time.Time
-	SimErr       error
 	IsLiquidable bool
 	CallData     []byte
 }
@@ -68,6 +67,9 @@ func (c *Consumer) Run(ctx context.Context) {
 		case pos := <-c.Ch:
 			m := c.Cache.MarketMap[pos.MarketID]
 			snap := c.Cache.Markets.GetSnapshot(pos.MarketID)
+			if snap == nil {
+				continue
+			}
 			c.liquidateWrapper(ctx, m, snap, &pos)
 		}
 	}
@@ -80,17 +82,14 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 		return
 	}
 	fee := route.Hops[0].Fee // change for multihop
-	result := c.SimulateAndPreComputeTx(ctx, market, snap, int64(fee), p)
-	if result.SimErr != nil {
-		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, result.SimErr))
+	result, err := c.SimulateAndPreComputeTx(ctx, market, snap, int64(fee), p)
+	if err != nil {
+		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, err))
 		return
 	}
-	if !result.IsLiquidable {
-		c.log("[liq] not profitable")
-		return
-	}
+
 	c.log(fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair()))
-	err := c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
+	err = c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
 		c.log(fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err))
 		return
@@ -110,6 +109,10 @@ func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstima
 
 // encode liquidate args after selector
 func EncodeLiquidateCalldata(args lqtypes.LiquidateArgs) ([]byte, error) {
+	if args.SeizedAssets == nil || args.RepaidShares == nil || args.PoolFee == nil || args.MinOut == nil || args.MarketParams.Lltv == nil {
+		return []byte{}, nil
+	}
+
 	return config.FuncLiquidate.EncodeArgs(
 		args.MarketParams,
 		args.Borrower,

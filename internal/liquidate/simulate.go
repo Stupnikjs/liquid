@@ -70,37 +70,48 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 	return out
 }
 
-func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.MarketParams) lqtypes.LiquidateArgs {
+// refactor on multihop
+func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.MarketParams) (lqtypes.LiquidateArgs, error) {
+	route, ok := c.SwapCache.GetRoute(params.CollateralToken, params.LoanToken)
+	if !ok {
+		return lqtypes.LiquidateArgs{}, fmt.Errorf("no avaible route found")
+	}
+	if l.MinOut.Cmp(route.Hops[0].WCAmountOut) > 0 {
+		l.MinOut.Set(route.Hops[0].WCAmountOut)
+	}
 	return lqtypes.LiquidateArgs{
 		MarketParams: *params.ToMarketContractParams(),
 		Borrower:     l.Pos.Address,
 		SeizedAssets: l.SeizeAssets,
 		RepaidShares: big.NewInt(0),
-		SwapRouter:   c.Infra.Config.Addresses.UniSwapRouter,
-		PoolFee:      big.NewInt(int64(fee)),
+		SwapRouter:   route.Hops[0].Router,
+		PoolFee:      big.NewInt(int64(route.Hops[0].Fee)),
 		MinOut:       l.MinOut,
-	}
+	}, nil
 }
 
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, fee int64, p *cache.BorrowPosition) *Liquidable {
+// snap nil guard upon this func
+// err is passed to Liquidable
+func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, fee int64, p *cache.BorrowPosition) (*Liquidable, error) {
 	l := c.ComputeAmounts(m, snap, p)
-	args := c.ToLiquidationArg(l, fee, m)
+	args, err := c.ToLiquidationArg(l, fee, m)
+	if err != nil {
+		return l, fmt.Errorf("to liquidation args err : %w", err)
+
+	}
 	data, err := EncodeLiquidateCalldata(args)
 	if err != nil {
-		l.SimErr = fmt.Errorf("encode: %w", err)
-		return l
+		return l, fmt.Errorf("encode: %w", err)
+
 	}
 	l.CallData = data
-
 	gasVal, err := c.dryRun(ctx, data)
 	l.SimulatedAt = time.Now()
 	if err != nil {
-		l.SimErr = fmt.Errorf("eth_call failed: %w", err)
-		l.IsLiquidable = false
-		return l
+		return l, fmt.Errorf("eth_call failed: %w", err)
 	}
 	l.GasEstimate = gasVal
 	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(m.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF)))
 	l.IsLiquidable = true
-	return l
+	return l, nil
 }
