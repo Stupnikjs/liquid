@@ -20,6 +20,13 @@ func LoadBaseConfig() lqtypes.Config {
 		fmt.Println(err)
 	}
 
+	dexs := []lqtypes.Dex{
+		{
+			QuoterAddr: BaseUniswapQuoterV2Addr,
+			RouterAddr: BaseUniswapV3Router,
+			Quoter:     swap.UniQuoter,
+		},
+	}
 	return lqtypes.Config{
 		Signer: signer,
 		Addresses: lqtypes.Addresses{
@@ -38,13 +45,7 @@ func LoadBaseConfig() lqtypes.Config {
 			HTTP: []string{os.Getenv("BASE_HTTP_RPC_DRPC"), os.Getenv("BASE_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("BASE_WS_RPC_DRPC"), os.Getenv("BASE_WS_RPC_ALCH")},
 		},
-		Dex: []swap.Dex{
-			swap.Dex{
-				QuoterAddr: BaseUniswapQuoterV2Addr,
-				RouterAddr: BaseUniswapV3Router,
-				Quoter:     swap.UniQuote,
-			},
-		},
+		Dexs: dexs,
 	}
 }
 

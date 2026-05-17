@@ -57,3 +57,11 @@ func (m *MarketParams) GetLoanToken() common.Address {
 func (m *MarketParams) GetLLTV() *big.Int {
 	return m.LLTV
 }
+
+func (m *MarketParams) MaxSlippage() float64 {
+	lltvF, _ := new(big.Float).SetInt(m.LLTV).Float64()
+	lltvPct := lltvF / 1e18 * 100
+	bonus := 100 - lltvPct
+	const gasCushion = 0.1
+	return bonus - gasCushion
+}

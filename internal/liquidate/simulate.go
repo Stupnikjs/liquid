@@ -61,7 +61,7 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 	}
 	maxSwapAmout := route.WCAmountOut
 	if seizeAssets.Cmp(maxSwapAmout) > 0 {
-		seizeAssets = maxSwapAmout // chercher a terme le swap manager ici
+		seizeAssets = new(big.Int).Set(maxSwapAmout) // chercher a terme le swap manager ici
 	}
 
 	out.SeizeAssets = seizeAssets

@@ -15,7 +15,6 @@ import (
 
 type Runner struct {
 	LiquidateConsumer *liquidate.Consumer
-	SwapConsumer      *swap.Consumer
 	Cache             *cache.Cache
 	SwapRoutes        *swap.RouteCache
 	Infra             *lqtypes.Infra
@@ -28,7 +27,6 @@ func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.
 	logger := utils.NewLogger(context.Background(), logfile)
 	return &Runner{
 		LiquidateConsumer: liquidate.NewConsumer(infra, mCache, routeCache, logger, liquidateCh),
-		SwapConsumer:      swap.NewConsumer(infra, mCache, routeCache, logger),
 		Cache:             mCache,
 		SwapRoutes:        routeCache,
 		Infra:             infra,
@@ -45,10 +43,9 @@ func (r *Runner) Init(ctx context.Context) {
 	r.Logger <- "Api call init"
 	r.OnChainRefreshAll(ctx)
 	r.Logger <- "Refresh all markets for init"
-	r.SwapConsumer.RouteCacheRefresh()
+	r.RouteCacheRefresh()
 	r.Logger <- "Quoting over "
 	r.LogMarkets()
-	fmt.Println(len(r.Cache.Markets.Ids()))
 
 }
 

@@ -2,6 +2,7 @@ package swap
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -11,32 +12,42 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
-type Dex struct {
-	QuoterAddr common.Address
-	RouterAddr common.Address
-	Quoter     QuoterFunc
-}
-
-type QuoterFunc func(
+func UniQuoter(
 	conn lqtypes.EthCaller,
-	marketp lqtypes.MorphoMarket,
-	quoterAddr common.Address,
-	amountIn, oraclePrice *big.Int,
-	maxSlippage float64,
-	rateLimit time.Duration,
-) (lqtypes.PoolEdge, bool)
-
-type QuotSingleFunc func(conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
 	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
-	fee uint32,
-) (lqtypes.PoolEdge, bool)
+	rateLimit time.Duration,
+) (lqtypes.PoolEdge, bool) {
+	maxSlippage := marketp.MaxSlippage()
+	fmt.Printf("max slippage for %s is: %f\n", marketp.GetPair(), maxSlippage)
 
-func (d *Dex) Quote(conn lqtypes.EthCaller, marketp lqtypes.MorphoMarket, amountIn, oraclePrice *big.Int, maxSlippage float64,
-	rateLimit time.Duration) (lqtypes.PoolEdge, bool) {
-	return d.Quoter(conn, marketp, d.QuoterAddr, amountIn, oraclePrice, maxSlippage, rateLimit)
+	lo := big.NewInt(1)
+	hi := new(big.Int).Set(amountIn)
+	var best lqtypes.PoolEdge
+	found := false
+
+	for i := 0; i < 12 && lo.Cmp(hi) <= 0; i++ {
+		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
+
+		result, ok := UniQuote(conn, marketp, quoterAddr, mid, oraclePrice, rateLimit)
+		if ok {
+			best = result
+			found = true
+			lo = new(big.Int).Add(mid, big.NewInt(1))
+		} else {
+			hi = new(big.Int).Sub(mid, big.NewInt(1))
+		}
+	}
+
+	if !found {
+		fmt.Printf("no acceptable slippage found for %s\n", marketp.GetPair())
+		return lqtypes.PoolEdge{}, false
+	}
+
+	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
+	return best, true
 }
 
 func UniQuote(
@@ -45,20 +56,20 @@ func UniQuote(
 	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
-	maxSlippage float64,
 	rateLimit time.Duration,
 ) (lqtypes.PoolEdge, bool) {
 	var best lqtypes.PoolEdge
 	var UniswapFees = []uint32{100, 500, 3000, 10000}
 	found := false
-
+	m := marketp
 	for _, fee := range UniswapFees {
 		time.Sleep(rateLimit)
-		result, ok := uniQuoteCall(conn, marketp, quoterAddr, amountIn, oraclePrice, fee)
+		result, ok := uniQuoteCall(conn, m, quoterAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}
-		if result.WCSlippage <= maxSlippage {
+
+		if result.WCSlippage <= m.MaxSlippage() {
 			if !found || result.WCAmountOut.Cmp(best.WCAmountOut) > 0 {
 				best = result
 				found = true

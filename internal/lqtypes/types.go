@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -45,7 +44,7 @@ type Config struct {
 		HTTP []string
 		WS   []string
 	}
-	Dexs []swap.Dex
+	Dexs []Dex
 }
 
 type PoolEdge struct {
@@ -75,4 +74,31 @@ type LiquidateArgs struct {
 	SwapRouter   common.Address
 	PoolFee      *big.Int
 	MinOut       *big.Int
+}
+
+type Dex struct {
+	QuoterAddr common.Address
+	RouterAddr common.Address
+	Quoter     QuoterFunc
+}
+
+type QuoterFunc func(
+	conn EthCaller,
+	marketp MorphoMarket,
+	quoterAddr common.Address,
+	amountIn, oraclePrice *big.Int,
+	rateLimit time.Duration,
+) (PoolEdge, bool)
+
+type QuotSingleFunc func(conn EthCaller,
+	marketp MorphoMarket,
+	quoterAddr common.Address,
+	amountIn *big.Int,
+	oraclePrice *big.Int,
+	fee uint32,
+) (PoolEdge, bool)
+
+func (d *Dex) Quote(conn EthCaller, marketp MorphoMarket, amountIn, oraclePrice *big.Int,
+	rateLimit time.Duration) (PoolEdge, bool) {
+	return d.Quoter(conn, marketp, d.QuoterAddr, amountIn, oraclePrice, rateLimit)
 }
