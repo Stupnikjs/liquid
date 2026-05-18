@@ -48,14 +48,15 @@ type Config struct {
 }
 
 type PoolEdge struct {
-	TokenIn      common.Address
-	TokenOut     common.Address
-	Router       common.Address
-	Fee          uint32
-	WCSlippage   float64
-	WCAmountIn   *big.Int
-	WCAmountOut  *big.Int
-	CalibratedAt time.Time
+	TokenIn        common.Address
+	TokenOut       common.Address
+	Router         common.Address
+	Fee            uint32
+	WCSlippage     float64
+	WCAmountIn     *big.Int
+	WCAmountOut    *big.Int
+	CalibratedAt   time.Time
+	AmountInOffset int64
 }
 
 type MarketContractParams struct {

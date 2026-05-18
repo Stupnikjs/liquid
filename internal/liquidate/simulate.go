@@ -73,12 +73,21 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 // refactor on multihop
 func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.MarketParams) (lqtypes.LiquidateArgs, error) {
 	route, ok := c.SwapCache.GetRoute(params.CollateralToken, params.LoanToken)
+
 	if !ok {
 		return lqtypes.LiquidateArgs{}, fmt.Errorf("no avaible route found")
 	}
 	if l.MinOut.Cmp(route.Hops[0].WCAmountOut) > 0 {
 		l.MinOut.Set(route.Hops[0].WCAmountOut)
 	}
+
+	/*
+		swapSteps := EncodeRouteToCallData()
+
+
+
+
+	*/
 	return lqtypes.LiquidateArgs{
 		MarketParams: *params.ToMarketContractParams(),
 		Borrower:     l.Pos.Address,

@@ -76,6 +76,7 @@ func UniQuote(
 			}
 		}
 	}
+	best.AmountInOffset = 164 // amountIn offset uni
 	return best, found
 }
 
