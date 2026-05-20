@@ -34,12 +34,14 @@ type AeroRoute struct {
 	Factory common.Address
 }
 
-var AeroFactory = common.HexToAddress("0x420DD381b31aEf6683db6B902084cB0FFECe40Da") // Sushiswap factory, used by Aerodrome
+var (
+	AeroFactory = common.HexToAddress("0x420DD381b31aEf6683db6B902084cB0FFECe40Da")
+	AeroRouter  = common.HexToAddress("0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43")
+)
 
 func AerodromeQuoter(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
-	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	rateLimit time.Duration,
@@ -70,18 +72,18 @@ func AerodromeQuoter(
 	for _, route := range routes {
 		time.Sleep(rateLimit)
 
-		result, ok := aeroQuoteCall(
+		result, ok := aeroAMMQuoteCall(
 			conn,
 			marketp,
-			quoterAddr,
 			amountIn,
 			oraclePrice,
 			route,
 		)
-		fmt.Println(result)
 		if !ok {
 			continue
 		}
+
+		fmt.Printf("aerodrome quote stable=%v slippage=%.4f%%\n", route[0].Stable, result.WCSlippage)
 
 		if result.WCSlippage <= marketp.MaxSlippage() {
 			if !found || result.WCAmountOut.Cmp(best.WCAmountOut) > 0 {
@@ -92,19 +94,19 @@ func AerodromeQuoter(
 	}
 
 	if !found {
+		fmt.Printf("no acceptable slippage found for %s\n", marketp.GetPair())
 		return lqtypes.PoolEdge{}, false
 	}
 
-	// offset ABI si tu fais du patch calldata plus tard
+	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
 	best.AmountInOffset = 36
 	best.DexName = "AERO"
 	return best, true
 }
 
-func aeroQuoteCall(
+func aeroAMMQuoteCall(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
-	router common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	routes []AeroRoute,
@@ -116,7 +118,7 @@ func aeroQuoteCall(
 		context.Background(),
 		[]w3types.RPCCaller{
 			eth.CallFunc(
-				router,
+				AeroRouter,
 				FuncGetAmountsOut,
 				amountIn,
 				routes,
@@ -131,17 +133,11 @@ func aeroQuoteCall(
 	amountOut := amounts[len(amounts)-1]
 
 	return lqtypes.PoolEdge{
-		TokenIn:  marketp.GetCollateralToken(),
-		TokenOut: marketp.GetLoanToken(),
-		Router:   router,
-
-		WCSlippage: ComputeSlippage(
-			amountIn,
-			amountOut,
-			oraclePrice,
-		),
-
-		WCAmountIn:   amountIn,
+		TokenIn:      marketp.GetCollateralToken(),
+		TokenOut:     marketp.GetLoanToken(),
+		Router:       AeroRouter,
+		WCSlippage:   ComputeSlippage(amountIn, amountOut, oraclePrice),
+		WCAmountIn:   new(big.Int).Set(amountIn),
 		WCAmountOut:  amountOut,
 		CalibratedAt: time.Now(),
 	}, true
