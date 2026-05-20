@@ -27,7 +27,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Interface
+// Interface _
 // ---------------------------------------------------------------------------
 
 // RPCClient is the minimal surface the Connector needs from a w3.Client.
