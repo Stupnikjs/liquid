@@ -11,7 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 
 	"github.com/Stupnikjs/liquid/internal/utils"
@@ -224,11 +224,11 @@ func (c *Connector) SubscribeToEventPos(ctx context.Context, conf lqtypes.Config
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{conf.Addresses.Morpho},
 		Topics: [][]common.Hash{{
-			config.EventBorrow.Topic0,
-			config.EventRepay.Topic0,
-			config.EventSupplyCollateral.Topic0,
-			config.EventLiquidate.Topic0,
-			config.EventAccrueInterest.Topic0,
+			abi.EventBorrow.Topic0,
+			abi.EventRepay.Topic0,
+			abi.EventSupplyCollateral.Topic0,
+			abi.EventLiquidate.Topic0,
+			abi.EventAccrueInterest.Topic0,
 		}},
 	}
 	c.watchLogs(ctx, query, c.logsCh)

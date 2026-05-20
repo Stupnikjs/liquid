@@ -8,7 +8,7 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 
-	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/config/abi"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -16,17 +16,17 @@ import (
 
 func ProcessEvents(c *cache.MarketStore, log *types.Log) {
 	switch log.Topics[0] {
-	case config.EventAccrueInterest.Topic0:
+	case abi.EventAccrueInterest.Topic0:
 		AccrueInterestEventProcess(c, log)
 
-	case config.EventBorrow.Topic0:
+	case abi.EventBorrow.Topic0:
 		BorrowEventProcess(c, log)
 
-	case config.EventLiquidate.Topic0:
+	case abi.EventLiquidate.Topic0:
 		LiquidateEventProcess(c, log)
-	case config.EventRepay.Topic0:
+	case abi.EventRepay.Topic0:
 		RepayEventProcess(c, log)
-	case config.EventSupplyCollateral.Topic0:
+	case abi.EventSupplyCollateral.Topic0:
 		SupplyCollateralEventProcess(c, log)
 
 	// ajouter les prix oracle
@@ -44,7 +44,7 @@ func BorrowEventProcess(c *cache.MarketStore, log *types.Log) {
 		assets   big.Int
 		shares   big.Int
 	)
-	if err := config.EventBorrow.DecodeArgs(log, &id, &caller, &onBehalf, &receiver, &assets, &shares); err != nil {
+	if err := abi.EventBorrow.DecodeArgs(log, &id, &caller, &onBehalf, &receiver, &assets, &shares); err != nil {
 		fmt.Println("borrow ", log)
 		fmt.Println("decode error:", err)
 		return
@@ -86,7 +86,7 @@ func RepayEventProcess(c *cache.MarketStore, log *types.Log) {
 		shares   big.Int
 	)
 
-	if err := config.EventRepay.DecodeArgs(log, &id, &caller, &onBehalf, &assets, &shares); err != nil {
+	if err := abi.EventRepay.DecodeArgs(log, &id, &caller, &onBehalf, &assets, &shares); err != nil {
 		fmt.Println("decode error:", err)
 		return
 	}
@@ -121,7 +121,7 @@ func LiquidateEventProcess(c *cache.MarketStore, log *types.Log) {
 		badDebtShares big.Int
 	)
 
-	if err := config.EventLiquidate.DecodeArgs(log, &id, &caller, &borrower, &repaidAssets, &repaidShares, &seizedAssets, &badDebtAssets, &badDebtShares); err != nil {
+	if err := abi.EventLiquidate.DecodeArgs(log, &id, &caller, &borrower, &repaidAssets, &repaidShares, &seizedAssets, &badDebtAssets, &badDebtShares); err != nil {
 		fmt.Println("liquidate ", log)
 		fmt.Println("decode error:", err)
 		return
@@ -159,7 +159,7 @@ func AccrueInterestEventProcess(c *cache.MarketStore, log *types.Log) {
 		interest       big.Int
 		feeShares      big.Int
 	)
-	if err := config.EventAccrueInterest.DecodeArgs(log, &id, &prevBorrowRate, &interest, &feeShares); err != nil {
+	if err := abi.EventAccrueInterest.DecodeArgs(log, &id, &prevBorrowRate, &interest, &feeShares); err != nil {
 		fmt.Println("decode error:", err)
 		return
 	}
@@ -189,7 +189,7 @@ func SupplyCollateralEventProcess(c *cache.MarketStore, log *types.Log) {
 		onBehalf common.Address
 		assets   big.Int
 	)
-	if err := config.EventSupplyCollateral.DecodeArgs(log, &id, &caller, &onBehalf, &assets); err != nil {
+	if err := abi.EventSupplyCollateral.DecodeArgs(log, &id, &caller, &onBehalf, &assets); err != nil {
 		fmt.Println("decode error:", err)
 		return
 	}

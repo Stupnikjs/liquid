@@ -25,6 +25,7 @@ type RouteCache struct {
 type Route struct {
 	Hops        []lqtypes.PoolEdge // ou Legs, Steps
 	WCAmountOut *big.Int           // worst case du chemin entier, précalculé
+	DexName     string
 }
 
 func NewRouteCache(n int) *RouteCache {

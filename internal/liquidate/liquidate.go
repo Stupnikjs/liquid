@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/swap"
@@ -113,7 +113,7 @@ func EncodeLiquidateCalldata(args lqtypes.LiquidateArgs) ([]byte, error) {
 		return []byte{}, nil
 	}
 
-	return config.FuncLiquidate.EncodeArgs(
+	return abi.FuncLiquidate.EncodeArgs(
 		args.MarketParams,
 		args.Borrower,
 		args.SeizedAssets,

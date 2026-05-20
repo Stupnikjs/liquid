@@ -8,7 +8,7 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	market "github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/config"
+	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -35,7 +35,7 @@ func newResult(id [32]byte) *OnChainResult {
 
 // marketCall builds the eth_call for a Morpho market.
 func marketCall(morphoAddr common.Address, id [32]byte, res *OnChainResult) w3types.RPCCaller {
-	return eth.CallFunc(morphoAddr, config.MarketFunc, id).Returns(
+	return eth.CallFunc(morphoAddr, abi.MarketFunc, id).Returns(
 		new(big.Int), new(big.Int),
 		&res.Stats.TotalBorrowAssets,
 		&res.Stats.TotalBorrowShares,
@@ -46,7 +46,7 @@ func marketCall(morphoAddr common.Address, id [32]byte, res *OnChainResult) w3ty
 
 // oracleCall builds the eth_call for an oracle price.
 func oracleCall(oracle common.Address, res *OnChainResult) w3types.RPCCaller {
-	return eth.CallFunc(oracle, config.OraclePriceFunc).Returns(res.OraclePrice)
+	return eth.CallFunc(oracle, abi.OraclePriceFunc).Returns(res.OraclePrice)
 }
 
 // refresh is the shared implementation for on-chain refreshes.

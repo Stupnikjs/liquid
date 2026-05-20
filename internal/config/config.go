@@ -76,6 +76,7 @@ func LoadArbitrumConfig() lqtypes.Config {
 			HTTP: []string{os.Getenv("ARB_HTTP_RPC_ALCH"), os.Getenv("ARB_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("ARB_WS_RPC_ALCH"), os.Getenv("ARB_WS_RPC_ALCH")},
 		},
+		Dexs: []lqtypes.Dex{},
 	}
 }
 

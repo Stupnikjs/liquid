@@ -57,6 +57,7 @@ type PoolEdge struct {
 	WCAmountIn     *big.Int
 	WCAmountOut    *big.Int
 	CalibratedAt   time.Time
+	DexName        string
 	AmountInOffset int64
 }
 
@@ -82,6 +83,7 @@ type Dex struct {
 	QuoterAddr common.Address
 	RouterAddr common.Address
 	Quoter     QuoterFunc
+	Name       string
 }
 
 type QuoterFunc func(
