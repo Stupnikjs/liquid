@@ -25,6 +25,13 @@ func LoadBaseConfig() lqtypes.Config {
 			QuoterAddr: BaseUniswapQuoterV2Addr,
 			RouterAddr: BaseUniswapV3Router,
 			Quoter:     swap.UniQuoter,
+			Name:       "UNIV3",
+		},
+		{
+			QuoterAddr: BaseAerodromeRouterAddr,
+			RouterAddr: BaseAerodromeRouterAddr,
+			Quoter:     swap.AerodromeQuoter,
+			Name:       "AERO",
 		},
 	}
 	return lqtypes.Config{
@@ -76,7 +83,14 @@ func LoadArbitrumConfig() lqtypes.Config {
 			HTTP: []string{os.Getenv("ARB_HTTP_RPC_ALCH"), os.Getenv("ARB_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("ARB_WS_RPC_ALCH"), os.Getenv("ARB_WS_RPC_ALCH")},
 		},
-		Dexs: []lqtypes.Dex{},
+		Dexs: []lqtypes.Dex{
+			{
+				QuoterAddr: ArbitrumUniswapQuoterV2Addr,
+				RouterAddr: ArbitrumUniswapV3Router,
+				Quoter:     swap.UniQuoter,
+				Name:       "UNIV3",
+			},
+		},
 	}
 }
 
@@ -107,6 +121,14 @@ func LoadOptimismConfig() lqtypes.Config {
 		}{
 			HTTP: []string{os.Getenv("OPT_HTTP_RPC_ALCH"), os.Getenv("OPT_HTTP_RPC_ALCH")},
 			WS:   []string{os.Getenv("OPT_WS_RPC_ALCH"), os.Getenv("OPT_WS_RPC_ALCH")},
+		},
+		Dexs: []lqtypes.Dex{
+			{
+				QuoterAddr: OptimismUniswapQuoterV2Addr,
+				RouterAddr: OptimismUniswapV3Router,
+				Quoter:     swap.UniQuoter,
+				Name:       "UNIV3",
+			},
 		},
 	}
 }

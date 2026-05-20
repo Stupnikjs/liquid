@@ -10,6 +10,7 @@ var (
 	// Base Addresses
 	BaseUniswapQuoterV2Addr    = common.HexToAddress("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a")
 	BaseUniswapV3Router        = common.HexToAddress("0x2626664c2603336E57B271c5C0b26F421741e481")
+	BaseAerodromeRouterAddr    = common.HexToAddress("0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43")
 	BaseLiquidatorAddr         = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
 	BaseLiquidatorUni          = common.HexToAddress("0xFa99159fC88E856738Ef3c02D09acDdfD99A3B33") // new one
 	BaseLiquidatorAddrV2       = common.HexToAddress("0x2661C239C38AaB0d333Be91F999F7E69dD706504")

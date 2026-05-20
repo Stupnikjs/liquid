@@ -36,7 +36,7 @@ func BuildSteps(route swap.Route, liquidatorAddress common.Address) ([]SwapStep,
 	for i, hop := range route.Hops {
 		// Encoder le calldata du DEX avec amountIn = 0 (placeholder)
 		switch hop.DexName {
-		case "UniswapV3":
+		case "UNIV3":
 			data, err := abi.ExactInputSingle.EncodeArgs(abi.ExactInputSingleParams{
 				TokenIn:           hop.TokenIn,
 				TokenOut:          hop.TokenOut,
@@ -57,9 +57,9 @@ func BuildSteps(route swap.Route, liquidatorAddress common.Address) ([]SwapStep,
 				TokenOut:       hop.TokenOut,
 				AmountInOffset: big.NewInt(hop.AmountInOffset), // 32 + 4 + 4*32 pour exactInputSingle
 			}
-		case "Aerodrome":
+		case "AERO":
 
-		case "Sushiswap":
+		case "SUSHI":
 
 		default:
 			return nil, fmt.Errorf("DEX non supporté: %s", hop.DexName)

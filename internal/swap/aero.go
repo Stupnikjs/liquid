@@ -2,6 +2,7 @@ package swap
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -77,7 +78,7 @@ func AerodromeQuoter(
 			oraclePrice,
 			route,
 		)
-
+		fmt.Println(result)
 		if !ok {
 			continue
 		}
@@ -96,7 +97,7 @@ func AerodromeQuoter(
 
 	// offset ABI si tu fais du patch calldata plus tard
 	best.AmountInOffset = 36
-
+	best.DexName = "AERO"
 	return best, true
 }
 

@@ -144,7 +144,7 @@ func New(mainRPC, quoteRPC, wsRPC string) *Connector {
 		quoteRPC: quoteRPC,
 		wsRPC:    wsRPC,
 		logsCh:   make(chan *types.Log, 100),
-		limiter:  rate.NewLimiter(rate.Every(time.Minute/300), 10),
+		limiter:  rate.NewLimiter(rate.Every(time.Minute/500), 15),
 	}
 }
 
@@ -162,7 +162,7 @@ func newWithClients(mainRPC, quoteRPC, wsRPC string,
 		quoteRPC: quoteRPC,
 		wsRPC:    wsRPC,
 		logsCh:   make(chan *types.Log, 100),
-		limiter:  rate.NewLimiter(rate.Every(time.Minute/300), 10),
+		limiter:  rate.NewLimiter(rate.Every(time.Minute/500), 15),
 	}
 }
 

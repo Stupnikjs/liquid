@@ -47,6 +47,7 @@ func UniQuoter(
 	}
 
 	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
+	best.DexName = "UNIV3"
 	return best, true
 }
 
