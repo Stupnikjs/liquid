@@ -50,6 +50,7 @@ type Config struct {
 type PoolEdge struct {
 	TokenIn        common.Address
 	TokenOut       common.Address
+	Quoter         common.Address
 	Router         common.Address
 	Fee            uint32
 	WCSlippage     float64

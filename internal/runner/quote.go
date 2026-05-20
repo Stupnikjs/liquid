@@ -1,9 +1,11 @@
 package runner
 
 import (
+	"log"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
 const QUOTE_RATE_LIMIT = 400 * time.Millisecond
@@ -23,6 +25,10 @@ func (r *Runner) singleHop() {
 				r.SwapRoutes.AppendPool(result)
 			}
 		}
+	}
+	err := utils.SavePoolEdgesJSON(r.SwapRoutes.Pools, "pools.json")
+	if err != nil {
+		log.Println("Err saving pools")
 	}
 	r.SwapRoutes.PoolsToGraph()
 }
