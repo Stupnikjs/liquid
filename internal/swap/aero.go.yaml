@@ -42,6 +42,7 @@ var (
 func AerodromeQuoter(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	rateLimit time.Duration,
@@ -75,10 +76,12 @@ func AerodromeQuoter(
 		result, ok := aeroAMMQuoteCall(
 			conn,
 			marketp,
+			quoterAddr,
 			amountIn,
 			oraclePrice,
 			route,
 		)
+		fmt.Println(result)
 		if !ok {
 			continue
 		}
@@ -107,6 +110,7 @@ func AerodromeQuoter(
 func aeroAMMQuoteCall(
 	conn lqtypes.EthCaller,
 	marketp lqtypes.MorphoMarket,
+	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	routes []AeroRoute,
@@ -118,7 +122,7 @@ func aeroAMMQuoteCall(
 		context.Background(),
 		[]w3types.RPCCaller{
 			eth.CallFunc(
-				AeroRouter,
+				quoterAddr,
 				FuncGetAmountsOut,
 				amountIn,
 				routes,
@@ -135,7 +139,7 @@ func aeroAMMQuoteCall(
 	return lqtypes.PoolEdge{
 		TokenIn:      marketp.GetCollateralToken(),
 		TokenOut:     marketp.GetLoanToken(),
-		Router:       AeroRouter,
+		Router:       quoterAddr,
 		WCSlippage:   ComputeSlippage(amountIn, amountOut, oraclePrice),
 		WCAmountIn:   new(big.Int).Set(amountIn),
 		WCAmountOut:  amountOut,
