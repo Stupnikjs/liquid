@@ -35,21 +35,13 @@ func LoadBaseConfig() lqtypes.Config {
 			Quoter:     swap.UniQuoter,
 			Name:       "UNIV3",
 		},
-
-		/*
-			{
-				QuoterAddr: BaseAerodromeRouterAddr,
-				RouterAddr: BaseAerodromeRouterAddr,
-				Quoter:     swap.AerodromeQuoter,
-				Name:       "AERO",
-			},*/
 	}
 	return lqtypes.Config{
 		Signer: signer,
 		Addresses: lqtypes.Addresses{
 			UniSwapRouter:      BaseUniswapV3Router,
 			UniSwapQuoter:      BaseUniswapQuoterV2Addr,
-			LiquidatorContract: BaseLiquidatorUni,
+			LiquidatorContract: BaseLiquidatorNew,
 			Morpho:             MorphoMain,
 			Wallet:             BaseWalletAddr,
 		},

@@ -10,7 +10,6 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/liquidate"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -194,7 +193,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 
 	ownerSel := crypto.Keccak256([]byte("owner()"))[:4]
 	res, _ := txCtx.client.CallContract(ctx, ethereum.CallMsg{
-		To:   &config.BaseLiquidatorUni,
+		To:   &config.BaseLiquidatorNew,
 		Data: ownerSel,
 	}, nil)
 	t.Logf("owner:  0x%x", res[12:32])
@@ -209,17 +208,14 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	price := new(big.Int).SetBytes(result)
 	a.LiquidationSetup(t, price)
 
-	liqArg := lqtypes.LiquidateArgs{
-		MarketParams: market,
-		Borrower:     common.HexToAddress(FundedAccounts[0]),
-		SeizedAssets: utils.WAD,
-		RepaidShares: big.NewInt(0),
-		SwapRouter:   config.BaseUniswapV3Router,
-		PoolFee:      big.NewInt(100),
-		MinOut:       big.NewInt(0),
-	}
-
-	calldata, err = liquidate.EncodeLiquidateCalldata(liqArg)
+	calldata, err = liquidate.BuildLiquidateCalldata(
+		market,
+		common.HexToAddress(FundedAccounts[0]),
+		utils.WAD,
+		big.NewInt(0),
+		[]liquidate.SwapStep{{}},
+		big.NewInt(0),
+	)
 	if err != nil {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
@@ -233,7 +229,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 		txCtx.nonce,
 		txCtx.gasPrice,
 		txCtx.chainID,
-		config.BaseLiquidatorUni, // to: le contrat liquidateur
+		config.BaseLiquidatorNew, // to: le contrat liquidateur
 		big.NewInt(0),            // value: 0 ETH
 		calldata,                 // data: calldata encodé
 		txCtx.privKey,

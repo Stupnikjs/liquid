@@ -19,7 +19,7 @@ var (
 
 	BaseAerodromeRouterAddr    = common.HexToAddress("0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43")
 	BaseLiquidatorAddr         = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
-	BaseLiquidatorUni          = common.HexToAddress("0xFa99159fC88E856738Ef3c02D09acDdfD99A3B33") // new one
+	BaseLiquidatorNew          = common.HexToAddress("0x8BB59aa1667E46f0587cBBA34557bb604c27b5f8") // mutli hop
 	BaseLiquidatorAddrV2       = common.HexToAddress("0x2661C239C38AaB0d333Be91F999F7E69dD706504")
 	BaseWalletAddr             = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 	BaseLiquidatorOdosContract = common.HexToAddress("")

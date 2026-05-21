@@ -6,7 +6,6 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )
@@ -30,10 +29,10 @@ type SwapStep struct {
 	AmountInOffset *big.Int
 }
 
-func BuildSteps(route swap.Route, liquidatorAddress common.Address) ([]SwapStep, error) {
-	steps := make([]SwapStep, len(route.Hops))
+func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]SwapStep, error) {
+	steps := make([]SwapStep, len(route))
 
-	for i, hop := range route.Hops {
+	for i, hop := range route {
 		// Encoder le calldata du DEX avec amountIn = 0 (placeholder)
 		switch hop.DexName {
 		case "UNIV3":

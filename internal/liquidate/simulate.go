@@ -8,6 +8,7 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/lmittmann/w3/module/eth"
@@ -41,7 +42,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 // Compute liquidation values
 // Encode args
 // Simulate with eth_call
-func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) *Liquidable {
+func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition, maxSwapAmount *big.Int) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
 
@@ -55,13 +56,9 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 	out.RepayShares = repayShares
 
 	// changer pour le multihop
-	route, ok := c.SwapCache.GetRoute(m.CollateralToken, m.LoanToken)
-	if !ok {
-		return out
-	}
-	maxSwapAmout := route.WCAmountOut
-	if seizeAssets.Cmp(maxSwapAmout) > 0 {
-		seizeAssets = new(big.Int).Set(maxSwapAmout) // chercher a terme le swap manager ici
+
+	if seizeAssets.Cmp(maxSwapAmount) > 0 {
+		seizeAssets = new(big.Int).Set(maxSwapAmount) // chercher a terme le swap manager ici
 	}
 
 	out.SeizeAssets = seizeAssets
@@ -71,48 +68,32 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 }
 
 // refactor on multihop
-func (c *Consumer) ToLiquidationArg(l *Liquidable, fee int64, params morpho.MarketParams) (lqtypes.LiquidateArgs, error) {
-	route, ok := c.SwapCache.GetRoute(params.CollateralToken, params.LoanToken)
-
-	if !ok {
-		return lqtypes.LiquidateArgs{}, fmt.Errorf("no avaible route found")
+func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []lqtypes.PoolEdge) ([]byte, error) {
+	m := params.ToMarketContractParams()
+	steps, err := BuildSteps(route, c.Infra.Config.Addresses.LiquidatorContract)
+	if err != nil {
+		return nil, fmt.Errorf("build steps: %w", err)
 	}
-	if l.MinOut.Cmp(route.Hops[0].WCAmountOut) > 0 {
-		l.MinOut.Set(route.Hops[0].WCAmountOut)
-	}
-
-	/*
-		swapSteps := EncodeRouteToCallData()
-
-
-
-
-	*/
-	return lqtypes.LiquidateArgs{
-		MarketParams: *params.ToMarketContractParams(),
-		Borrower:     l.Pos.Address,
-		SeizedAssets: l.SeizeAssets,
-		RepaidShares: big.NewInt(0),
-		SwapRouter:   route.Hops[0].Router,
-		PoolFee:      big.NewInt(int64(route.Hops[0].Fee)),
-		MinOut:       l.MinOut,
-	}, nil
+	return BuildLiquidateCalldata(*m, l.Pos.Address, l.SeizeAssets, l.RepayShares, steps, new(big.Int).SetInt64(0))
 }
 
 // snap nil guard upon this func
 // err is passed to Liquidable
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, fee int64, p *cache.BorrowPosition) (*Liquidable, error) {
-	l := c.ComputeAmounts(m, snap, p)
-	args, err := c.ToLiquidationArg(l, fee, m)
+func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) (*Liquidable, error) {
+	routes := c.SwapCache.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 3)
+	route, err := swap.BestRoute(routes, big.NewInt(0))
+	maxSwapAmount := new(big.Int).Set(route[0].WCAmountIn)
+	l := c.ComputeAmounts(m, snap, p, maxSwapAmount)
+	if len(routes) == 0 {
+		return l, fmt.Errorf("route is len 0")
+	}
+
+	data, err := c.ToLiquidationArg(l, m, route)
 	if err != nil {
-		return l, fmt.Errorf("to liquidation args err : %w", err)
+		return l, fmt.Errorf("to liquidation arg encoding err : %w", err)
 
 	}
-	data, err := EncodeLiquidateCalldata(args)
-	if err != nil {
-		return l, fmt.Errorf("encode: %w", err)
 
-	}
 	l.CallData = data
 	gasVal, err := c.dryRun(ctx, data)
 	l.SimulatedAt = time.Now()

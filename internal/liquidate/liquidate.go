@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/swap"
@@ -76,13 +75,8 @@ func (c *Consumer) Run(ctx context.Context) {
 }
 
 func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) {
-	route, ok := c.SwapCache.GetRoute(market.CollateralToken, market.LoanToken)
-	if !ok {
-		c.log("no route found in cache for these tokens")
-		return
-	}
-	fee := route.Hops[0].Fee // change for multihop
-	result, err := c.SimulateAndPreComputeTx(ctx, market, snap, int64(fee), p)
+
+	result, err := c.SimulateAndPreComputeTx(ctx, market, snap, p)
 	if err != nil {
 		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, err))
 		return
@@ -105,21 +99,4 @@ func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstima
 	}
 	_, err := onchain.SendSignedTx(ctx, c.Infra.Conn, c.Infra.Config.Addresses.Wallet, c.Infra.Config.Signer, tx)
 	return err
-}
-
-// encode liquidate args after selector
-func EncodeLiquidateCalldata(args lqtypes.LiquidateArgs) ([]byte, error) {
-	if args.SeizedAssets == nil || args.RepaidShares == nil || args.PoolFee == nil || args.MinOut == nil || args.MarketParams.Lltv == nil {
-		return []byte{}, nil
-	}
-
-	return abi.FuncLiquidate.EncodeArgs(
-		args.MarketParams,
-		args.Borrower,
-		args.SeizedAssets,
-		args.RepaidShares,
-		args.SwapRouter,
-		args.PoolFee,
-		args.MinOut,
-	)
 }

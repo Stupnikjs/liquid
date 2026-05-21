@@ -1,7 +1,6 @@
 package swap
 
 import (
-	"math/big"
 	"sync"
 
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
@@ -16,71 +15,19 @@ type RouteKey struct {
 }
 
 type RouteCache struct {
-	Mu     sync.RWMutex
-	Pools  []lqtypes.PoolEdge
-	Graph  PoolGraph
-	Routes map[RouteKey]Route // change by pool graph
+	Mu    sync.RWMutex
+	Pools []lqtypes.PoolEdge
+	Graph PoolGraph
 }
 
-type Route struct {
-	Hops        []lqtypes.PoolEdge // ou Legs, Steps
-	WCAmountOut *big.Int           // worst case du chemin entier, précalculé
-	DexName     string
-}
-
-func NewRouteCache(n int) *RouteCache {
+func NewRouteCache() *RouteCache {
 	return &RouteCache{
-		Routes: make(map[RouteKey]Route, n),
+		Pools: make([]lqtypes.PoolEdge, 0),
+		Graph: make(PoolGraph),
 	}
 }
-
 func (rc *RouteCache) AppendPool(r lqtypes.PoolEdge) {
 	rc.Mu.Lock()
 	defer rc.Mu.Unlock()
 	rc.Pools = append(rc.Pools, r)
-}
-
-func (rc *RouteCache) GetRoute(tokenIn, tokenOut common.Address) (Route, bool) {
-	k := RouteKey{
-		TokenIn:  tokenIn,
-		TokenOut: tokenOut,
-	}
-	rc.Mu.RLock()
-	defer rc.Mu.RUnlock()
-	route, ok := rc.Routes[k]
-	if !ok {
-		return Route{}, false
-	}
-	hops := make([]lqtypes.PoolEdge, len(route.Hops))
-	copy(hops, route.Hops)
-
-	return Route{
-		Hops:        hops,
-		WCAmountOut: new(big.Int).Set(route.WCAmountOut),
-	}, true
-}
-
-func (rc *RouteCache) StoreRoute(r []lqtypes.PoolEdge) {
-	if len(r) == 0 {
-		return
-	}
-	lastWC := r[len(r)-1].WCAmountOut
-	if lastWC == nil {
-		return // ou log + return selon ta logique
-	}
-
-	k := RouteKey{
-		TokenIn:  r[0].TokenIn,
-		TokenOut: r[len(r)-1].TokenOut,
-	}
-
-	rc.Mu.Lock()
-	defer rc.Mu.Unlock()
-	hops := make([]lqtypes.PoolEdge, len(r))
-	copy(hops, r)
-	route := Route{
-		Hops:        hops,
-		WCAmountOut: new(big.Int).Set(lastWC), // copie aussi le big.Int
-	}
-	rc.Routes[k] = route
 }

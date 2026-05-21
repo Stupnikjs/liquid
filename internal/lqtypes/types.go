@@ -53,13 +53,3 @@ type MarketContractParams struct {
 	Irm             common.Address
 	Lltv            *big.Int
 }
-
-type LiquidateArgs struct {
-	MarketParams MarketContractParams
-	Borrower     common.Address
-	SeizedAssets *big.Int
-	RepaidShares *big.Int
-	SwapRouter   common.Address
-	PoolFee      *big.Int
-	MinOut       *big.Int
-}

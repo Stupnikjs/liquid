@@ -12,7 +12,7 @@ const QUOTE_RATE_LIMIT = 400 * time.Millisecond
 
 // quote to Pools array
 // then append to graph
-func (r *Runner) singleHop() {
+func (r *Runner) QuotePools() {
 	for id, m := range r.Cache.MarketMap {
 		snap := r.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
@@ -34,22 +34,18 @@ func (r *Runner) singleHop() {
 		log.Println("Err saving pools")
 	}
 	r.SwapRoutes.PoolsToGraph()
+	r.SelectMarketWithRoute()
 }
 
-// for now we stay on single hop by parameters
-func (r *Runner) RouteCacheRefresh() {
-	r.singleHop()
+func (r *Runner) SelectMarketWithRoute() {
 	for _, m := range r.Cache.MarketMap {
-		routes := r.SwapRoutes.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 1)
-
-		// select best route
-		if len(routes) == 0 {
+		_, found := r.SwapRoutes.Graph.FindBestRoute(m.CollateralToken, m.LoanToken)
+		if !found {
 			r.Cache.Markets.Update(m.ID, func(m *cache.Market) {
 				m.Canceled = true
 			})
-			continue
 		}
-		r.SwapRoutes.StoreRoute(routes[0])
 	}
-
 }
+
+// for now we stay on single hop by parameters
