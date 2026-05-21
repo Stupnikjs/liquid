@@ -55,11 +55,31 @@ func BuildSteps(route swap.Route, liquidatorAddress common.Address) ([]SwapStep,
 				Data:           data,
 				TokenIn:        hop.TokenIn,
 				TokenOut:       hop.TokenOut,
-				AmountInOffset: big.NewInt(hop.AmountInOffset), // 32 + 4 + 4*32 pour exactInputSingle
+				AmountInOffset: big.NewInt(132), // 32 + 4 + 4*32 pour exactInputSingle
 			}
-		case "AERO":
 
-		case "SUSHI":
+		case "PANCAKE":
+			data, err := abi.PancakeExactInputSingle.EncodeArgs(abi.PancakeExactInputSingleParams{
+				TokenIn:           hop.TokenIn,
+				TokenOut:          hop.TokenOut,
+				Fee:               big.NewInt(int64(hop.Fee)),
+				Recipient:         liquidatorAddress,
+				Deadline:          big.NewInt(0), // placeholder, patché on-chain
+				AmountIn:          big.NewInt(0), // placeholder, patché on-chain
+				AmountOutMinimum:  big.NewInt(0),
+				SqrtPriceLimitX96: big.NewInt(0),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			steps[i] = SwapStep{
+				Target:         hop.Router,
+				Data:           data,
+				TokenIn:        hop.TokenIn,
+				TokenOut:       hop.TokenOut,
+				AmountInOffset: big.NewInt(164), // 32 + 4 + 4*32 pour exactInputSingle
+			}
 
 		default:
 			return nil, fmt.Errorf("DEX non supporté: %s", hop.DexName)

@@ -26,7 +26,7 @@ func LoadBaseConfig() lqtypes.Config {
 			QuoterAddr: BasePankakeSwapQuoterV2Addr,
 			RouterAddr: BasePankakeSwapV3Router,
 			Quoter:     swap.UniQuoter,
-			Name:       "UNIV3", // same abi than univ3
+			Name:       "PANCAKE", // same abi than univ3
 		},
 
 		{
@@ -35,6 +35,7 @@ func LoadBaseConfig() lqtypes.Config {
 			Quoter:     swap.UniQuoter,
 			Name:       "UNIV3",
 		},
+
 		/*
 			{
 				QuoterAddr: BaseAerodromeRouterAddr,

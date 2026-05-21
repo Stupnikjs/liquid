@@ -22,6 +22,7 @@ func (r *Runner) singleHop() {
 		for _, d := range r.Infra.Config.Dexs {
 			result, found := d.Quote(r.Infra.Conn, &m, snap.Stats.MaxCollateralPos, snap.Oracle.Price, QUOTE_RATE_LIMIT)
 			if found {
+				result.DexName = d.Name
 				r.SwapRoutes.AppendPool(result)
 			}
 		}
