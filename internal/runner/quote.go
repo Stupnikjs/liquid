@@ -21,12 +21,13 @@ func (r *Runner) singleHop() {
 		// add router address to struct
 		for _, d := range r.Infra.Config.Dexs {
 			result, found := d.Quote(r.Infra.Conn, &m, snap.Stats.MaxCollateralPos, snap.Oracle.Price, QUOTE_RATE_LIMIT)
-
 			if found {
 				r.SwapRoutes.AppendPool(result)
 			}
 		}
 	}
+	// quote bridge tokens
+
 	err := utils.SavePoolEdgesJSON(r.SwapRoutes.Pools, "pools.json")
 	if err != nil {
 		log.Println("Err saving pools")

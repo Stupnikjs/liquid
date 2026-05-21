@@ -54,10 +54,45 @@ query {
   }
 }
 
+query {
+  transactions(
+    first: 20
+    orderBy: Timestamp
+    orderDirection: Desc
+    where: {
+      type_in: [MarketLiquidation]
+      chainId_in: [8453]
+      marketId_in: ["0x78d11c03944e0dc298398f0545dc8195ad201a18b0388cb8058b1bcb89440971"]
+    }
+  ) {
+    items {
+      blockNumber
+      hash
+      type
+      user { address }
+      data {
+        ... on MarketLiquidationTransactionData {
+          seizedAssets
+          seizedAssetsUsd
+          repaidAssets
+          repaidAssetsUsd
+          badDebtAssetsUsd
+          liquidator
+          market {
+            uniqueKey
+            loanAsset { symbol }
+            collateralAsset { symbol }
+          }
+        }
+      }
+    }
+  }
+}
+
 // FIND INFO ABOUT MARKET ID 
 query {
   marketByUniqueKey(
-    uniqueKey: "0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda"
+    uniqueKey: "0x78d11c03944e0dc298398f0545dc8195ad201a18b0388cb8058b1bcb89440971"
     chainId: 8453
   ) {
     lltv

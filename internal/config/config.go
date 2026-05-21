@@ -21,19 +21,27 @@ func LoadBaseConfig() lqtypes.Config {
 	}
 
 	dexs := []lqtypes.Dex{
+
+		{
+			QuoterAddr: BasePankakeSwapQuoterV2Addr,
+			RouterAddr: BasePankakeSwapV3Router,
+			Quoter:     swap.UniQuoter,
+			Name:       "UNIV3", // same abi than univ3
+		},
+
+		{
+			QuoterAddr: BaseUniswapQuoterV2Addr,
+			RouterAddr: BaseUniswapV3Router,
+			Quoter:     swap.UniQuoter,
+			Name:       "UNIV3",
+		},
 		/*
 			{
-				QuoterAddr: BaseUniswapQuoterV2Addr,
-				RouterAddr: BaseUniswapV3Router,
-				Quoter:     swap.UniQuoter,
-				Name:       "UNIV3",
+				QuoterAddr: BaseAerodromeRouterAddr,
+				RouterAddr: BaseAerodromeRouterAddr,
+				Quoter:     swap.AerodromeQuoter,
+				Name:       "AERO",
 			},*/
-		{
-			QuoterAddr: BaseAerodromeRouterAddr,
-			RouterAddr: BaseAerodromeRouterAddr,
-			Quoter:     swap.AerodromeQuoter,
-			Name:       "AERO",
-		},
 	}
 	return lqtypes.Config{
 		Signer: signer,

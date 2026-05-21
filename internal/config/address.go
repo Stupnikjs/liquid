@@ -1,6 +1,9 @@
 package config
 
 import (
+	"math/big"
+
+	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -8,8 +11,12 @@ var (
 	MorphoMain = common.HexToAddress("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb")
 
 	// Base Addresses
-	BaseUniswapQuoterV2Addr    = common.HexToAddress("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a")
-	BaseUniswapV3Router        = common.HexToAddress("0x2626664c2603336E57B271c5C0b26F421741e481")
+	BaseUniswapQuoterV2Addr = common.HexToAddress("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a")
+	BaseUniswapV3Router     = common.HexToAddress("0x2626664c2603336E57B271c5C0b26F421741e481")
+
+	BasePankakeSwapV3Router     = common.HexToAddress("0x1b81D678ffb9C0263b24A97847620C99d213eB14")
+	BasePankakeSwapQuoterV2Addr = common.HexToAddress("0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997")
+
 	BaseAerodromeRouterAddr    = common.HexToAddress("0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43")
 	BaseLiquidatorAddr         = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
 	BaseLiquidatorUni          = common.HexToAddress("0xFa99159fC88E856738Ef3c02D09acDdfD99A3B33") // new one
@@ -60,3 +67,43 @@ var (
 	MonadMorphoBlueAddr      = common.HexToAddress("0xD5D960E8C380B724a48AC59E2DfF1b2CB4a1eAee")
 	MonadLiquidatorAddress   = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
 )
+
+type BridgeToken struct {
+	Address   common.Address
+	MaxAmount *big.Int
+}
+
+var BaseBridgeTokens = []BridgeToken{
+	{
+		Address:   common.HexToAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(10_000), big.NewInt(1e6)), // 10k USDC
+	},
+	{
+		Address:   common.HexToAddress("0x4200000000000000000000000000000000000006"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(5), utils.TenPowInt(18)), // 5 WETH
+	},
+	{
+		Address:   common.HexToAddress("0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf"),
+		MaxAmount: big.NewInt(10_000_000), // 0.1 cbBTC
+	},
+	{
+		Address:   common.HexToAddress("0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(5), utils.TenPowInt(18)), // 5 cbETH
+	},
+	{
+		Address:   common.HexToAddress("0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(5), utils.TenPowInt(18)), // 5 wstETH
+	},
+	{
+		Address:   common.HexToAddress("0x04C0599Ae5A44757c0AF6F9eC3b93da8976c150a"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(5), utils.TenPowInt(18)), // 5 weETH
+	},
+	{
+		Address:   common.HexToAddress("0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(10_000), utils.TenPowInt(6)), // 10k EURC
+	},
+	{
+		Address:   common.HexToAddress("0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34"),
+		MaxAmount: new(big.Int).Mul(big.NewInt(10_000), utils.TenPowInt(18)), // 10k USDe
+	},
+}
