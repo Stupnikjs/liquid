@@ -47,7 +47,6 @@ func UniQuoter(
 	}
 
 	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
-	best.DexName = "UNIV3"
 	return best, true
 }
 
@@ -77,7 +76,7 @@ func UniQuote(
 			}
 		}
 	}
-
+	best.AmountInOffset = 164 // amountIn offset uniswap
 	return best, found
 }
 
@@ -122,12 +121,13 @@ func uniQuoteCall(
 	return lqtypes.PoolEdge{
 		TokenIn:      marketp.GetCollateralToken(),
 		TokenOut:     marketp.GetLoanToken(),
-		Router:       quoterAddr,
+		Quoter:       quoterAddr,
 		Fee:          fee,
 		WCSlippage:   ComputeSlippage(amountIn, amountOut, oraclePrice),
 		WCAmountIn:   new(big.Int).Set(amountIn),
 		WCAmountOut:  amountOut,
 		CalibratedAt: time.Now(),
+		PriceAtQuote: oraclePrice,
 	}, true
 }
 

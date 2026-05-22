@@ -234,5 +234,6 @@ func camelotAlgebraQuoteCall(
 		// selector(4) + tokenIn(32) + tokenOut(32) + amountIn(32) → offset = 68
 		AmountInOffset: 68,
 		CalibratedAt:   time.Now(),
+		PriceAtQuote:   oraclePrice,
 	}, true
 }

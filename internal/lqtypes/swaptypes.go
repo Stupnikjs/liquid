@@ -19,6 +19,7 @@ type PoolEdge struct {
 	CalibratedAt   time.Time
 	DexName        string
 	AmountInOffset int64
+	PriceAtQuote   *big.Int
 }
 
 type Dex struct {
