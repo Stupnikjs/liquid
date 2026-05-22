@@ -82,7 +82,14 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, r
 func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) (*Liquidable, error) {
 	routes := c.SwapCache.FindRoutes(m.CollateralToken, m.LoanToken, 3)
 	route, err := swap.BestRoute(routes, big.NewInt(0))
-	maxSwapAmount := new(big.Int).Set(route[0].WCAmountIn)
+	if err != nil {
+		return nil, fmt.Errorf("err finding best route: %w", err)
+	}
+
+	maxSwapAmount, err := swap.RouteMaxAmountIn(route)
+	if err != nil {
+		return nil, fmt.Errorf("error calculating max swap amount: %w", err)
+	}
 	l := c.ComputeAmounts(m, snap, p, maxSwapAmount)
 	if len(routes) == 0 {
 		return l, fmt.Errorf("route is len 0")

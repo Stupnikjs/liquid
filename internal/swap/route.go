@@ -54,9 +54,12 @@ func BestRoute(routes [][]lqtypes.PoolEdge, minProfit *big.Int) ([]lqtypes.PoolE
 		}
 		if slippage < lowestSlippage {
 			bestRoute = route
+			lowestSlippage = slippage
 		}
 	}
-
+	if bestRoute == nil {
+		return nil, fmt.Errorf("no valid route found")
+	}
 	return bestRoute, nil
 }
 
@@ -95,4 +98,42 @@ func EstimateRouteSlippage(route []lqtypes.PoolEdge) (float64, error) {
 	}
 
 	return totalSlippage, nil
+}
+
+func RouteMaxAmountIn(route []lqtypes.PoolEdge) (*big.Int, error) {
+	if len(route) == 0 {
+		return nil, fmt.Errorf("empty route")
+	}
+
+	e36 := new(big.Int).Exp(big.NewInt(10), big.NewInt(36), nil)
+
+	// 1. Convertir tous les WCAmountIn en token[0] et trouver le minimum
+	bottleneckHop := 0
+	minInToken0 := new(big.Int).Set(route[0].WCAmountIn)
+
+	for i := 1; i < len(route); i++ {
+		if route[i].PriceAtQuote == nil || route[i].PriceAtQuote.Sign() == 0 {
+			continue
+		}
+		// WCAmountIn[i] en token[0] = WCAmountIn[i] * e36 / PriceAtQuote
+		converted := new(big.Int).Mul(route[i].WCAmountIn, e36)
+		converted.Div(converted, route[i].PriceAtQuote)
+
+		if converted.Cmp(minInToken0) < 0 {
+			minInToken0 = converted
+			bottleneckHop = i
+		}
+	}
+
+	// 2. Restituer les slippages successifs jusqu'au hop goulot
+	result := new(big.Float).SetInt(minInToken0)
+	for i := bottleneckHop; i >= 0; i-- {
+		// amountIn = amountOut / (1 - slippage)
+		slippageMul := new(big.Float).SetFloat64(1 - route[i].WCSlippage)
+		result.Quo(result, slippageMul)
+	}
+
+	out, _ := result.Int(nil)
+	return out, nil
+
 }
