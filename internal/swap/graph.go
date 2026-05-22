@@ -21,11 +21,13 @@ func (rc *RouteCache) PoolsToGraph() {
 	}
 }
 
-func (g PoolGraph) FindRoutes(
+func (rc *RouteCache) FindRoutes(
 	tokenIn, tokenOut common.Address,
 	maxHops int,
 ) [][]lqtypes.PoolEdge {
 
+	rc.Mu.RLock()
+	defer rc.Mu.RUnlock()
 	var results [][]lqtypes.PoolEdge
 	visited := make(map[common.Address]bool)
 	path := make([]lqtypes.PoolEdge, 0, maxHops)
@@ -44,7 +46,7 @@ func (g PoolGraph) FindRoutes(
 		}
 		visited[current] = true
 
-		for _, edge := range g[current] {
+		for _, edge := range rc.Graph[current] {
 			if !visited[edge.TokenOut] {
 				// appening token to path
 				path = append(path, edge)
@@ -61,8 +63,8 @@ func (g PoolGraph) FindRoutes(
 	return results
 }
 
-func (g PoolGraph) FindBestRoute(tokenIn, tokenOut common.Address) ([]lqtypes.PoolEdge, bool) {
-	routes := g.FindRoutes(tokenIn, tokenOut, 3) // Assuming maxHops is 3
+func (rc *RouteCache) FindBestRoute(tokenIn, tokenOut common.Address) ([]lqtypes.PoolEdge, bool) {
+	routes := rc.FindRoutes(tokenIn, tokenOut, 3) // Assuming maxHops is 3
 	if len(routes) == 0 {
 		return nil, false
 	}

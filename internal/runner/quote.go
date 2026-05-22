@@ -39,7 +39,7 @@ func (r *Runner) QuotePools() {
 
 func (r *Runner) SelectMarketWithRoute() {
 	for _, m := range r.Cache.MarketMap {
-		_, found := r.SwapRoutes.Graph.FindBestRoute(m.CollateralToken, m.LoanToken)
+		_, found := r.SwapRoutes.FindBestRoute(m.CollateralToken, m.LoanToken)
 		if !found {
 			r.Cache.Markets.Update(m.ID, func(m *cache.Market) {
 				m.Canceled = true

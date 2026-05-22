@@ -80,7 +80,7 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, r
 // snap nil guard upon this func
 // err is passed to Liquidable
 func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) (*Liquidable, error) {
-	routes := c.SwapCache.Graph.FindRoutes(m.CollateralToken, m.LoanToken, 3)
+	routes := c.SwapCache.FindRoutes(m.CollateralToken, m.LoanToken, 3)
 	route, err := swap.BestRoute(routes, big.NewInt(0))
 	maxSwapAmount := new(big.Int).Set(route[0].WCAmountIn)
 	l := c.ComputeAmounts(m, snap, p, maxSwapAmount)
