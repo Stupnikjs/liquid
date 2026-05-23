@@ -7,6 +7,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// mapping to liquidate contract struct
+type SwapStep struct {
+	Target         common.Address
+	Data           []byte
+	TokenIn        common.Address
+	TokenOut       common.Address
+	AmountInOffset *big.Int
+}
+
 type PoolEdge struct {
 	TokenIn        common.Address
 	TokenOut       common.Address

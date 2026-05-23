@@ -82,13 +82,13 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 		return
 	}
 
-	c.log(fmt.Sprintf("[liq] sending tx for %s seized=%s market %s ", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair()))
+	fmt.Printf("[liq] sending tx for %s seized=%s market %s  \n", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair())
 	err = c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
 		c.log(fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err))
 		return
 	}
-	c.log(fmt.Sprintf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address))
+	fmt.Printf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address)
 }
 
 func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {

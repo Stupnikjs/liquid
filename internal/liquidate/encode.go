@@ -6,6 +6,7 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )
@@ -20,17 +21,18 @@ var liquidateFunc = w3.MustNewFunc(`liquidate(
     uint256 minOut
 )`, "")
 
-// Struct Go qui mappe SwapStep
-type SwapStep struct {
-	Target         common.Address
-	Data           []byte
-	TokenIn        common.Address
-	TokenOut       common.Address
-	AmountInOffset *big.Int
+func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []lqtypes.PoolEdge) ([]byte, error) {
+	m := params.ToMarketContractParams()
+	steps, err := BuildSteps(route, c.Infra.Config.Addresses.LiquidatorContract)
+	if err != nil {
+		return nil, fmt.Errorf("build steps: %w", err)
+	}
+	return BuildLiquidateCalldata(*m, l.Pos.Address, l.SeizeAssets, l.RepayShares, steps, new(big.Int).SetInt64(0))
 }
 
-func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]SwapStep, error) {
-	steps := make([]SwapStep, len(route))
+// converting route to contract params swap step
+func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]lqtypes.SwapStep, error) {
+	steps := make([]lqtypes.SwapStep, len(route))
 
 	for i, hop := range route {
 		// Encoder le calldata du DEX avec amountIn = 0 (placeholder)
@@ -49,7 +51,7 @@ func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]S
 				return nil, err
 			}
 
-			steps[i] = SwapStep{
+			steps[i] = lqtypes.SwapStep{
 				Target:         hop.Router,
 				Data:           data,
 				TokenIn:        hop.TokenIn,
@@ -72,7 +74,7 @@ func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]S
 				return nil, err
 			}
 
-			steps[i] = SwapStep{
+			steps[i] = lqtypes.SwapStep{
 				Target:         hop.Router,
 				Data:           data,
 				TokenIn:        hop.TokenIn,
@@ -93,7 +95,7 @@ func BuildLiquidateCalldata(
 	borrower common.Address,
 	seizedAssets *big.Int,
 	repaidShares *big.Int,
-	steps []SwapStep,
+	steps []lqtypes.SwapStep,
 	minOut *big.Int,
 ) ([]byte, error) {
 	return liquidateFunc.EncodeArgs(
