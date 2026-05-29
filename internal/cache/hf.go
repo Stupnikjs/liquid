@@ -10,6 +10,8 @@ import (
 
 // prec 1e18
 func (m *Market) HF(pos *BorrowPosition) *big.Int {
+ // move to morpho pkg 
+ // return morpho.HF(BorrowShares, TotalAsset, lltv.....)
 
 	borrowAssets := morpho.BorrowAssetsFromShares(
 		pos.BorrowShares, m.Stats.TotalBorrowShares, m.Stats.TotalBorrowAssets,
