@@ -9,8 +9,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func main() {
-	db, err := sql.Open("sqlite", "app.db")
+func openDb(filename string) (sqlitedb,error) {
+	db, err := sql.Open("sqlite", filename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,5 +20,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("sqlite opened")
+	return db,err 
+
 }
