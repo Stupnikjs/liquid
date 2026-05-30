@@ -89,7 +89,26 @@ func ComputeMinOut(seizedAssets, collateralPrice *big.Int) *big.Int {
 }
 
 
-func HF(BorrowAsset, LLTV,OraclePrice, TotlaBorrowShares *big.Int) *big.Int {
+func HF(CollateralAssets, BorrowShares,TotalBorrowAssets, LLTV,OraclePrice, TotalBorrowShares *big.Int) *big.Int {
 
+
+           borrowAssets := BorrowAssetsFromShares(
+                BorrowShares, m.Stats.TotalBorrowShares, m.Stats.TotalBorrowAssets,
+        )
+        if borrowAssets == nil || pos.CollateralAssets == nil {
+                return nil
+        }
+        if borrowAssets.Sign() == 0 || pos.CollateralAssets.Sign() == 0 {
+                return nil
+        }
+        // numerator = collateral * price * LLTV
+        numerator := new(big.Int).Mul(CollateralAssets, m.Oracle.Price)
+        numerator.Mul(numerator, m.LLTV)
+
+        // denominator = borrow * 1e36
+        denominator := new(big.Int).Mul(borrowAssets, utils.TenPowInt(36))
+        hf := new(big.Int).Div(numerator, denominator)
+        // utils.BigIntToFloat(hf)/1e18
+        return hf
 
 }
