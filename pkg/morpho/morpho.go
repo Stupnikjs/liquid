@@ -87,3 +87,9 @@ func ComputeMinOut(seizedAssets, collateralPrice *big.Int) *big.Int {
 	valueInLoan := new(big.Int).Mul(seizedAssets, collateralPrice)
 	return valueInLoan.Div(valueInLoan, utils.TenPowInt(36))
 }
+
+
+func HF(BorrowAsset, LLTV,OraclePrice, TotlaBorrowShares *big.Int) *big.Int {
+
+
+}
