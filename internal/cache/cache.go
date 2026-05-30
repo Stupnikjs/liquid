@@ -23,6 +23,8 @@ Pos insert / update / delete logic
 type Cache struct {
 	Markets   *MarketStore
 	MarketMap map[[32]byte]morpho.MarketParams
+ ToFlush []BorrowPos
+ mu sync.RWMutex 
 }
 
 type MarketStore struct {
