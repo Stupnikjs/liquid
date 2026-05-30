@@ -89,6 +89,8 @@ func ComputeMinOut(seizedAssets, collateralPrice *big.Int) *big.Int {
 }
 
 
+
+// si pblm reprendre fonction historique dans cache
 func HF(CollateralAssets, BorrowShares,TotalBorrowAssets, LLTV,OraclePrice, TotalBorrowShares *big.Int) *big.Int {
 
 
