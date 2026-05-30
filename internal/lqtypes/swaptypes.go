@@ -19,7 +19,7 @@ type SwapStep struct {
 type PoolEdge struct {
 	TokenIn        common.Address
 	TokenOut       common.Address
-	Quoter         common.Address
+	Quoter         common.Address // useless i think
 	Router         common.Address
 	Fee            uint32
 	WCSlippage     float64
