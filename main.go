@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"time"
 
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/runner"
@@ -28,8 +29,23 @@ func main() {
 	*/
 	go func() {
 		defer wg.Done()
+		time.Sleep(600 * time.Second)
 		// to avoid too much logs at the same time
 		runner.Wrapper(config.LoadArbitrumConfig(), arbitrum, "arb.log")
+	}()
+
+	go func() {
+		defer wg.Done()
+		time.Sleep(300 * time.Second)
+		// to avoid too much logs at the same time
+		runner.Wrapper(config.LoadKatanaConfig(), arbitrum, "katana.log")
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		// to avoid too much logs at the same time
+		runner.Wrapper(config.LoadHypeChainConfig(), arbitrum, "hype.log")
 	}()
 
 	wg.Wait()

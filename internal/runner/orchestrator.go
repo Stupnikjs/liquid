@@ -6,9 +6,9 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/connector"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 )
 
 // logs ethcalls missing
@@ -26,10 +26,12 @@ func Wrapper(conf lqtypes.Config, filters api.MarketFilters, logfile string) {
 	conn := connector.New(conf.Endpoints)
 	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {
+
 		fmt.Println(err)
 		return
 	}
 	markets := api.FilterMarket(result, filters, conf.ChainID)
+
 	cached := cache.NewCache(conf, markets, filters)
 	infra := &lqtypes.Infra{
 		Conn:   conn,

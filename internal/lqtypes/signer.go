@@ -35,7 +35,7 @@ func NewMainnetSigner() (*Signer, error) {
 }
 
 func NewArbitrumSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("ARB_PK")
+	keyHex := os.Getenv("BASE_PK")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR__ARBITRUM_PRIVATE_KEY not set")
 	}
@@ -95,7 +95,7 @@ func NewWorldChainSigner(chainid int64) (*Signer, error) {
 }
 
 func NewKatanaSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("KATA_PK")
+	keyHex := os.Getenv("BASE_PK")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR__KATANA_PRIVATE_KEY not set")
 	}

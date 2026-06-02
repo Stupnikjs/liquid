@@ -2,7 +2,7 @@ package runner
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"math/big"
 	"sort"
 	"sync"
@@ -23,27 +23,19 @@ func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
 func (r *Runner) ApiResyncRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, 30*time.Minute, func() {
 		if err := r.ApiCall(); err != nil {
-			r.log(fmt.Sprintf("api resync error: %v", err))
+			log.Printf("api resync error: %v", err)
 		}
 	})
 }
 
 func (r *Runner) LiquidationRoutine(ctx context.Context) {
 	consumer := &liquidate.Consumer{
-		Infra:  r.Infra,
-		Cache:  r.Cache,
-		Logger: r.Logger,
-		Ch:     r.LiquidateCh,
+		Infra: r.Infra,
+		Cache: r.Cache,
+		Ch:    r.LiquidateCh,
 	}
 	consumer.Run(ctx)
 
-}
-
-func (r *Runner) log(msg string) {
-	select {
-	case r.Logger <- msg:
-	default:
-	}
 }
 
 func (r *Runner) ApiCall() error {

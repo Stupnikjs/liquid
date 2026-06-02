@@ -16,7 +16,7 @@ type MarketConfig struct {
 func (m MarketItem) ToConfig(chainid uint32) MarketConfig {
 	return MarketConfig{
 		morpho.MarketParams{
-			ID:                      [32]byte(common.HexToHash(m.UniqueKey)),
+			ID:                      [32]byte(common.HexToHash(m.Id)),
 			ChainID:                 chainid,
 			LoanToken:               common.HexToAddress(m.LoanAsset.Address),
 			LoanTokenStr:            m.LoanAsset.Symbol,

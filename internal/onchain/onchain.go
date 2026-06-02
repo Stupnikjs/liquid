@@ -103,7 +103,9 @@ func OnChainOracleRefresh(
 ) error {
 	return refresh(infra.Conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
 		res := newResult(id)
-		calls := []w3types.RPCCaller{oracleCall(mParam.Oracle, res)}
+		calls := []w3types.RPCCaller{
+			oracleCall(mParam.Oracle, res),
+		}
 		apply := func() {
 			c.Markets.Update(res.ID, func(m *market.Market) {
 				// log price to debug

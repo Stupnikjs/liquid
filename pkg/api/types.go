@@ -38,7 +38,7 @@ func MarketsQuery(chainid uint32) string {
             where: { chainId_in: [%d] }
         ) {
             items {
-                uniqueKey
+                marketId
                 creationTimestamp
                 oracleAddress
                 lltv
@@ -95,7 +95,7 @@ type MarketsResult struct {
 }
 
 type MarketItem struct {
-	UniqueKey         string      `json:"uniqueKey"`
+	Id                string      `json:"marketId"`
 	CreationTimestamp int64       `json:"creationTimestamp"`
 	OracleAddress     string      `json:"oracleAddress"`
 	Lltv              json.Number `json:"lltv"`

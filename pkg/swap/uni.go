@@ -24,6 +24,7 @@ func (u *UniswapV3) BestAmountIn(
 	marketp MorphoMarket,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
+	rateLimit time.Duration,
 ) (PoolEdge, bool) {
 	maxSlippage := marketp.MaxSlippage()
 	fmt.Printf("max slippage for %s is: %f\n", marketp.GetPair(), maxSlippage)
@@ -67,7 +68,7 @@ func (u *UniswapV3) UniQuote(
 	m := marketp
 	for _, fee := range UniswapFees {
 		time.Sleep(u.rateLimit)
-		result, ok := uniQuoteCall(conn, m, u.quoterAddr, amountIn, oraclePrice, fee)
+		result, ok := uniQuoteCall(conn, m, u.quoterAddr, u.routerAddr, amountIn, oraclePrice, fee)
 		if !ok {
 			continue
 		}
@@ -91,6 +92,7 @@ func uniQuoteCall(
 	conn RPCClient,
 	marketp MorphoMarket,
 	quoterAddr common.Address,
+	routerAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	fee uint32,
@@ -124,6 +126,7 @@ func uniQuoteCall(
 		TokenIn:      marketp.GetCollateralToken(),
 		TokenOut:     marketp.GetLoanToken(),
 		Quoter:       quoterAddr,
+		Router:       routerAddr,
 		Fee:          fee,
 		WCSlippage:   ComputeSlippage(amountIn, amountOut, oraclePrice),
 		WCAmountIn:   new(big.Int).Set(amountIn),
@@ -158,22 +161,6 @@ type UniswapV3 struct {
 	routerAddr common.Address
 	fees       []uint32
 	rateLimit  time.Duration
-}
-
-func NewUniswapQuoter(
-	market MorphoMarket,
-	quoterAddr common.Address,
-	routerAddr common.Address,
-	oraclePrice *big.Int,
-	rateLimit time.Duration,
-) *UniswapV3 {
-	return &UniswapV3{
-		market:     market,
-		quoterAddr: quoterAddr,
-		routerAddr: routerAddr,
-		fees:       []uint32{100, 500, 3000, 10000},
-		rateLimit:  rateLimit,
-	}
 }
 
 func (u *UniswapV3) DEX() string                   { return "uniswap-v3" }

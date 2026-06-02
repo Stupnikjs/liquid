@@ -8,7 +8,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/utils"
 )
 
-const QUOTE_RATE_LIMIT = 400 * time.Millisecond
+const QUOTE_RATE_LIMIT = 200 * time.Millisecond
 
 // quote to Pools array
 // then append to graph
@@ -20,26 +20,26 @@ func (r *Runner) QuotePools() {
 		}
 		// add router address to struct
 		for _, d := range r.Infra.Config.Dexs {
-			result, found := d.Quote(r.Infra.Conn, &m, snap.Stats.MaxCollateralPos, snap.Oracle.Price, QUOTE_RATE_LIMIT)
+			result, found := d.BestAmountIn(r.Infra.Conn, &m, snap.Stats.MaxCollateralPos, snap.Oracle.Price, QUOTE_RATE_LIMIT)
 			if found {
-				result.DexName = d.Name
-				r.SwapRoutes.AppendPool(result)
+				result.DexName = d.DEX()
+				r.Routes.AppendPool(result)
 			}
 		}
 	}
 	// quote bridge tokens
 
-	err := utils.SavePoolEdgesJSON(r.SwapRoutes.Pools, "pools.json")
+	err := utils.SavePoolEdgesJSON(r.Routes.Pools, "pools.json")
 	if err != nil {
 		log.Println("Err saving pools")
 	}
-	r.SwapRoutes.PoolsToGraph()
+	r.Routes.PoolsToGraph()
 	r.SelectMarketWithRoute()
 }
 
 func (r *Runner) SelectMarketWithRoute() {
 	for _, m := range r.Cache.MarketMap {
-		_, found := r.SwapRoutes.FindBestRoute(m.CollateralToken, m.LoanToken)
+		_, found := r.Routes.FindBestRoute(m.CollateralToken, m.LoanToken)
 		if !found {
 			r.Cache.Markets.Update(m.ID, func(m *cache.Market) {
 				m.Canceled = true

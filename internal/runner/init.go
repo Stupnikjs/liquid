@@ -2,24 +2,28 @@ package runner
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/db"
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type Runner struct {
 	LiquidateConsumer *liquidate.Consumer
 	Cache             *cache.Cache
-	SwapRoutes        *swap.RouteCache
+	Routes            *swap.RouteCache
 	Infra             *lqtypes.Infra
-	Logger            chan string
+	DB                *sql.DB
+	EntryToFlush      []db.Entry
 	LiquidateCh       chan cache.BorrowPosition
 	EventCh           <-chan *types.Log
 }
@@ -27,28 +31,28 @@ type Runner struct {
 func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.Cache, logfile string) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
 	logger := utils.NewLogger(context.Background(), logfile)
+	database, err := db.OpenDb(fmt.Sprintf("%d.db", infra.Config.ChainID))
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &Runner{
 		LiquidateConsumer: liquidate.NewConsumer(infra, mCache, routeCache, logger, liquidateCh),
 		Cache:             mCache,
-		SwapRoutes:        routeCache,
+		Routes:            routeCache,
 		Infra:             infra,
-		Logger:            logger,
+		DB:                database,
 		LiquidateCh:       liquidateCh,
 		EventCh:           make(<-chan *types.Log),
+		EntryToFlush:      make([]db.Entry, 0, MAX_FLUSH_QUEUE_SIZE),
 	}
 }
 
 func (r *Runner) Init(ctx context.Context) {
 	err := r.ApiCall()
-	if err != nil {
-		r.Logger <- err.Error()
-	}
-	r.Logger <- "Api call init"
+	log.Println(err)
 	r.OnChainRefreshAll(ctx)
-	r.Logger <- "Refresh all markets for init"
 	r.QuotePools()
-
-	r.Logger <- "Quoting over "
+	log.Println("Quoting over ")
 	r.LogMarkets()
 
 }
@@ -61,9 +65,9 @@ func (r *Runner) LogMarkets() {
 		if snap == nil {
 			continue
 		}
-		r.log(fmt.Sprintf("[%s/%s]",
+		fmt.Printf("[%s/%s]",
 			m.CollateralTokenStr,
-			m.LoanTokenStr))
+			m.LoanTokenStr)
 	}
 }
 

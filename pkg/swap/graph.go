@@ -62,7 +62,7 @@ func (rc *RouteCache) FindRoutes(
 }
 
 func (rc *RouteCache) FindBestRoute(tokenIn, tokenOut common.Address) ([]PoolEdge, bool) {
-	routes := rc.FindRoutes(tokenIn, tokenOut, 3) // Assuming maxHops is 3
+	routes := rc.FindRoutes(tokenIn, tokenOut, MAX_HOP_LEN) // Assuming maxHops is 3
 	if len(routes) == 0 {
 		return nil, false
 	}

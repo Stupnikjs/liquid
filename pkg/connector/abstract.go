@@ -41,7 +41,7 @@ type Connector interface {
 	Metrics() MetricsSnapshot
 
 	// Close shuts down all underlying connections.
-	Close()
+	Close() error
 }
 
 // RPCClient is the minimal surface needed from a w3.Client.
@@ -182,7 +182,7 @@ func newWithClients(
 // ---------------------------------------------------------------------------
 
 // CallCtx dispatches calls on the primary (low-latency) RPC.
-func (c *EthConnector) CallCtx(ctx context.Context, calls []w3types.RPCCaller) error {
+func (c *EthConnector) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error {
 	if err := c.limiter.Wait(ctx); err != nil {
 		return fmt.Errorf("%w: %v", ErrRateLimited, err)
 	}
@@ -195,7 +195,7 @@ func (c *EthConnector) CallCtx(ctx context.Context, calls []w3types.RPCCaller) e
 }
 
 // SecondCallCtx dispatches calls on the secondary (non-critical) RPC.
-func (c *EthConnector) SecondCallCtx(ctx context.Context, calls []w3types.RPCCaller) error {
+func (c *EthConnector) SecondCallCtx(ctx context.Context, calls ...w3types.RPCCaller) error {
 	if err := c.limiter.Wait(ctx); err != nil {
 		return fmt.Errorf("%w: %v", ErrRateLimited, err)
 	}
@@ -220,13 +220,25 @@ func (c *EthConnector) Metrics() MetricsSnapshot {
 	return c.metrics.snapshot()
 }
 
-// Close shuts down all three underlying connections.
-func (c *EthConnector) Close() {
+func (c *EthConnector) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.primary.Close()
-	c.second.Close()
-	c.ws.Close()
+
+	var errs []error
+
+	if err := c.primary.Close(); err != nil {
+		errs = append(errs, fmt.Errorf("primary close failed: %w", err))
+	}
+
+	if err := c.second.Close(); err != nil {
+		errs = append(errs, fmt.Errorf("second close failed: %w", err))
+	}
+
+	if err := c.ws.Close(); err != nil {
+		errs = append(errs, fmt.Errorf("ws close failed: %w", err))
+	}
+
+	return errors.Join(errs...)
 }
 
 // ---------------------------------------------------------------------------

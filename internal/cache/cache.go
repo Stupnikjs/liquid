@@ -23,8 +23,7 @@ Pos insert / update / delete logic
 type Cache struct {
 	Markets   *MarketStore
 	MarketMap map[[32]byte]morpho.MarketParams
- ToFlush []BorrowPosition // async flush in sqlite 
- mu sync.RWMutex 
+	mu        sync.RWMutex
 }
 
 type MarketStore struct {
@@ -32,15 +31,15 @@ type MarketStore struct {
 	markets map[[32]byte]*Market
 }
 
-
 type Market struct {
-	Mu          sync.RWMutex
-	Canceled    bool
-	Oracle      Oracle
-	LLTV        *big.Int // already in morphomarket
-	Stats       MarketStats
-	ActiveIndex int               // index of last pos with tracked HF
-	Positions   []*BorrowPosition // Borrow positions sorted by HF asc
+	Mu               sync.RWMutex
+	Canceled         bool
+	Oracle           Oracle
+	LLTV             *big.Int // already in morphomarket
+	Stats            MarketStats
+	LastOnChainBlock *big.Int
+	ActiveIndex      int               // index of last pos with tracked HF
+	Positions        []*BorrowPosition // Borrow positions sorted by HF asc
 }
 
 type Oracle struct {
@@ -90,6 +89,7 @@ func NewCache(conf lqtypes.Config, markets []morpho.MarketParams, filters api.Ma
 		store.Update(mk.ID, func(m *Market) {
 			m.LLTV = mk.LLTV
 			m.Oracle.Address = mk.Oracle
+			m.LastOnChainBlock = new(big.Int)
 		})
 	}
 

@@ -2,17 +2,19 @@ package runner
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	market "github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/db"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
+
+var MAX_FLUSH_QUEUE_SIZE = 5_000
 
 // One routine per market with dynamic interval based on distance to liquidation (HF = 1)
 // Hold Liquidation logic
@@ -30,6 +32,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	}
 	ticker, interval := r.MarketInitTicker(ctx, id)
 	if ticker == nil {
+		log.Println("Failed to initialize ticker")
 		return
 	}
 	ms.ticker = ticker
@@ -51,7 +54,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 
 func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticker, time.Duration) {
 	// Wait for initial data
-	var snap *market.MarketSnapshot
+	var snap *cache.MarketSnapshot
 	for snap == nil || snap.Oracle.Price == nil || snap.Oracle.Price.Sign() == 0 {
 		select {
 		case <-ctx.Done():
@@ -87,18 +90,23 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 	r.MarketRecompute(ms, id)
 	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
-		r.log("snap is nil or has no pos")
+		log.Println("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
+
 	morphoM := r.Cache.MarketMap[id]
 
 	_, interval := r.SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms)
 	latency := (time.Now().UnixNano() - start) / 1_000_000
 	if ms.tickCount%100 == 0 {
-		r.log(fmt.Sprintf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF())))
+		log.Printf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF()))
 	}
-	r.log(fmt.Sprintf("%s %s", morphoM.GetPair(), snap.Analysis().String()))
+	log.Printf("%s %s", morphoM.GetPair(), snap.Analysis().String())
+	err := r.ToDBEntryQueue(id, *snap)
+	if err != nil {
+		log.Printf("error adding entry to queue: %v", err)
+	}
 	return interval
 }
 
@@ -108,18 +116,18 @@ func (r *Runner) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [
 	if ms.tickCount%20 == 0 {
 
 		if err := onchain.OnChainRefresh(r.Infra, ctx, r.Cache, morphoM, id); err != nil {
-			r.log(fmt.Sprintf("full refresh error: %v", err))
+			log.Printf("full refresh error: %v", err)
 		}
 		return
 	}
 	if err := onchain.OnChainOracleRefresh(r.Infra, ctx, r.Cache, morphoM, id, r.Infra.Config.Addresses.Morpho); err != nil {
-		r.log(fmt.Sprintf("oracle refresh error: %v", err))
+		log.Printf("oracle refresh error: %v", err)
 	}
 }
 
 // Sorting + Hf recalculate
 func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
-	r.Cache.Markets.Update(id, func(m *market.Market) {
+	r.Cache.Markets.Update(id, func(m *cache.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
@@ -134,23 +142,25 @@ func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
 // updating market state ignore map on malformed pos
 func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState) {
 	for _, pos := range snap.Positions {
+		// since positions are sorted by HF, we can break early
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
 			break
 		}
+		// baddebt
 		if pos.CachedHF.Cmp(utils.HALF_WAD) < 0 {
 			ms.ignoreMap[pos.Address] = 999
 			continue
 		}
 		morphoM := r.Cache.MarketMap[snap.ID]
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
-			r.log(fmt.Sprintf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
+			log.Printf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
 				pos.Address,
 				utils.FormatWAD(pos.BorrowAssetsUsd),
 				morphoM.GetPair(),
 				hexutil.Encode(pos.MarketID[:]),
 				utils.FormatWAD(pos.CachedHF),
 				utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
-				snap.Oracle.Price.String()))
+				snap.Oracle.Price.String())
 			r.LiquidateCh <- pos
 		}
 		ms.ignoreMap[pos.Address]++
@@ -180,3 +190,31 @@ func distanceToInterval(distance float64) time.Duration {
 // query quoter to test swaping
 // updating market if swapable
 // canceling if not
+
+func (r *Runner) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
+	for _, pos := range snap.Positions {
+		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD1DOT05) >= 0 {
+			break // slice trié, on peut break
+		}
+		e := db.PosToEntry(pos, snap.Oracle.Price, snap.Stats.TotalBorrowAssets, snap.Stats.TotalBorrowShares, time.Now().UnixMilli())
+		if len(r.EntryToFlush) < MAX_FLUSH_QUEUE_SIZE {
+			r.EntryToFlush = append(r.EntryToFlush, e)
+		} else {
+			r.FlushEntries()
+			r.EntryToFlush = append(r.EntryToFlush, e)
+		}
+
+	}
+	return nil
+}
+
+func (r *Runner) FlushEntries() {
+	if len(r.EntryToFlush) == 0 {
+		return
+	}
+	err := db.InsertEntries(r.DB, r.EntryToFlush)
+	if err != nil {
+		log.Printf("error flushing entries: %v", err)
+	}
+	r.EntryToFlush = r.EntryToFlush[:0] // Clear the slice
+}

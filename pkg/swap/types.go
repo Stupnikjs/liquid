@@ -6,23 +6,21 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/lmittmann/w3/w3types"
 )
 
 type RPCClient interface {
 	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
-	Subscribe(w3types.RPCSubscriber) (*rpc.ClientSubscription, error)
 	Close() error
 }
 
 type Dex interface {
 	// Quote returns the best PoolEdge for a given amountIn.
 	// Returns false if no route satisfies the market's slippage constraint.
-	BestAmountIn(conn RPCClient, ctx context.Context, amountIn, oraclePrice *big.Int, rateLimit time.Duration) (PoolEdge, bool)
+	BestAmountIn(conn RPCClient, marketp MorphoMarket, amountIn *big.Int, oraclePrice *big.Int, rateLimit time.Duration) (PoolEdge, bool)
 	// DEX returns a human-readable identifier for logging and metrics.
 	DEX() string
-	QuoteAddress() common.Address
+	QuoterAddress() common.Address
 	RouterAddress() common.Address
 }
 

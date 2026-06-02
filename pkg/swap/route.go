@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var MAX_HOP_LEN = 2
+var MAX_HOP_LEN = 3
 
 type RouteKey struct {
 	TokenIn  common.Address
