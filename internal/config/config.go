@@ -6,12 +6,10 @@ import (
 	"os"
 
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/pkg/connector"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/joho/godotenv"
 )
-
-var uniArbitrum = lqtypes.Dex{}
 
 func LoadArbitrumConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
@@ -36,7 +34,7 @@ func LoadArbitrumConfig() lqtypes.Config {
 			Second:  os.Getenv("ARB_HTTP_RPC_ALCH"),
 			WS:      os.Getenv("ARB_WS_RPC_ALCH"),
 		},
-		Dexs: []lqtypes.Dex{
+		Dexs: []swap.Dex{
 			{
 				QuoterAddr: ArbitrumUniswapQuoterV2Addr,
 				RouterAddr: ArbitrumUniswapV3Router,

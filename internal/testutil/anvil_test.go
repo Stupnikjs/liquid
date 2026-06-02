@@ -10,8 +10,8 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/liquidate"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -214,7 +214,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 		common.HexToAddress(FundedAccounts[0]),
 		utils.WAD,
 		big.NewInt(0),
-		[]lqtypes.SwapStep{{}},
+		[]swap.SwapStep{{}},
 		big.NewInt(0),
 	)
 	if err != nil {

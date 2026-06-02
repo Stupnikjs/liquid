@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -18,17 +17,17 @@ type RouteKey struct {
 
 type RouteCache struct {
 	Mu    sync.RWMutex
-	Pools []lqtypes.PoolEdge
+	Pools []PoolEdge
 	Graph PoolGraph
 }
 
 func NewRouteCache() *RouteCache {
 	return &RouteCache{
-		Pools: make([]lqtypes.PoolEdge, 0),
+		Pools: make([]PoolEdge, 0),
 		Graph: make(PoolGraph),
 	}
 }
-func (rc *RouteCache) AppendPool(r lqtypes.PoolEdge) {
+func (rc *RouteCache) AppendPool(r PoolEdge) {
 	rc.Mu.Lock()
 	defer rc.Mu.Unlock()
 	rc.Pools = append(rc.Pools, r)
@@ -36,12 +35,12 @@ func (rc *RouteCache) AppendPool(r lqtypes.PoolEdge) {
 
 // BestRoute returns the route with the highest expected output after slippage + basic sanity checks
 
-func BestRoute(routes [][]lqtypes.PoolEdge, minProfit *big.Int) ([]lqtypes.PoolEdge, error) {
+func BestRoute(routes [][]PoolEdge, minProfit *big.Int) ([]PoolEdge, error) {
 	if len(routes) == 0 {
 		return nil, fmt.Errorf("no routes provided")
 	}
 
-	var bestRoute []lqtypes.PoolEdge
+	var bestRoute []PoolEdge
 	var lowestSlippage float64 = 1.0
 
 	for _, route := range routes {
@@ -63,7 +62,7 @@ func BestRoute(routes [][]lqtypes.PoolEdge, minProfit *big.Int) ([]lqtypes.PoolE
 	return bestRoute, nil
 }
 
-func EstimateRouteSlippage(route []lqtypes.PoolEdge) (float64, error) {
+func EstimateRouteSlippage(route []PoolEdge) (float64, error) {
 	if len(route) == 0 {
 		return 0, fmt.Errorf("empty route")
 	}
@@ -100,7 +99,7 @@ func EstimateRouteSlippage(route []lqtypes.PoolEdge) (float64, error) {
 	return totalSlippage, nil
 }
 
-func RouteMaxAmountIn(route []lqtypes.PoolEdge) (*big.Int, error) {
+func RouteMaxAmountIn(route []PoolEdge) (*big.Int, error) {
 	if len(route) == 0 {
 		return nil, fmt.Errorf("empty route")
 	}

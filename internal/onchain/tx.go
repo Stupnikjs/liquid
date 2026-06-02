@@ -29,7 +29,7 @@ func SendSignedTx(ctx context.Context, conn connector.Connector, msgsender commo
 	if err := conn.CallCtx(ctx, []w3types.RPCCaller{
 		eth.Nonce(msgsender, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
-	}); err != nil {
+	}...); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", err)
 	}
 
@@ -51,7 +51,7 @@ func SendSignedTx(ctx context.Context, conn connector.Connector, msgsender commo
 	var receipt common.Hash
 	if err := conn.CallCtx(ctx, []w3types.RPCCaller{
 		eth.SendTx(signedTx).Returns(&receipt),
-	}); err != nil {
+	}...); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
 	}
 

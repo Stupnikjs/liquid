@@ -4,25 +4,23 @@ import (
 	"math"
 	"math/big"
 	"testing"
-
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 )
 
 func TestEstimateRouteSlippage(t *testing.T) {
 	tests := []struct {
 		name             string
-		route            []lqtypes.PoolEdge
+		route            []PoolEdge
 		expectedSlippage float64
 		expectedErr      bool
 	}{
 		{
 			name:        "empty route",
-			route:       []lqtypes.PoolEdge{},
+			route:       []PoolEdge{},
 			expectedErr: true,
 		},
 		{
 			name: "single pool no slippage",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(997),
@@ -34,7 +32,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		{
 			name: "two pools contigus sans gap de transition",
 			// amountOut pool1 == amountIn pool2 → pas de slippage de transition
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(997),
@@ -52,7 +50,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 			name: "two pools avec gap de transition",
 			// pool1 sort 1000 mais pool2 attend 990 → gap de 10
 			// transition ratio = 10/1000 = 0.01
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(1000),
@@ -69,7 +67,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "nil WCAmountIn",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  nil,
 					WCAmountOut: big.NewInt(997),
@@ -80,7 +78,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "zero WCAmountIn",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(0),
 					WCAmountOut: big.NewInt(997),
@@ -91,7 +89,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "route avec trois pools et deux gaps de transition",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(1000),
@@ -113,7 +111,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "pool avec WCAmountOut nul",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(0),
@@ -131,7 +129,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "nil WCAmountOut",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: nil,
@@ -142,7 +140,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "nil WCAmountIn sur le deuxième pool",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(997),
@@ -158,7 +156,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "zero WCAmountIn sur le deuxième pool",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(997),
@@ -174,7 +172,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "gap de transition nul exact (amountOut == nextAmountIn)",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(500),
@@ -190,7 +188,7 @@ func TestEstimateRouteSlippage(t *testing.T) {
 		},
 		{
 			name: "WCSlippage négatif (données corrompues)",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:  big.NewInt(1000),
 					WCAmountOut: big.NewInt(1005), // quoter buggé qui sort plus qu'il reçoit
@@ -236,18 +234,18 @@ func TestRouteMaxAmountIn(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		route       []lqtypes.PoolEdge
+		route       []PoolEdge
 		expectedErr bool
 		check       func(t *testing.T, result *big.Int)
 	}{
 		{
 			name:        "empty route",
-			route:       []lqtypes.PoolEdge{},
+			route:       []PoolEdge{},
 			expectedErr: true,
 		},
 		{
 			name: "single hop, pas de slippage",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:   big.NewInt(1000),
 					WCAmountOut:  big.NewInt(997),
@@ -264,7 +262,7 @@ func TestRouteMaxAmountIn(t *testing.T) {
 		},
 		{
 			name: "single hop, slippage 2%",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:   big.NewInt(1000),
 					WCAmountOut:  big.NewInt(980),
@@ -287,7 +285,7 @@ func TestRouteMaxAmountIn(t *testing.T) {
 			// hop1: WCAmountIn=2000 → converti en token0 = 2000 * e36 / (2*e36) = 1000
 			// min = 500 (hop0) → bottleneck=0
 			// result = 500 / (1 - 0.01) ≈ 505
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:   big.NewInt(500),
 					WCAmountOut:  big.NewInt(495),
@@ -315,7 +313,7 @@ func TestRouteMaxAmountIn(t *testing.T) {
 			// hop1: WCAmountIn=400 → converti = 400 * e36 / (2*e36) = 200
 			// min = 200 (hop1) → bottleneck=1
 			// result = 200 / (1-0.01) / (1-0.01) ≈ 204
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:   big.NewInt(1000),
 					WCAmountOut:  big.NewInt(990),
@@ -339,7 +337,7 @@ func TestRouteMaxAmountIn(t *testing.T) {
 		},
 		{
 			name: "slippage zero sur tous les hops",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:   big.NewInt(1000),
 					WCAmountOut:  big.NewInt(1000),
@@ -363,7 +361,7 @@ func TestRouteMaxAmountIn(t *testing.T) {
 		},
 		{
 			name: "PriceAtQuote nil sur hop1 → panic guard",
-			route: []lqtypes.PoolEdge{
+			route: []PoolEdge{
 				{
 					WCAmountIn:   big.NewInt(1000),
 					WCAmountOut:  big.NewInt(990),

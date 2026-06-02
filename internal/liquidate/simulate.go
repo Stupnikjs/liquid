@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -63,10 +63,11 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 
 	var callResult []byte
 
-	if err := c.Infra.Conn.CallCtx(ctx, []w3types.RPCCaller{
+	calls := []w3types.RPCCaller{
 		eth.Call(&msg, nil, nil).Returns(&callResult),
-		eth.EstimateGas(&msg, nil).Returns(&gasVal),
-	}); err != nil {
+		eth.EstimateGas(&msg, nil).Returns(&gasVal)}
+
+	if err := c.Infra.Conn.CallCtx(ctx, calls...); err != nil {
 		return 0, fmt.Errorf("dryRun: %w", err)
 	}
 

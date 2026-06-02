@@ -27,11 +27,11 @@ import (
 type Connector interface {
 	// CallCtx dispatches batch eth_calls on the primary (low-latency) RPC.
 	// Use for time-critical calls: health factor checks, bundle submission.
-	CallCtx(ctx context.Context, calls []w3types.RPCCaller) error
+	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
 
 	// SecondCallCtx dispatches batch eth_calls on the secondary RPC.
 	// Use for non-critical calls: historical prices, backtesting, quotes.
-	SecondCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
+	SecondCallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
 
 	// SubscribeLogs opens a WS log subscription for the given FilterQuery.
 	// Returns a read-only channel; the subscription runs until ctx is cancelled.

@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/Stupnikjs/liquid/pkg/connector"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -39,7 +40,7 @@ type Config struct {
 	Addresses Addresses
 	ChainID   uint32
 	Endpoints connector.RPCEndpoints
-	Dexs      []Dex
+	Dexs      []swap.Dex
 }
 
 type MarketContractParams struct {

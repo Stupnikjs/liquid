@@ -4,13 +4,11 @@ package swap
 import (
 	"math/big"
 
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
-
 	"github.com/ethereum/go-ethereum/common"
 )
 
 // Graph : tokenIn -> liste de pools disponibles depuis ce token
-type PoolGraph map[common.Address][]lqtypes.PoolEdge
+type PoolGraph map[common.Address][]PoolEdge
 
 func (rc *RouteCache) PoolsToGraph() {
 	rc.Mu.Lock()
@@ -24,19 +22,19 @@ func (rc *RouteCache) PoolsToGraph() {
 func (rc *RouteCache) FindRoutes(
 	tokenIn, tokenOut common.Address,
 	maxHops int,
-) [][]lqtypes.PoolEdge {
+) [][]PoolEdge {
 
 	rc.Mu.RLock()
 	defer rc.Mu.RUnlock()
-	var results [][]lqtypes.PoolEdge
+	var results [][]PoolEdge
 	visited := make(map[common.Address]bool)
-	path := make([]lqtypes.PoolEdge, 0, maxHops)
+	path := make([]PoolEdge, 0, maxHops)
 
 	// iteration util found tokenOut
 	var dfs func(current common.Address)
 	dfs = func(current common.Address) {
 		if current == tokenOut {
-			cp := make([]lqtypes.PoolEdge, len(path))
+			cp := make([]PoolEdge, len(path))
 			copy(cp, path)
 			results = append(results, cp)
 			return
@@ -63,7 +61,7 @@ func (rc *RouteCache) FindRoutes(
 	return results
 }
 
-func (rc *RouteCache) FindBestRoute(tokenIn, tokenOut common.Address) ([]lqtypes.PoolEdge, bool) {
+func (rc *RouteCache) FindBestRoute(tokenIn, tokenOut common.Address) ([]PoolEdge, bool) {
 	routes := rc.FindRoutes(tokenIn, tokenOut, 3) // Assuming maxHops is 3
 	if len(routes) == 0 {
 		return nil, false

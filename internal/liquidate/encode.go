@@ -7,6 +7,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )
@@ -21,7 +22,7 @@ var liquidateFunc = w3.MustNewFunc(`liquidate(
     uint256 minOut
 )`, "")
 
-func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []lqtypes.PoolEdge) ([]byte, error) {
+func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
 	m := params.ToMarketContractParams()
 	steps, err := BuildSteps(route, c.Infra.Config.Addresses.LiquidatorContract)
 	if err != nil {
@@ -31,8 +32,8 @@ func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, r
 }
 
 // converting route to contract params swap step
-func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]lqtypes.SwapStep, error) {
-	steps := make([]lqtypes.SwapStep, len(route))
+func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap.SwapStep, error) {
+	steps := make([]swap.SwapStep, len(route))
 
 	for i, hop := range route {
 		// Encoder le calldata du DEX avec amountIn = 0 (placeholder)
@@ -51,7 +52,7 @@ func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]l
 				return nil, err
 			}
 
-			steps[i] = lqtypes.SwapStep{
+			steps[i] = swap.SwapStep{
 				Target:         hop.Router,
 				Data:           data,
 				TokenIn:        hop.TokenIn,
@@ -74,7 +75,7 @@ func BuildSteps(route []lqtypes.PoolEdge, liquidatorAddress common.Address) ([]l
 				return nil, err
 			}
 
-			steps[i] = lqtypes.SwapStep{
+			steps[i] = swap.SwapStep{
 				Target:         hop.Router,
 				Data:           data,
 				TokenIn:        hop.TokenIn,
@@ -95,7 +96,7 @@ func BuildLiquidateCalldata(
 	borrower common.Address,
 	seizedAssets *big.Int,
 	repaidShares *big.Int,
-	steps []lqtypes.SwapStep,
+	steps []swap.SwapStep,
 	minOut *big.Int,
 ) ([]byte, error) {
 	return liquidateFunc.EncodeArgs(

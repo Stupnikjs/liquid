@@ -1,12 +1,38 @@
-package lqtypes
+package swap
 
 import (
+	"context"
 	"math/big"
 	"time"
 
-	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/lmittmann/w3/w3types"
 )
+
+type RPCClient interface {
+	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
+	Subscribe(w3types.RPCSubscriber) (*rpc.ClientSubscription, error)
+	Close() error
+}
+
+type Dex interface {
+	// Quote returns the best PoolEdge for a given amountIn.
+	// Returns false if no route satisfies the market's slippage constraint.
+	BestAmountIn(conn RPCClient, ctx context.Context, amountIn, oraclePrice *big.Int, rateLimit time.Duration) (PoolEdge, bool)
+	// DEX returns a human-readable identifier for logging and metrics.
+	DEX() string
+	QuoteAddress() common.Address
+	RouterAddress() common.Address
+}
+
+type MorphoMarket interface {
+	GetPair() string
+	GetCollateralToken() common.Address
+	GetLoanToken() common.Address
+	GetLLTV() *big.Int
+	MaxSlippage() float64
+}
 
 // mapping to liquidate contract struct
 type SwapStep struct {
@@ -32,30 +58,18 @@ type PoolEdge struct {
 	PriceAtQuote   *big.Int
 }
 
-type Dex struct {
-	QuoterAddr common.Address
-	RouterAddr common.Address
-	Quoter     QuoterFunc
-	Name       string
-}
-
 type QuoterFunc func(
-	conn connector.Connector,
+	conn RPCClient,
 	marketp MorphoMarket,
 	quoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	rateLimit time.Duration,
 ) (PoolEdge, bool)
 
-type QuotSingleFunc func(conn connector.Connector,
+type QuotSingleFunc func(conn RPCClient,
 	marketp MorphoMarket,
 	quoterAddr common.Address,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	fee uint32,
 ) (PoolEdge, bool)
-
-func (d *Dex) Quote(conn connector.Connector, marketp MorphoMarket, amountIn, oraclePrice *big.Int,
-	rateLimit time.Duration) (PoolEdge, bool) {
-	return d.Quoter(conn, marketp, d.QuoterAddr, amountIn, oraclePrice, rateLimit)
-}

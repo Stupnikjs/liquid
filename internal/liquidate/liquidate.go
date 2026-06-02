@@ -9,9 +9,9 @@ import (
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
-	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
