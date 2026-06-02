@@ -34,5 +34,10 @@ func main() {
 		runner.Wrapper(config.LoadKatanaConfig(), arbitrum)
 	}()
 
+	go func() {
+		defer wg.Done()
+		// to avoid too much logs at the same time
+		runner.Wrapper(config.LoadBaseConfig(), arbitrum)
+	}()
 	wg.Wait()
 }

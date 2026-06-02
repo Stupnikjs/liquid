@@ -64,7 +64,7 @@ func (u *UniswapV3) UniQuote(
 	m := marketp
 	for _, fee := range UniswapFees {
 		time.Sleep(u.rateLimit)
-		result, ok := uniQuoteCall(conn, m, u.quoterAddr, u.routerAddr, amountIn, oraclePrice, fee)
+		result, ok := uniQuoteCall(conn, m, u.quoterAddr, u.routerAddr, amountIn, oraclePrice, fee, u.name)
 		if !ok {
 			continue
 		}
@@ -92,6 +92,7 @@ func uniQuoteCall(
 	amountIn *big.Int,
 	oraclePrice *big.Int,
 	fee uint32,
+	dexname string,
 ) (PoolEdge, bool) {
 	params := QuoteExactInputSingleParams{
 		TokenIn:           marketp.GetCollateralToken(),
@@ -129,6 +130,7 @@ func uniQuoteCall(
 		WCAmountOut:  amountOut,
 		CalibratedAt: time.Now(),
 		PriceAtQuote: oraclePrice,
+		DexName:      dexname,
 	}, true
 }
 
@@ -136,12 +138,14 @@ func NewUniDex(
 	quoterAddr common.Address,
 	routerAddr common.Address,
 	rateLimit time.Duration,
+	name string,
 ) *UniswapV3 {
 	return &UniswapV3{
 		quoterAddr: quoterAddr,
 		routerAddr: routerAddr,
 		fees:       []uint32{100, 500, 3000, 10000},
 		rateLimit:  rateLimit,
+		name:       name,
 	}
 }
 
@@ -157,9 +161,10 @@ type UniswapV3 struct {
 	routerAddr common.Address
 	fees       []uint32
 	rateLimit  time.Duration
+	name       string
 }
 
-func (u *UniswapV3) DEX() string                   { return "uniswap-v3" }
+func (u *UniswapV3) DEX() string                   { return u.name }
 func (u *UniswapV3) QuoterAddress() common.Address { return u.quoterAddr }
 func (u *UniswapV3) RouterAddress() common.Address { return u.routerAddr }
 

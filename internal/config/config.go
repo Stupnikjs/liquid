@@ -12,6 +12,36 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func LoadBaseConfig() lqtypes.Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	chainid := 8453
+	signer, err := lqtypes.NewBaseSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return lqtypes.Config{
+		Signer: signer,
+		Addresses: lqtypes.Addresses{
+			Wallet:             BaseWalletAddr,
+			Morpho:             MorphoMain,
+			LiquidatorContract: BaseLiquidatorNew,
+		},
+		ChainID: uint32(chainid),
+		Endpoints: connector.RPCEndpoints{
+			Primary: os.Getenv("BASE_HTTP_RPC_DRPC"),
+			Second:  os.Getenv("BASE_HTTP_RPC_ALCH"),
+			WS:      os.Getenv("BASE_WS_RPC_ALCH"),
+		},
+		Dexs: []swap.Dex{
+			swap.NewUniDex(BaseUniswapQuoterV2Addr, BaseUniswapV3Router, 200*time.Millisecond, "UNIV3"),
+			swap.NewUniDex(BasePankakeSwapQuoterV2Addr, BasePankakeSwapV3Router, 200*time.Millisecond, "PANCAKE"),
+		},
+	}
+}
+
 func LoadArbitrumConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
@@ -36,7 +66,7 @@ func LoadArbitrumConfig() lqtypes.Config {
 			WS:      os.Getenv("ARB_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(ArbitrumUniswapQuoterV2Addr, ArbitrumUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(ArbitrumUniswapQuoterV2Addr, ArbitrumUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -65,7 +95,7 @@ func LoadKatanaConfig() lqtypes.Config {
 			WS:      os.Getenv("KATANA_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(KatanaUniswapQuoterV2Addr, KatanaUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(KatanaUniswapQuoterV2Addr, KatanaUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -94,7 +124,7 @@ func LoadWorldChainConfig() lqtypes.Config {
 			WS:      os.Getenv("WORLD_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(WorldChainUniswapQuoterV2Addr, WorldChainUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(WorldChainUniswapQuoterV2Addr, WorldChainUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -123,7 +153,7 @@ func LoadHypeChainConfig() lqtypes.Config {
 			WS:      os.Getenv("HYPE_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(HypeUniswapQuoterV2Addr, HypeUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(HypeUniswapQuoterV2Addr, HypeUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -152,7 +182,7 @@ func LoadUnichainConfig() lqtypes.Config {
 			WS:      os.Getenv("UNICHAIN_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(UnichainUniswapQuoterV2Addr, UnichainUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(UnichainUniswapQuoterV2Addr, UnichainUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -181,7 +211,7 @@ func LoadPolygonConfig() lqtypes.Config {
 			WS:      os.Getenv("POLYGON_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(PolygonUniswapQuoterV2Addr, PolygonUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(PolygonUniswapQuoterV2Addr, PolygonUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -210,7 +240,7 @@ func LoadOptimismConfig() lqtypes.Config {
 			WS:      os.Getenv("OPT_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(OptimismUniswapQuoterV2Addr, OptimismUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(OptimismUniswapQuoterV2Addr, OptimismUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
@@ -239,7 +269,7 @@ func LoadMonadConfig() lqtypes.Config {
 			WS:      os.Getenv("MONAD_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
-			swap.NewUniDex(MonadUniswapQuoterV2Addr, MonadUniswapV3Router, 200*time.Millisecond),
+			swap.NewUniDex(MonadUniswapQuoterV2Addr, MonadUniswapV3Router, 200*time.Millisecond, "UNIV3"),
 		},
 	}
 }
