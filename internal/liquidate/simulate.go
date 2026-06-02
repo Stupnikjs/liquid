@@ -63,7 +63,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 
 	var callResult []byte
 
-	if err := c.Infra.Conn.FallBackEthCallCtx(ctx, []w3types.RPCCaller{
+	if err := c.Infra.Conn.CallCtx(ctx, []w3types.RPCCaller{
 		eth.Call(&msg, nil, nil).Returns(&callResult),
 		eth.EstimateGas(&msg, nil).Returns(&gasVal),
 	}); err != nil {

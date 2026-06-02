@@ -49,7 +49,7 @@ type Connector interface {
 type RPCClient interface {
 	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
 	Subscribe(w3types.RPCSubscriber) (*rpc.ClientSubscription, error)
-	Close()
+	Close() error
 }
 
 // ---------------------------------------------------------------------------

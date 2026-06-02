@@ -10,6 +10,7 @@ import (
 	market "github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3/module/eth"
@@ -53,7 +54,7 @@ func oracleCall(oracle common.Address, res *OnChainResult) w3types.RPCCaller {
 // callBuilder returns the list of RPCCallers to batch, plus a function
 // that writes the results back into the market cache.
 func refresh(
-	conn lqtypes.EthCaller,
+	conn connector.Connector,
 	ctx context.Context,
 	id [32]byte,
 	callBuilder func() ([]w3types.RPCCaller, func()),
@@ -63,7 +64,7 @@ func refresh(
 
 	calls, apply := callBuilder()
 	// oracle call must be fast (alchemy)
-	if err := conn.FallBackEthCallCtx(ctx, calls); err != nil {
+	if err := conn.CallCtx(ctx, calls); err != nil {
 		fmt.Printf("[onchain] rpc error %x: %v\n", id[:4], err)
 		return err
 	}

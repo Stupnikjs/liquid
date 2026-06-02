@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/connector"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/pkg/api"
+	"github.com/Stupnikjs/liquid/pkg/connector"
 )
 
 // logs ethcalls missing
@@ -23,7 +23,7 @@ func (r *Runner) Run(ctx context.Context) {
 }
 
 func Wrapper(conf lqtypes.Config, filters api.MarketFilters, logfile string) {
-	conn := connector.New(conf.RPC.HTTP[0], conf.RPC.HTTP[1], conf.RPC.WS[0])
+	conn := connector.New(conf.Endpoints)
 	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {
 		fmt.Println(err)

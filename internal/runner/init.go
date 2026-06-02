@@ -11,6 +11,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/swap"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type Runner struct {
@@ -20,6 +21,7 @@ type Runner struct {
 	Infra             *lqtypes.Infra
 	Logger            chan string
 	LiquidateCh       chan cache.BorrowPosition
+	EventCh           <-chan *types.Log
 }
 
 func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.Cache, logfile string) *Runner {
@@ -32,6 +34,7 @@ func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.
 		Infra:             infra,
 		Logger:            logger,
 		LiquidateCh:       liquidateCh,
+		EventCh:           make(<-chan *types.Log),
 	}
 }
 

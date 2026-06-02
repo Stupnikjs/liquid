@@ -13,13 +13,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/lmittmann/w3/w3types"
 )
-
-// mockable dans testutil
-type EthCaller interface {
-	EthCallCtx(ctx context.Context, calls []w3types.RPCCaller) error
-}
 
 type Liquidable struct {
 	Pos          *cache.BorrowPosition

@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -39,14 +40,14 @@ type Dex struct {
 }
 
 type QuoterFunc func(
-	conn EthCaller,
+	conn connector.Connector,
 	marketp MorphoMarket,
 	quoterAddr common.Address,
 	amountIn, oraclePrice *big.Int,
 	rateLimit time.Duration,
 ) (PoolEdge, bool)
 
-type QuotSingleFunc func(conn EthCaller,
+type QuotSingleFunc func(conn connector.Connector,
 	marketp MorphoMarket,
 	quoterAddr common.Address,
 	amountIn *big.Int,
@@ -54,7 +55,7 @@ type QuotSingleFunc func(conn EthCaller,
 	fee uint32,
 ) (PoolEdge, bool)
 
-func (d *Dex) Quote(conn EthCaller, marketp MorphoMarket, amountIn, oraclePrice *big.Int,
+func (d *Dex) Quote(conn connector.Connector, marketp MorphoMarket, amountIn, oraclePrice *big.Int,
 	rateLimit time.Duration) (PoolEdge, bool) {
 	return d.Quoter(conn, marketp, d.QuoterAddr, amountIn, oraclePrice, rateLimit)
 }

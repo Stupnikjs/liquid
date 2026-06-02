@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	var baseFilter api.MarketFilters
+	var arbitrum api.MarketFilters
 
-	baseFilter = api.MarketFilters{
+	arbitrum = api.MarketFilters{
 		MaxUsdMarket: 10_000_000_000,
 		MinUsdMarket: 20_000,
 	}
@@ -29,15 +29,8 @@ func main() {
 	go func() {
 		defer wg.Done()
 		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadBaseConfig(), baseFilter, "base.log")
+		runner.Wrapper(config.LoadArbitrumConfig(), arbitrum, "arb.log")
 	}()
-	/*
-		go func() {
-			time.Sleep(500 * time.Second)
-			defer wg.Done()
-			// to avoid too much logs at the same time
-			runner.Wrapper(config.LoadArbitrumConfig(), baseFilter, "arb.log")
-		}()
-	*/
+
 	wg.Wait()
 }

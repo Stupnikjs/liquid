@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"math/big"
 
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -11,14 +12,12 @@ import (
 // Types with no internal dep
 
 type Infra struct {
-	Conn   EthCaller
+	Conn   connector.Connector
 	Config Config
 }
 
 type Addresses struct {
 	LiquidatorContract common.Address
-	UniSwapRouter      common.Address
-	UniSwapQuoter      common.Address
 	Wallet             common.Address
 	Morpho             common.Address
 }
@@ -39,11 +38,8 @@ type Config struct {
 	Signer    *Signer
 	Addresses Addresses
 	ChainID   uint32
-	RPC       struct {
-		HTTP []string
-		WS   []string
-	}
-	Dexs []Dex
+	Endpoints connector.RPCEndpoints
+	Dexs      []Dex
 }
 
 type MarketContractParams struct {
