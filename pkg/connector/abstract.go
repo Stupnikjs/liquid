@@ -122,8 +122,8 @@ func isTransient(err error) bool {
 
 type EthConnector struct {
 	mu        sync.RWMutex
-	primary   RPCClient
-	second    RPCClient
+	primary   RPCClient // primary is for garbage calls
+	second    RPCClient // second is main
 	ws        RPCClient
 	dialWS    func(url string) (RPCClient, error)
 	endpoints RPCEndpoints

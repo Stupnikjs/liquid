@@ -29,24 +29,22 @@ func main() {
 	*/
 	go func() {
 		defer wg.Done()
-		time.Sleep(600 * time.Second)
+		time.Sleep(100 * time.Second)
 		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadArbitrumConfig(), arbitrum, "arb.log")
+		runner.Wrapper(config.LoadArbitrumConfig(), arbitrum)
 	}()
 
 	go func() {
 		defer wg.Done()
-		time.Sleep(300 * time.Second)
+		time.Sleep(200 * time.Second)
 		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadKatanaConfig(), arbitrum, "katana.log")
+		runner.Wrapper(config.LoadKatanaConfig(), arbitrum)
 	}()
 
 	go func() {
 		defer wg.Done()
-
 		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadHypeChainConfig(), arbitrum, "hype.log")
+		runner.Wrapper(config.LoadPolygonConfig(), arbitrum)
 	}()
-
 	wg.Wait()
 }

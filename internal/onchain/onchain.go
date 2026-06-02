@@ -64,7 +64,7 @@ func refresh(
 
 	calls, apply := callBuilder()
 	// oracle call must be fast (alchemy)
-	if err := conn.CallCtx(ctx, calls...); err != nil {
+	if err := conn.SecondCallCtx(ctx, calls...); err != nil {
 		fmt.Printf("[onchain] rpc error %x: %v\n", id[:4], err)
 		return err
 	}

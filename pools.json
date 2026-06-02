@@ -1,1 +1,72 @@
-[]
+[
+  {
+    "TokenIn": "0xee7d8bcfb72bc1880d0cf19822eb0a2e6577ab62",
+    "TokenOut": "0x2dca96907fde857dd3d816880a0df407eeb2d2f2",
+    "Quoter": "0x92dea23ed1c683940ff1a2f8fe23fe98c5d3041c",
+    "Router": "0x4e1d81a3e627b9294532e990109e4c21d217376c",
+    "Fee": 3000,
+    "WCSlippage": 13.825761868277187,
+    "WCAmountIn": 1422005946030158838,
+    "WCAmountOut": 2340196057,
+    "CalibratedAt": "2026-06-02T20:46:48.306860365+02:00",
+    "DexName": "uniswap-v3",
+    "AmountInOffset": 164,
+    "PriceAtQuote": 1909736191670000000000000000
+  },
+  {
+    "TokenIn": "0xee7d8bcfb72bc1880d0cf19822eb0a2e6577ab62",
+    "TokenOut": "0x203a662b0bd271a6ed5a60edfbd04bfce608fd36",
+    "Quoter": "0x92dea23ed1c683940ff1a2f8fe23fe98c5d3041c",
+    "Router": "0x4e1d81a3e627b9294532e990109e4c21d217376c",
+    "Fee": 500,
+    "WCSlippage": 0.27225459677172414,
+    "WCAmountIn": 12049634255626018136,
+    "WCAmountOut": 22957209710,
+    "CalibratedAt": "2026-06-02T20:47:20.271786094+02:00",
+    "DexName": "uniswap-v3",
+    "AmountInOffset": 164,
+    "PriceAtQuote": 1910421670069437614910606074
+  },
+  {
+    "TokenIn": "0x9893989433e7a383cb313953e4c2365107dc19a7",
+    "TokenOut": "0xee7d8bcfb72bc1880d0cf19822eb0a2e6577ab62",
+    "Quoter": "0x92dea23ed1c683940ff1a2f8fe23fe98c5d3041c",
+    "Router": "0x4e1d81a3e627b9294532e990109e4c21d217376c",
+    "Fee": 500,
+    "WCSlippage": 0.0668873972155952,
+    "WCAmountIn": 4225008943397747590,
+    "WCAmountOut": 4627859697695745218,
+    "CalibratedAt": "2026-06-02T20:48:36.0157669+02:00",
+    "DexName": "uniswap-v3",
+    "AmountInOffset": 164,
+    "PriceAtQuote": 1096082230000000000000000000000000000
+  },
+  {
+    "TokenIn": "0x0913da6da4b42f538b445599b46bb4622342cf52",
+    "TokenOut": "0x203a662b0bd271a6ed5a60edfbd04bfce608fd36",
+    "Quoter": "0x92dea23ed1c683940ff1a2f8fe23fe98c5d3041c",
+    "Router": "0x4e1d81a3e627b9294532e990109e4c21d217376c",
+    "Fee": 500,
+    "WCSlippage": 0.6408444999644403,
+    "WCAmountIn": 42156890,
+    "WCAmountOut": 28159352409,
+    "CalibratedAt": "2026-06-02T20:49:51.285149154+02:00",
+    "DexName": "uniswap-v3",
+    "AmountInOffset": 164,
+    "PriceAtQuote": 672273831934830536544817646019568281295
+  },
+  {
+    "TokenIn": "0x7231dbacdfc968e07656d12389ab20de82fbfceb",
+    "TokenOut": "0x7f1f4b4b29f5058fa32cc7a97141b8d7e5abdc2d",
+    "Quoter": "0x92dea23ed1c683940ff1a2f8fe23fe98c5d3041c",
+    "Router": "0x4e1d81a3e627b9294532e990109e4c21d217376c",
+    "Fee": 10000,
+    "WCSlippage": 6.7558257941857045,
+    "WCAmountIn": 1594187624461609093775107,
+    "WCAmountOut": 1815386725844717866764776,
+    "CalibratedAt": "2026-06-02T20:50:14.497649027+02:00",
+    "DexName": "uniswap-v3",
+    "AmountInOffset": 164,
+    "PriceAtQuote": 1221259668707300941000000000000000000
+  }
+]

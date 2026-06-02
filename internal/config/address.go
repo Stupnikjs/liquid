@@ -66,6 +66,12 @@ var (
 	HypeUniswapQuoterV2Addr = common.HexToAddress("0x6Cdcd65e03c1CEc3730AeeCd45bc140D57A25C77")
 	HypeMorphoBlueAddr      = common.HexToAddress("0x68e37dE8d93d3496ae143F2E900490f6280C57cD")
 	HypeLiquidatorAddress   = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
+
+	PolygonWalletAddress       = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
+	PolygonMorphoBlueAddr      = common.HexToAddress("0x1bF0c2541F820E775182832f06c0B7Fc27A25f67")
+	PolygonLiquidatorAddr      = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
+	PolygonUniswapV3Router     = common.HexToAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
+	PolygonUniswapQuoterV2Addr = common.HexToAddress("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
 )
 
 type BridgeToken struct {

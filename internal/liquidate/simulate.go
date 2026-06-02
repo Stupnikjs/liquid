@@ -3,6 +3,7 @@ package liquidate
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/big"
 	"time"
 
@@ -45,7 +46,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketP
 		return l, fmt.Errorf("eth_call failed: %w", err)
 	}
 	l.GasEstimate = gasVal
-	c.log(fmt.Sprintf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(m.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF)))
+	log.Printf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(m.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF))
 	l.IsLiquidable = true
 	return l, nil
 }
@@ -67,7 +68,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 		eth.Call(&msg, nil, nil).Returns(&callResult),
 		eth.EstimateGas(&msg, nil).Returns(&gasVal)}
 
-	if err := c.Infra.Conn.CallCtx(ctx, calls...); err != nil {
+	if err := c.Infra.Conn.SecondCallCtx(ctx, calls...); err != nil {
 		return 0, fmt.Errorf("dryRun: %w", err)
 	}
 

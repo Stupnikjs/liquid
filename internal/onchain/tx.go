@@ -26,7 +26,7 @@ type TxParams struct {
 func SendSignedTx(ctx context.Context, conn connector.Connector, msgsender common.Address, signer *lqtypes.Signer, params TxParams) (common.Hash, error) {
 	var nonce uint64
 	var gasPrice *big.Int
-	if err := conn.CallCtx(ctx, []w3types.RPCCaller{
+	if err := conn.SecondCallCtx(ctx, []w3types.RPCCaller{
 		eth.Nonce(msgsender, nil).Returns(&nonce),
 		eth.GasPrice().Returns(&gasPrice),
 	}...); err != nil {
@@ -49,7 +49,7 @@ func SendSignedTx(ctx context.Context, conn connector.Connector, msgsender commo
 	}
 
 	var receipt common.Hash
-	if err := conn.CallCtx(ctx, []w3types.RPCCaller{
+	if err := conn.SecondCallCtx(ctx, []w3types.RPCCaller{
 		eth.SendTx(signedTx).Returns(&receipt),
 	}...); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)

@@ -2,7 +2,7 @@ package liquidate
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"math/big"
 	"time"
 
@@ -27,10 +27,9 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *swap.RouteCache, logger chan string, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *swap.RouteCache, ch <-chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
 		Infra:     infra,
-		Logger:    logger,
 		SwapCache: swapCache,
 		Cache:     cache,
 		Ch:        ch,
@@ -39,17 +38,9 @@ func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *swap.Route
 
 type Consumer struct {
 	Infra     *lqtypes.Infra
-	Logger    chan string
 	SwapCache *swap.RouteCache
 	Cache     *cache.Cache
 	Ch        <-chan cache.BorrowPosition
-}
-
-func (c *Consumer) log(msg string) {
-	select {
-	case c.Logger <- msg:
-	default: // drop if full — never block the liquidation path
-	}
 }
 
 func (c *Consumer) Run(ctx context.Context) {
@@ -72,17 +63,17 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 
 	result, err := c.SimulateAndPreComputeTx(ctx, market, snap, p)
 	if err != nil {
-		c.log(fmt.Sprintf("[liq] simulation failed for %s: %v", p.Address, err))
+		log.Printf("[liq] simulation failed for %s: %v", p.Address, err)
 		return
 	}
 
-	fmt.Printf("[liq] sending tx for %s seized=%s market %s  \n", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair())
+	log.Printf("[liq] sending tx for %s seized=%s market %s  \n", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair())
 	err = c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
-		c.log(fmt.Sprintf("[liq] tx failed for %s: %v", p.Address, err))
+		log.Printf("[liq] tx failed for %s: %v", p.Address, err)
 		return
 	}
-	fmt.Printf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address)
+	log.Printf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address)
 }
 
 func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {

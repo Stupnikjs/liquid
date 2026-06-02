@@ -22,11 +22,10 @@ func (r *Runner) Run(ctx context.Context) {
 	<-ctx.Done()
 }
 
-func Wrapper(conf lqtypes.Config, filters api.MarketFilters, logfile string) {
+func Wrapper(conf lqtypes.Config, filters api.MarketFilters) {
 	conn := connector.New(conf.Endpoints)
 	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {
-
 		fmt.Println(err)
 		return
 	}
@@ -39,7 +38,7 @@ func Wrapper(conf lqtypes.Config, filters api.MarketFilters, logfile string) {
 	}
 	// pass empty
 	routeCache := swap.NewRouteCache()
-	runn := NewRunner(infra, routeCache, cached, logfile)
+	runn := NewRunner(infra, routeCache, cached)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
 

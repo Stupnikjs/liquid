@@ -48,10 +48,8 @@ func (u *UniswapV3) BestAmountIn(
 	}
 
 	if !found {
-		fmt.Printf("no acceptable slippage found for %s\n", marketp.GetPair())
 		return PoolEdge{}, false
 	}
-
 	fmt.Printf("acceptable slippage found for %s  %.4f%%\n", marketp.GetPair(), best.WCSlippage)
 	return best, true
 }
@@ -166,3 +164,23 @@ type UniswapV3 struct {
 func (u *UniswapV3) DEX() string                   { return "uniswap-v3" }
 func (u *UniswapV3) QuoterAddress() common.Address { return u.quoterAddr }
 func (u *UniswapV3) RouterAddress() common.Address { return u.routerAddr }
+
+func ComputeSlippage(amountIn, amountOut, oraclePrice *big.Int) float64 {
+	if oraclePrice == nil || oraclePrice.Sign() == 0 {
+		return 0
+	}
+	scale := new(big.Int).Exp(big.NewInt(10), big.NewInt(36), nil)
+	expectedOut := new(big.Int).Div(
+		new(big.Int).Mul(amountIn, oraclePrice),
+		scale,
+	)
+	if expectedOut.Sign() == 0 {
+		return 0
+	}
+	diff := new(big.Int).Sub(expectedOut, amountOut)
+	slip, _ := new(big.Float).Quo(
+		new(big.Float).SetInt(diff),
+		new(big.Float).SetInt(expectedOut),
+	).Float64()
+	return slip * 100
+}

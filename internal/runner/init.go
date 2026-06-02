@@ -12,7 +12,6 @@ import (
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
-	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -28,15 +27,14 @@ type Runner struct {
 	EventCh           <-chan *types.Log
 }
 
-func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.Cache, logfile string) *Runner {
+func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.Cache) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
-	logger := utils.NewLogger(context.Background(), logfile)
 	database, err := db.OpenDb(fmt.Sprintf("%d.db", infra.Config.ChainID))
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &Runner{
-		LiquidateConsumer: liquidate.NewConsumer(infra, mCache, routeCache, logger, liquidateCh),
+		LiquidateConsumer: liquidate.NewConsumer(infra, mCache, routeCache, liquidateCh),
 		Cache:             mCache,
 		Routes:            routeCache,
 		Infra:             infra,
@@ -49,7 +47,9 @@ func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.
 
 func (r *Runner) Init(ctx context.Context) {
 	err := r.ApiCall()
-	log.Println(err)
+	if err != nil {
+		log.Printf("initial api call error: %v", err)
+	}
 	r.OnChainRefreshAll(ctx)
 	r.QuotePools()
 	log.Println("Quoting over ")
@@ -65,9 +65,10 @@ func (r *Runner) LogMarkets() {
 		if snap == nil {
 			continue
 		}
-		fmt.Printf("[%s/%s]",
+		fmt.Printf("[%s/%s] chain %d \n",
 			m.CollateralTokenStr,
-			m.LoanTokenStr)
+			m.LoanTokenStr,
+			r.Infra.Config.ChainID)
 	}
 }
 
