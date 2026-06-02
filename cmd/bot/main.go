@@ -14,7 +14,7 @@ func main() {
 
 	arbitrum = api.MarketFilters{
 		MaxUsdMarket: 10_000_000_000,
-		MinUsdMarket: 20_000,
+		MinUsdMarket: 10_000,
 	}
 
 	var wg sync.WaitGroup

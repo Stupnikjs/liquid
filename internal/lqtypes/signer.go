@@ -153,3 +153,18 @@ func NewPolygonSigner(chainid int64) (*Signer, error) {
 		signer: types.NewLondonSigner(big.NewInt(chainid)),
 	}, nil
 }
+
+func NewMonadSigner(chainid int64) (*Signer, error) {
+	keyHex := os.Getenv("BASE_PK")
+	if keyHex == "" {
+		return nil, fmt.Errorf("LIQUIDATOR_MONAD_PRIVATE_KEY not set")
+	}
+	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
+	if err != nil {
+		return nil, fmt.Errorf("invalid private key: %w", err)
+	}
+	return &Signer{
+		key:    key,
+		signer: types.NewLondonSigner(big.NewInt(chainid)),
+	}, nil
+}

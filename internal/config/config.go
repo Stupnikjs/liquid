@@ -214,3 +214,32 @@ func LoadOptimismConfig() lqtypes.Config {
 		},
 	}
 }
+
+func LoadMonadConfig() lqtypes.Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	chainid := 143
+	signer, err := lqtypes.NewMonadSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return lqtypes.Config{
+		Signer: signer,
+		Addresses: lqtypes.Addresses{
+			Wallet:             MonadWalletAddress,
+			Morpho:             MonadMorphoBlueAddr,
+			LiquidatorContract: MonadLiquidatorAddr,
+		},
+		ChainID: uint32(chainid),
+		Endpoints: connector.RPCEndpoints{
+			Primary: os.Getenv("MONAD_HTTP_RPC_DRPC"),
+			Second:  os.Getenv("MONAD_HTTP_RPC_ALCH"),
+			WS:      os.Getenv("MONAD_WS_RPC_ALCH"),
+		},
+		Dexs: []swap.Dex{
+			swap.NewUniDex(MonadUniswapQuoterV2Addr, MonadUniswapV3Router, 200*time.Millisecond),
+		},
+	}
+}

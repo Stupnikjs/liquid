@@ -72,6 +72,12 @@ var (
 	PolygonLiquidatorAddr      = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
 	PolygonUniswapV3Router     = common.HexToAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
 	PolygonUniswapQuoterV2Addr = common.HexToAddress("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
+
+	MonadWalletAddress       = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
+	MonadUniswapV3Router     = common.HexToAddress("0xfe31f71c1b106eac32f1a19239c9a9a72ddfb900")
+	MonadUniswapQuoterV2Addr = common.HexToAddress("0x661e93cca42afacb172121ef892830ca3b70f08d")
+	MonadMorphoBlueAddr      = common.HexToAddress("0xD5D960E8C380B724a48AC59E2DfF1b2CB4a1eAee")
+	MonadLiquidatorAddr      = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
 )
 
 type BridgeToken struct {
