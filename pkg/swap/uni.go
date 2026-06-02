@@ -26,8 +26,6 @@ func (u *UniswapV3) BestAmountIn(
 	oraclePrice *big.Int,
 	rateLimit time.Duration,
 ) (PoolEdge, bool) {
-	maxSlippage := marketp.MaxSlippage()
-	fmt.Printf("max slippage for %s is: %f\n", marketp.GetPair(), maxSlippage)
 
 	lo := big.NewInt(1)
 	hi := new(big.Int).Set(amountIn)

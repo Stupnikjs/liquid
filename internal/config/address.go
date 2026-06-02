@@ -29,7 +29,7 @@ var (
 	// Arbitrum Addresses
 	ArbitrumMorphoBlueAddr      = common.HexToAddress("0x6c247b1F6182318877311737BaC0844bAa518F5e")
 	ArbitrumUniswapQuoterV2Addr = common.HexToAddress("0x61fFE014bA17989E743c5F6cB21bF9697530B21e")
-	ArbitrumLiquidatorAddr      = common.HexToAddress("")
+	ArbitrumLiquidatorAddr      = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C") // multihop
 	ArbitrumUniswapV3Router     = common.HexToAddress("0xe592427a0aece92de3edee1f18e0157c05861564")
 	ArbitrumWalletAddress       = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 
@@ -59,7 +59,7 @@ var (
 	KatanaUniswapV3Router     = common.HexToAddress("0x4e1d81A3E627b9294532e990109e4c21d217376C")
 	KatanaMorphoBlueAddr      = common.HexToAddress("0xD50F2DffFd62f94Ee4AEd9ca05C61d0753268aBc")
 	KatanaUniswapQuoterV2Addr = common.HexToAddress("0x92dea23ED1C683940fF1a2f8fE23FE98C5d3041c")
-	KatanaLiquidatorAddr      = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
+	KatanaLiquidatorAddr      = common.HexToAddress("0x2661C239C38AaB0d333Be91F999F7E69dD706504") // multihop
 
 	HypeWalletAddress       = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 	HypeUniswapV3Router     = common.HexToAddress("0xe8571fd6629da6e488f7bbd83e729c20fa9b97b4")

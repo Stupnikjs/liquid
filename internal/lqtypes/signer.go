@@ -50,7 +50,7 @@ func NewArbitrumSigner(chainid int64) (*Signer, error) {
 }
 
 func NewOptimismSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("OPT_PK")
+	keyHex := os.Getenv("BASE_PK")
 	if keyHex == "" {
 		return nil, fmt.Errorf("LIQUIDATOR__OPT_PRIVATE_KEY not set")
 	}

@@ -185,3 +185,32 @@ func LoadPolygonConfig() lqtypes.Config {
 		},
 	}
 }
+
+func LoadOptimismConfig() lqtypes.Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	chainid := 10
+	signer, err := lqtypes.NewOptimismSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return lqtypes.Config{
+		Signer: signer,
+		Addresses: lqtypes.Addresses{
+			Wallet:             OptimismWalletAddress,
+			Morpho:             OptimismMorphoBlueAddr,
+			LiquidatorContract: OptimismLiquidatorAddr,
+		},
+		ChainID: uint32(chainid),
+		Endpoints: connector.RPCEndpoints{
+			Primary: os.Getenv("OPT_HTTP_RPC_DRPC"),
+			Second:  os.Getenv("OPT_HTTP_RPC_ALCH"),
+			WS:      os.Getenv("OPT_WS_RPC_ALCH"),
+		},
+		Dexs: []swap.Dex{
+			swap.NewUniDex(OptimismUniswapQuoterV2Addr, OptimismUniswapV3Router, 200*time.Millisecond),
+		},
+	}
+}

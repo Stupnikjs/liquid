@@ -4,5 +4,6 @@ go.sum
 *.log
 cmd.txt
 data/*
+*.json
 
 

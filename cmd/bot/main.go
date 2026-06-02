@@ -19,14 +19,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(4)
-	/*
-		go func() {
-			time.Sleep(200 * time.Second)
-			defer wg.Done()
-			// to avoid too much logs at the same time
-			runner.Wrapper(config.LoadWorldChainConfig(), baseFilter, "world.log")
-		}()
-	*/
+
 	go func() {
 		defer wg.Done()
 		time.Sleep(100 * time.Second)
@@ -41,10 +34,5 @@ func main() {
 		runner.Wrapper(config.LoadKatanaConfig(), arbitrum)
 	}()
 
-	go func() {
-		defer wg.Done()
-		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadPolygonConfig(), arbitrum)
-	}()
 	wg.Wait()
 }
