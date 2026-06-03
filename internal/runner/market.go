@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/db"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -25,12 +27,18 @@ type marketState struct {
 	interval  time.Duration
 }
 
-func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
+func (c *MarketConsumer) OnChainRefreshRoutine(ctx context.Context, liquidationCh chan cache.BorrowPosition) {
+	for _, id := range c.Cache.Markets.Ids() {
+		go c.MarketRoutine(ctx, liquidationCh, id)
+	}
+}
+
+func (c *MarketConsumer) MarketRoutine(ctx context.Context, liquidationCh chan cache.BorrowPosition, id [32]byte) {
 
 	ms := &marketState{
 		ignoreMap: make(map[common.Address]int),
 	}
-	ticker, interval := r.MarketInitTicker(ctx, id)
+	ticker, interval := c.MarketInitTicker(ctx, id)
 	if ticker == nil {
 		log.Println("Failed to initialize ticker")
 		return
@@ -43,7 +51,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 		case <-ctx.Done():
 			return
 		case <-ms.ticker.C:
-			interval := r.MarketTick(ctx, ms, id)
+			interval := c.MarketTick(ctx, ms, id, liquidationCh)
 			if interval != ms.interval {
 				ms.ticker.Reset(interval)
 			}
@@ -52,7 +60,7 @@ func (r *Runner) MarketRoutine(ctx context.Context, id [32]byte) {
 	}
 }
 
-func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticker, time.Duration) {
+func (c *MarketConsumer) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticker, time.Duration) {
 	// Wait for initial data
 	var snap *cache.MarketSnapshot
 	for snap == nil || snap.Oracle.Price == nil || snap.Oracle.Price.Sign() == 0 {
@@ -60,15 +68,15 @@ func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticke
 		case <-ctx.Done():
 			return nil, time.Second
 		case <-time.After(500 * time.Millisecond):
-			snap = r.MarketConsumer.Cache.Markets.GetSnapshot(id)
+			snap = c.Cache.Markets.GetSnapshot(id)
 		}
 	}
-	morphoM := r.MarketConsumer.Cache.MarketMap[id]
-	return r.SnapToTickerInterval(*snap, morphoM)
+	morphoM := c.Cache.MarketMap[id]
+	return SnapToTickerInterval(*snap, morphoM)
 
 }
 
-func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.MarketParams) (*time.Ticker, time.Duration) {
+func SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.MarketParams) (*time.Ticker, time.Duration) {
 	firstHF := snap.GetFirstHF()
 	if firstHF == nil {
 		firstHF = utils.TenPowInt(19)
@@ -83,27 +91,27 @@ func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.
 	return time.NewTicker(interval), interval
 }
 
-func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) time.Duration {
+func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32]byte, liquidationCh chan cache.BorrowPosition) time.Duration {
 	start := time.Now().UnixNano()
 	ms.tickCount++
-	r.MarketConsumer.MarketOnchainRefresh(ctx, ms, id)
-	r.MarketConsumer.MarketRecompute(ms, id)
-	snap := r.MarketConsumer.Cache.Markets.GetSnapshot(id)
+	r.MarketOnchainRefresh(ctx, ms, id)
+	r.MarketRecompute(ms, id)
+	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
 		log.Println("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
 
-	morphoM := r.MarketConsumer.Cache.MarketMap[id]
+	morphoM := r.Cache.MarketMap[id]
 
-	_, interval := r.SnapToTickerInterval(*snap, morphoM)
-	r.LiquidationCheck(ctx, *snap, ms)
+	_, interval := SnapToTickerInterval(*snap, morphoM)
+	r.LiquidationCheck(ctx, *snap, ms, liquidationCh)
 	latency := (time.Now().UnixNano() - start) / 1_000_000
 	if ms.tickCount%100 == 0 {
 		log.Printf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF()))
 	}
 	log.Printf("%s %s", morphoM.GetPair(), snap.Analysis().String())
-	err := r.MarketConsumer.ToDBEntryQueue(id, *snap)
+	err := r.ToDBEntryQueue(id, *snap)
 	if err != nil {
 		log.Printf("error adding entry to queue: %v", err)
 	}
@@ -140,7 +148,7 @@ func (r *MarketConsumer) MarketRecompute(ms *marketState, id [32]byte) {
 
 // Checking hf and sending pos into liquidation channel
 // updating market state ignore map on malformed pos
-func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState) {
+func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState, liquidationCh chan cache.BorrowPosition) {
 	for _, pos := range snap.Positions {
 		// since positions are sorted by HF, we can break early
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
@@ -151,7 +159,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 			ms.ignoreMap[pos.Address] = 999
 			continue
 		}
-		morphoM := r.MarketConsumer.Cache.MarketMap[snap.ID]
+		morphoM := r.Cache.MarketMap[snap.ID]
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
 			log.Printf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
 				pos.Address,
@@ -161,7 +169,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 				utils.FormatWAD(pos.CachedHF),
 				utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
 				snap.Oracle.Price.String())
-			r.LiquidateConsumer.Ch <- pos
+			liquidationCh <- pos
 		}
 		ms.ignoreMap[pos.Address]++
 	}
@@ -209,4 +217,40 @@ func (r *MarketConsumer) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) 
 
 	}
 	return nil
+}
+
+// EVENTS
+
+func (r *MarketConsumer) SubscribePositionRoutine(ctx context.Context) {
+	query := ethereum.FilterQuery{
+		Addresses: []common.Address{r.Config.Addresses.Morpho},
+		Topics: [][]common.Hash{{
+			abi.EventBorrow.Topic0,
+			abi.EventRepay.Topic0,
+			abi.EventSupplyCollateral.Topic0,
+			abi.EventLiquidate.Topic0,
+			abi.EventAccrueInterest.Topic0,
+		}},
+	}
+	ch, err := r.Conn.SubscribeLogs(ctx, query)
+	r.EventCh = ch
+	if err != nil {
+		log.Printf("Error subscribing to logs: %v", err)
+	}
+
+}
+
+func (m *MarketConsumer) EventListener(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case event, ok := <-m.EventCh:
+			if !ok {
+				return
+			}
+			onchain.ProcessEvents(m.Cache.Markets, event)
+		}
+	}
 }

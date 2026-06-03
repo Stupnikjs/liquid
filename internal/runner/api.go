@@ -13,23 +13,12 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/api"
 )
 
-func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
-	for _, id := range r.MarketConsumer.Cache.Markets.Ids() {
-		go r.MarketRoutine(ctx, id)
-	}
-}
-
 func (r *Runner) ApiResyncRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, 30*time.Minute, func() {
 		if err := r.ApiCall(); err != nil {
 			log.Printf("api resync error: %v", err)
 		}
 	})
-}
-
-func (r *Runner) LiquidationRoutine(ctx context.Context) {
-	r.LiquidateConsumer.Run(ctx)
-
 }
 
 func (r *Runner) ApiCall() error {
