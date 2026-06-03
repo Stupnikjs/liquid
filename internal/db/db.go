@@ -92,7 +92,7 @@ func InsertEntries(db *sql.DB, entries []Entry) error {
 
 	for _, e := range entries {
 		_, err := stmt.ExecContext(context.Background(),
-			e.Pos.Address,
+			e.Pos.Address.String(),
 			hexutil.Encode(e.Pos.MarketID[:]),
 			e.Pos.BorrowShares.String(),
 			e.TotalBorrowShares.String(),
