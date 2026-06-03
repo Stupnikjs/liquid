@@ -6,11 +6,18 @@ import (
 	"log"
 	"math/big"
 	"path"
+	"sync"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	_ "modernc.org/sqlite"
 )
+
+type Store struct {
+	DB           *sql.DB
+	EntryToFlush []Entry
+	Mu           sync.Mutex
+}
 
 type Entry struct {
 	Pos               cache.BorrowPosition

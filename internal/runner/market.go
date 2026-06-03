@@ -60,10 +60,10 @@ func (r *Runner) MarketInitTicker(ctx context.Context, id [32]byte) (*time.Ticke
 		case <-ctx.Done():
 			return nil, time.Second
 		case <-time.After(500 * time.Millisecond):
-			snap = r.Cache.Markets.GetSnapshot(id)
+			snap = r.MarketConsumer.Cache.Markets.GetSnapshot(id)
 		}
 	}
-	morphoM := r.Cache.MarketMap[id]
+	morphoM := r.MarketConsumer.Cache.MarketMap[id]
 	return r.SnapToTickerInterval(*snap, morphoM)
 
 }
@@ -88,13 +88,13 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 	ms.tickCount++
 	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
-	snap := r.Cache.Markets.GetSnapshot(id)
+	snap := r.MarketConsumer.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
 		log.Println("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
 
-	morphoM := r.Cache.MarketMap[id]
+	morphoM := r.MarketConsumer.Cache.MarketMap[id]
 
 	_, interval := r.SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms)
@@ -111,22 +111,22 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 }
 
 // RPC Call Oracle only or Markets
-func (r *Runner) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [32]byte) {
+func (r *MarketConsumer) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [32]byte) {
 	morphoM := r.Cache.MarketMap[id]
 	if ms.tickCount%20 == 0 {
 
-		if err := onchain.OnChainRefresh(r.Infra, ctx, r.Cache, morphoM, id); err != nil {
+		if err := onchain.OnChainRefresh(r.Conn, r.Config, ctx, r.Cache, morphoM, id); err != nil {
 			log.Printf("full refresh error: %v", err)
 		}
 		return
 	}
-	if err := onchain.OnChainOracleRefresh(r.Infra, ctx, r.Cache, morphoM, id, r.Infra.Config.Addresses.Morpho); err != nil {
+	if err := onchain.OnChainOracleRefresh(r.Conn, r.Config, ctx, r.Cache, morphoM, id, r.Config.Addresses.Morpho); err != nil {
 		log.Printf("oracle refresh error: %v", err)
 	}
 }
 
 // Sorting + Hf recalculate
-func (r *Runner) MarketRecompute(ms *marketState, id [32]byte) {
+func (r *MarketConsumer) MarketRecompute(ms *marketState, id [32]byte) {
 	r.Cache.Markets.Update(id, func(m *cache.Market) {
 		m.RecomputeHFUnsafe(len(m.Positions) / 2)
 		if ms.tickCount%10 == 0 {
@@ -151,7 +151,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 			ms.ignoreMap[pos.Address] = 999
 			continue
 		}
-		morphoM := r.Cache.MarketMap[snap.ID]
+		morphoM := r.MarketConsumer.Cache.MarketMap[snap.ID]
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
 			log.Printf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
 				pos.Address,
@@ -161,7 +161,7 @@ func (r *Runner) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot
 				utils.FormatWAD(pos.CachedHF),
 				utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
 				snap.Oracle.Price.String())
-			r.LiquidateCh <- pos
+			r.LiquidateConsumer.Ch <- pos
 		}
 		ms.ignoreMap[pos.Address]++
 	}
@@ -197,25 +197,25 @@ func (r *Runner) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
 			break // slice trié, on peut break
 		}
 		e := db.PosToEntry(pos, snap.Oracle.Price, snap.Stats.TotalBorrowAssets, snap.Stats.TotalBorrowShares, time.Now().UnixMilli())
-		if len(r.EntryToFlush) < MAX_FLUSH_QUEUE_SIZE {
-			r.EntryToFlush = append(r.EntryToFlush, e)
+		if len(r.MarketConsumer.Store.EntryToFlush) < MAX_FLUSH_QUEUE_SIZE {
+			r.MarketConsumer.Store.EntryToFlush = append(r.MarketConsumer.Store.EntryToFlush, e)
 		} else {
 			r.FlushEntries()
-			r.EntryToFlush = append(r.EntryToFlush, e)
+			r.MarketConsumer.Store.EntryToFlush = append(r.MarketConsumer.Store.EntryToFlush, e)
 		}
 
 	}
 	return nil
 }
 
-// need mutex here 
+// need mutex here
 func (r *Runner) FlushEntries() {
-	if len(r.EntryToFlush) == 0 {
+	if len(r.MarketConsumer.Store.EntryToFlush) == 0 {
 		return
 	}
-	err := db.InsertEntries(r.DB, r.EntryToFlush)
+	err := db.InsertEntries(r.MarketConsumer.Store.DB, r.MarketConsumer.Store.EntryToFlush)
 	if err != nil {
 		log.Printf("error flushing entries: %v", err)
 	}
-	r.EntryToFlush = r.EntryToFlush[:0] // Clear the slice
+	r.MarketConsumer.Store.EntryToFlush = r.MarketConsumer.Store.EntryToFlush[:0] // Clear the slice
 }

@@ -16,7 +16,7 @@ import (
 func (r *Runner) Run(ctx context.Context) {
 	go r.SubscribePositionRoutine(ctx)
 	go r.OnChainRefreshRoutine(ctx)
-	go r.EventListener(ctx)
+	go r.MarketConsumer.EventListener(ctx)
 	go r.LiquidationRoutine(ctx)
 	go r.ApiResyncRoutine(ctx)
 	<-ctx.Done()
@@ -32,13 +32,10 @@ func Wrapper(conf lqtypes.Config, filters api.MarketFilters) {
 	markets := api.FilterMarket(result, filters, conf.ChainID)
 
 	cached := cache.NewCache(conf, markets, filters)
-	infra := &lqtypes.Infra{
-		Conn:   conn,
-		Config: conf,
-	}
+
 	// pass empty
 	routeCache := swap.NewRouteCache()
-	runn := NewRunner(infra, routeCache, cached)
+	runn := NewRunner(conn, conf, routeCache, cached)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
 

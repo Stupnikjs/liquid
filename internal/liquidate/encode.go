@@ -11,7 +11,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )
-// Passer de la logique dans swap pkg 
+
+// Passer de la logique dans swap pkg
 // ABI de la fonction liquidate
 var liquidateFunc = w3.MustNewFunc(`liquidate(
     (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
@@ -24,7 +25,7 @@ var liquidateFunc = w3.MustNewFunc(`liquidate(
 
 func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
 	m := params.ToMarketContractParams()
-	steps, err := BuildSteps(route, c.Infra.Config.Addresses.LiquidatorContract)
+	steps, err := BuildSteps(route, c.Config.Addresses.LiquidatorContract)
 	if err != nil {
 		return nil, fmt.Errorf("build steps: %w", err)
 	}

@@ -74,14 +74,14 @@ func refresh(
 
 // OnChainRefresh fetches both the market state and the oracle price.
 func OnChainRefresh(
-	infra *lqtypes.Infra, ctx context.Context,
+	conn connector.Connector, config lqtypes.Config, ctx context.Context,
 	c *cache.Cache, mParam morpho.MarketParams,
 	id [32]byte,
 ) error {
-	return refresh(infra.Conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
+	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
 		res := newResult(id)
 		calls := []w3types.RPCCaller{
-			marketCall(infra.Config.Addresses.Morpho, id, res),
+			marketCall(config.Addresses.Morpho, id, res),
 			oracleCall(mParam.Oracle, res),
 		}
 		apply := func() {
@@ -97,11 +97,11 @@ func OnChainRefresh(
 
 // OnChainOracleRefresh fetches only the oracle price.
 func OnChainOracleRefresh(
-	infra *lqtypes.Infra, ctx context.Context,
+	conn connector.Connector, config lqtypes.Config, ctx context.Context,
 	c *cache.Cache, mParam morpho.MarketParams,
 	id [32]byte, morphoAddr common.Address,
 ) error {
-	return refresh(infra.Conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
+	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
 		res := newResult(id)
 		calls := []w3types.RPCCaller{
 			oracleCall(mParam.Oracle, res),

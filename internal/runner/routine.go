@@ -15,7 +15,7 @@ import (
 )
 
 func (r *Runner) OnChainRefreshRoutine(ctx context.Context) {
-	for _, id := range r.Cache.Markets.Ids() {
+	for _, id := range r.MarketConsumer.Cache.Markets.Ids() {
 		go r.MarketRoutine(ctx, id)
 	}
 }
@@ -30,9 +30,10 @@ func (r *Runner) ApiResyncRoutine(ctx context.Context) {
 
 func (r *Runner) LiquidationRoutine(ctx context.Context) {
 	consumer := &liquidate.Consumer{
-		Infra: r.Infra,
-		Cache: r.Cache,
-		Ch:    r.LiquidateCh,
+		Conn:   r.Conn,
+		Config: r.Config,
+		Cache:  r.MarketConsumer.Cache,
+		Ch:     r.LiquidateConsumer.Ch,
 	}
 	consumer.Run(ctx)
 
@@ -43,11 +44,11 @@ func (r *Runner) ApiCall() error {
 	var mu sync.Mutex
 	var firstErr error
 	ctx := context.Background()
-	for _, id := range r.Cache.Markets.Ids() {
+	for _, id := range r.MarketConsumer.Cache.Markets.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			fetched, err := api.FetchAllPositions(ctx, id, r.Infra.Config.ChainID)
+			fetched, err := api.FetchAllPositions(ctx, id, r.Config.ChainID)
 			if err != nil {
 				mu.Lock()
 				if firstErr == nil {
@@ -60,7 +61,7 @@ func (r *Runner) ApiCall() error {
 			for _, pos := range fetched {
 				p := cache.ApiItemToPos(pos, id)
 				// pos less than 1 dollard
-				if p.BorrowAssetsUsd.Cmp(utils.WAD_10) < 0 || p.BorrowAssetsUsd.Cmp(utils.WAD_10_000) > 0 {
+				if p.BorrowAssetsUsd.Cmp(utils.WAD_5) < 0 || p.BorrowAssetsUsd.Cmp(utils.WAD_10_000) > 0 {
 					continue
 				}
 				positions = append(positions, p)
@@ -84,11 +85,11 @@ func (r *Runner) ApiCall() error {
 				return
 			}
 			// maybe sorting by collateral here
-			r.Cache.Markets.Update(id, func(m *cache.Market) {
+			r.MarketConsumer.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Positions = positions
 			})
 
-			r.Cache.Markets.Update(id, func(m *cache.Market) {
+			r.MarketConsumer.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
 			})
 

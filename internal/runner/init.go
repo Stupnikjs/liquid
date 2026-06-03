@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"sync"
@@ -12,36 +11,66 @@ import (
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type Runner struct {
+	//Conn              connector.Connector
+	//Config            lqtypes.Config
+	MarketConsumer    *MarketConsumer
+	QuoteConsumer     *QuoteConsumer
 	LiquidateConsumer *liquidate.Consumer
-	Cache             *cache.Cache
-	Routes            *swap.RouteCache
-	Infra             *lqtypes.Infra
-	DB                *sql.DB
-	EntryToFlush      []db.Entry
-	LiquidateCh       chan cache.BorrowPosition
-	EventCh           <-chan *types.Log
 }
 
-func NewRunner(infra *lqtypes.Infra, routeCache *swap.RouteCache, mCache *cache.Cache) *Runner {
+type MarketConsumer struct {
+	Conn    connector.Connector
+	Config  lqtypes.Config
+	Cache   *cache.Cache
+	Store   *db.Store
+	EventCh <-chan *types.Log
+}
+
+type QuoteConsumer struct {
+	Conn   connector.Connector
+	Config lqtypes.Config
+	Cache  *cache.Cache
+	Routes *swap.RouteCache
+}
+
+func NewMarketConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, routes *swap.RouteCache, store *db.Store) *MarketConsumer {
+	return &MarketConsumer{
+		Conn:   conn,
+		Config: config,
+		Cache:  cache,
+		Store:  store,
+
+		EventCh: make(<-chan *types.Log),
+	}
+}
+
+func NewQuoteConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, routes *swap.RouteCache) *QuoteConsumer {
+	return &QuoteConsumer{
+		Conn:   conn,
+		Config: config,
+		Cache:  cache,
+		Routes: routes,
+	}
+}
+
+func NewRunner(conn connector.Connector, config lqtypes.Config, routeCache *swap.RouteCache, mCache *cache.Cache) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
-	database, err := db.OpenDb(fmt.Sprintf("%d.db", infra.Config.ChainID))
+	database, err := db.OpenDb(fmt.Sprintf("%d.db", config.ChainID))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to open database: %v", err)
 	}
 	return &Runner{
-		LiquidateConsumer: liquidate.NewConsumer(infra, mCache, routeCache, liquidateCh),
-		Cache:             mCache,
-		Routes:            routeCache,
-		Infra:             infra,
-		DB:                database,
-		LiquidateCh:       liquidateCh,
-		EventCh:           make(<-chan *types.Log),
-		EntryToFlush:      make([]db.Entry, 0, MAX_FLUSH_QUEUE_SIZE),
+		//Conn:              conn,
+		//Config:            config,
+		LiquidateConsumer: liquidate.NewConsumer(conn, config, mCache, routeCache, liquidateCh),
+		QuoteConsumer:     NewQuoteConsumer(conn, config, mCache, routeCache),
+		MarketConsumer:    NewMarketConsumer(conn, config, mCache, routeCache, &db.Store{DB: database, EntryToFlush: []db.Entry{}}),
 	}
 }
 
@@ -50,37 +79,37 @@ func (r *Runner) Init(ctx context.Context) {
 	if err != nil {
 		log.Printf("initial api call error: %v", err)
 	}
-	r.OnChainRefreshAll(ctx)
-	r.QuotePools()
+	r.MarketConsumer.OnChainRefreshAll(ctx)
+	r.QuoteConsumer.QuotePools()
 	log.Println("Quoting over ")
-	r.LogMarkets()
+	r.MarketConsumer.LogMarkets()
 
 }
 
-func (r *Runner) LogMarkets() {
-	ids := r.Cache.Markets.Ids()
+func (c *MarketConsumer) LogMarkets() {
+	ids := c.Cache.Markets.Ids()
 	for _, id := range ids {
-		m := r.Cache.MarketMap[id]
-		snap := r.Cache.Markets.GetSnapshot(id)
+		m := c.Cache.MarketMap[id]
+		snap := c.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}
 		fmt.Printf("[%s/%s] chain %d \n",
 			m.CollateralTokenStr,
 			m.LoanTokenStr,
-			r.Infra.Config.ChainID)
+			c.Config.ChainID)
 	}
 }
 
 // on chain call for all active market
-func (r *Runner) OnChainRefreshAll(ctx context.Context) {
+func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
 	var wg sync.WaitGroup
-	for _, id := range r.Cache.Markets.Ids() {
+	for _, id := range c.Cache.Markets.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
-			m := r.Cache.MarketMap[id]
+			m := c.Cache.MarketMap[id]
 			defer wg.Done()
-			err := onchain.OnChainRefresh(r.Infra, ctx, r.Cache, m, id)
+			err := onchain.OnChainRefresh(c.Conn, c.Config, ctx, c.Cache, m, id)
 			if err != nil {
 				fmt.Println(err)
 			}

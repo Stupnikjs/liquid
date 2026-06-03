@@ -13,8 +13,6 @@ import (
 // Types with no internal dep
 
 type Infra struct {
-	Conn   connector.Connector
-	Config Config
 }
 
 type Addresses struct {

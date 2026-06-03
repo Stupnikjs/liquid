@@ -12,7 +12,7 @@ import (
 
 func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{r.Infra.Config.Addresses.Morpho},
+		Addresses: []common.Address{r.Config.Addresses.Morpho},
 		Topics: [][]common.Hash{{
 			abi.EventBorrow.Topic0,
 			abi.EventRepay.Topic0,
@@ -21,25 +21,25 @@ func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
 			abi.EventAccrueInterest.Topic0,
 		}},
 	}
-	ch, err := r.Infra.Conn.SubscribeLogs(ctx, query)
-	r.EventCh = ch
+	ch, err := r.Conn.SubscribeLogs(ctx, query)
+	r.MarketConsumer.EventCh = ch
 	if err != nil {
 		log.Printf("Error subscribing to logs: %v", err)
 	}
 
 }
 
-func (r *Runner) EventListener(ctx context.Context) {
+func (m *MarketConsumer) EventListener(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 
-		case event, ok := <-r.EventCh:
+		case event, ok := <-m.EventCh:
 			if !ok {
 				return
 			}
-			onchain.ProcessEvents(r.Cache.Markets, event)
+			onchain.ProcessEvents(m.Cache.Markets, event)
 		}
 	}
 }

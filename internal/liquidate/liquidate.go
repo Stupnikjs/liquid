@@ -10,6 +10,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -27,9 +28,10 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *swap.RouteCache, ch <-chan cache.BorrowPosition) *Consumer {
+func NewConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, swapCache *swap.RouteCache, ch chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
-		Infra:     infra,
+		Conn:      conn,
+		Config:    config,
 		SwapCache: swapCache,
 		Cache:     cache,
 		Ch:        ch,
@@ -37,10 +39,11 @@ func NewConsumer(infra *lqtypes.Infra, cache *cache.Cache, swapCache *swap.Route
 }
 
 type Consumer struct {
-	Infra     *lqtypes.Infra
+	Conn      connector.Connector
+	Config    lqtypes.Config
 	SwapCache *swap.RouteCache
 	Cache     *cache.Cache
-	Ch        <-chan cache.BorrowPosition
+	Ch        chan cache.BorrowPosition
 }
 
 func (c *Consumer) Run(ctx context.Context) {
@@ -78,10 +81,10 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 
 func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {
 	tx := onchain.TxParams{
-		To:          &c.Infra.Config.Addresses.LiquidatorContract,
+		To:          &c.Config.Addresses.LiquidatorContract,
 		Calldata:    calldata,
 		GasEstimate: gasEstimate,
 	}
-	_, err := onchain.SendSignedTx(ctx, c.Infra.Conn, c.Infra.Config.Addresses.Wallet, c.Infra.Config.Signer, tx)
+	_, err := onchain.SendSignedTx(ctx, c.Conn, c.Config.Addresses.Wallet, c.Config.Signer, tx)
 	return err
 }
