@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lmittmann/w3"
 )
-
+// Passer de la logique dans swap pkg 
 // ABI de la fonction liquidate
 var liquidateFunc = w3.MustNewFunc(`liquidate(
     (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
