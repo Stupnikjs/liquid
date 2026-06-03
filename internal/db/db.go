@@ -106,7 +106,7 @@ func InsertEntries(db *sql.DB, entries []Entry) error {
 			e.TotalBorrowAssets.String(),
 			e.Pos.CollateralAssets.String(),
 			e.OraclePrice.String(),
-			e.Pos.CachedHF,
+			e.Pos.CachedHF.String(),
 			e.Ts,
 		)
 		if err != nil {
