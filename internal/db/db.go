@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	_ "modernc.org/sqlite"
 )
 
@@ -92,7 +93,7 @@ func InsertEntries(db *sql.DB, entries []Entry) error {
 	for _, e := range entries {
 		_, err := stmt.ExecContext(context.Background(),
 			e.Pos.Address,
-			e.Pos.MarketID,
+			hexutil.Encode(e.Pos.MarketID[:]),
 			e.Pos.BorrowShares.String(),
 			e.TotalBorrowShares.String(),
 			e.TotalBorrowAssets.String(),
