@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/api"
 )
@@ -29,13 +28,7 @@ func (r *Runner) ApiResyncRoutine(ctx context.Context) {
 }
 
 func (r *Runner) LiquidationRoutine(ctx context.Context) {
-	consumer := &liquidate.Consumer{
-		Conn:   r.Conn,
-		Config: r.Config,
-		Cache:  r.MarketConsumer.Cache,
-		Ch:     r.LiquidateConsumer.Ch,
-	}
-	consumer.Run(ctx)
+	r.LiquidateConsumer.Run(ctx)
 
 }
 
@@ -48,7 +41,7 @@ func (r *Runner) ApiCall() error {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			fetched, err := api.FetchAllPositions(ctx, id, r.Config.ChainID)
+			fetched, err := api.FetchAllPositions(ctx, id, r.MarketConsumer.Config.ChainID)
 			if err != nil {
 				mu.Lock()
 				if firstErr == nil {

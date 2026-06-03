@@ -86,8 +86,8 @@ func (r *Runner) SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.
 func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) time.Duration {
 	start := time.Now().UnixNano()
 	ms.tickCount++
-	r.MarketOnchainRefresh(ctx, ms, id)
-	r.MarketRecompute(ms, id)
+	r.MarketConsumer.MarketOnchainRefresh(ctx, ms, id)
+	r.MarketConsumer.MarketRecompute(ms, id)
 	snap := r.MarketConsumer.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
 		log.Println("snap is nil or has no pos")
@@ -103,7 +103,7 @@ func (r *Runner) MarketTick(ctx context.Context, ms *marketState, id [32]byte) t
 		log.Printf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF()))
 	}
 	log.Printf("%s %s", morphoM.GetPair(), snap.Analysis().String())
-	err := r.ToDBEntryQueue(id, *snap)
+	err := r.MarketConsumer.ToDBEntryQueue(id, *snap)
 	if err != nil {
 		log.Printf("error adding entry to queue: %v", err)
 	}
@@ -191,31 +191,22 @@ func distanceToInterval(distance float64) time.Duration {
 // updating market if swapable
 // canceling if not
 
-func (r *Runner) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
+func (r *MarketConsumer) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
+	r.Store.Mu.Lock()
+	defer r.Store.Mu.Unlock()
 	for _, pos := range snap.Positions {
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD1DOT05) >= 0 {
 			break // slice trié, on peut break
 		}
+
 		e := db.PosToEntry(pos, snap.Oracle.Price, snap.Stats.TotalBorrowAssets, snap.Stats.TotalBorrowShares, time.Now().UnixMilli())
-		if len(r.MarketConsumer.Store.EntryToFlush) < MAX_FLUSH_QUEUE_SIZE {
-			r.MarketConsumer.Store.EntryToFlush = append(r.MarketConsumer.Store.EntryToFlush, e)
+		if len(r.Store.EntryToFlush) < MAX_FLUSH_QUEUE_SIZE {
+			r.Store.EntryToFlush = append(r.Store.EntryToFlush, e)
 		} else {
-			r.FlushEntries()
-			r.MarketConsumer.Store.EntryToFlush = append(r.MarketConsumer.Store.EntryToFlush, e)
+			r.Store.FlushEntries()
+			r.Store.EntryToFlush = append(r.Store.EntryToFlush, e)
 		}
 
 	}
 	return nil
-}
-
-// need mutex here
-func (r *Runner) FlushEntries() {
-	if len(r.MarketConsumer.Store.EntryToFlush) == 0 {
-		return
-	}
-	err := db.InsertEntries(r.MarketConsumer.Store.DB, r.MarketConsumer.Store.EntryToFlush)
-	if err != nil {
-		log.Printf("error flushing entries: %v", err)
-	}
-	r.MarketConsumer.Store.EntryToFlush = r.MarketConsumer.Store.EntryToFlush[:0] // Clear the slice
 }

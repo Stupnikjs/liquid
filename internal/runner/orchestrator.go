@@ -14,7 +14,7 @@ import (
 // logs ethcalls missing
 
 func (r *Runner) Run(ctx context.Context) {
-	go r.SubscribePositionRoutine(ctx)
+	go r.MarketConsumer.SubscribePositionRoutine(ctx)
 	go r.OnChainRefreshRoutine(ctx)
 	go r.MarketConsumer.EventListener(ctx)
 	go r.LiquidationRoutine(ctx)

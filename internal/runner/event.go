@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
+func (r *MarketConsumer) SubscribePositionRoutine(ctx context.Context) {
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{r.Config.Addresses.Morpho},
 		Topics: [][]common.Hash{{
@@ -22,7 +22,7 @@ func (r *Runner) SubscribePositionRoutine(ctx context.Context) {
 		}},
 	}
 	ch, err := r.Conn.SubscribeLogs(ctx, query)
-	r.MarketConsumer.EventCh = ch
+	r.EventCh = ch
 	if err != nil {
 		log.Printf("Error subscribing to logs: %v", err)
 	}

@@ -116,3 +116,17 @@ func InsertEntries(db *sql.DB, entries []Entry) error {
 
 	return tx.Commit()
 }
+
+// need mutex here
+func (s *Store) FlushEntries() {
+	if len(s.EntryToFlush) == 0 {
+		return
+	}
+	err := InsertEntries(s.DB, s.EntryToFlush)
+	if err != nil {
+		log.Printf("error flushing entries: %v", err)
+	}
+
+	s.EntryToFlush = s.EntryToFlush[:0] // Clear the slice
+
+}
