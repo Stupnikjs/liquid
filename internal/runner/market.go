@@ -208,6 +208,7 @@ func (r *Runner) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
 	return nil
 }
 
+// need mutex here 
 func (r *Runner) FlushEntries() {
 	if len(r.EntryToFlush) == 0 {
 		return
