@@ -12,6 +12,36 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func LoadMainnetConfig() lqtypes.Config {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	chainid := 1
+	signer, err := lqtypes.NewBaseSigner(int64(chainid))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return lqtypes.Config{
+		Signer: signer,
+		Addresses: lqtypes.Addresses{
+			Wallet:             BaseWalletAddr,
+			Morpho:             MorphoMain,
+			LiquidatorContract: BaseLiquidatorNew,
+		},
+		ChainID: uint32(chainid),
+		Endpoints: connector.RPCEndpoints{
+			Primary: os.Getenv("MAINNET_HTTP_RPC_DRPC"),
+			Second:  os.Getenv("MAINNET_HTTP_RPC_ALCH"),
+			WS:      os.Getenv("MAINNET_WS_RPC_ALCH"),
+		},
+		Dexs: []swap.Dex{
+			swap.NewUniDex(MainnetUniswapQuoterV2Addr, MainnetUniswapV3Router, 300*time.Millisecond, "UNIV3"),
+			swap.NewUniDex(MainnetPankakeQuoterV2Addr, MainnetPankakeV3Router, 300*time.Millisecond, "UNIV3"),
+		},
+	}
+}
+
 func LoadBaseConfig() lqtypes.Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, using system env")
@@ -270,6 +300,7 @@ func LoadMonadConfig() lqtypes.Config {
 		},
 		Dexs: []swap.Dex{
 			swap.NewUniDex(MonadUniswapQuoterV2Addr, MonadUniswapV3Router, 200*time.Millisecond, "UNIV3"),
+			swap.NewUniDex(MonadUniswapQuoterV2Addr, MonadUniswapV3Router, 200*time.Millisecond, "PANKAKE"),
 		},
 	}
 }

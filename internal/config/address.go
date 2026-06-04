@@ -10,6 +10,10 @@ import (
 var (
 	MorphoMain = common.HexToAddress("0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb")
 
+	MainnetUniswapQuoterV2Addr = common.HexToAddress("0x61fFE014bA17989E743c5F6cB21bF9697530B21e")
+	MainnetUniswapV3Router     = common.HexToAddress("0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45")
+	MainnetPankakeQuoterV2Addr = common.HexToAddress("0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997")
+	MainnetPankakeV3Router     = common.HexToAddress("0x1b81D678ffb9C0263b24A97847620C99d213eB14")
 	// Base Addresses
 	BaseUniswapQuoterV2Addr = common.HexToAddress("0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a")
 	BaseUniswapV3Router     = common.HexToAddress("0x2626664c2603336E57B271c5C0b26F421741e481")
@@ -76,6 +80,8 @@ var (
 	MonadWalletAddress       = common.HexToAddress("0x78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 	MonadUniswapV3Router     = common.HexToAddress("0xfe31f71c1b106eac32f1a19239c9a9a72ddfb900")
 	MonadUniswapQuoterV2Addr = common.HexToAddress("0x661e93cca42afacb172121ef892830ca3b70f08d")
+	MonadPankakeQuoterV2Addr = common.HexToAddress("0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997")
+	MonadPankakeV3Router     = common.HexToAddress("0x1b81D678ffb9C0263b24A97847620C99d213eB14")
 	MonadMorphoBlueAddr      = common.HexToAddress("0xD5D960E8C380B724a48AC59E2DfF1b2CB4a1eAee")
 	MonadLiquidatorAddr      = common.HexToAddress("0xAA5356884FE5aFA3DC7f2AA90e9C8E434fcCD87C")
 )

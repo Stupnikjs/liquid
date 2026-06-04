@@ -62,6 +62,88 @@ func MarketsQuery(chainid uint32) string {
     }`, chainid)
 }
 
+func LiquidationsQuery(chainID uint32, skip int) string {
+	return fmt.Sprintf(`{
+        transactions(
+            first: 1000
+            skip: %d
+            where: {
+                chainId_in: [%d]
+                type_in: [MarketLiquidation]
+            }
+            orderBy: Timestamp
+            orderDirection: Desc
+        ) {
+            items {
+                hash
+                timestamp
+                type
+                data {
+                    ... on MarketLiquidationTransactionData {
+                        seizedAssets
+                        repaidAssets
+                        seizedAssetsUsd
+                        repaidAssetsUsd
+                        badDebtAssetsUsd
+                        liquidator
+                        market {
+                            marketId
+                            loanAsset {
+                                address
+                                symbol
+                                decimals
+                            }
+                            collateralAsset {
+                                address
+                                symbol
+                                decimals
+                            }
+                        }
+                        position {
+                            user { address }
+                        }
+                    }
+                }
+            }
+            pageInfo {
+                count
+                countTotal
+            }
+        }
+    }`, skip, chainID)
+}
+
+type LiquidationItem struct {
+	Hash      string      `json:"hash"`
+	Timestamp json.Number `json:"timestamp"`
+	Type      string      `json:"type"`
+	Data      struct {
+		SeizedAssets     json.Number `json:"seizedAssets"`
+		RepaidAssets     json.Number `json:"repaidAssets"`
+		SeizedAssetsUsd  json.Number `json:"seizedAssetsUsd"`
+		RepaidAssetsUsd  json.Number `json:"repaidAssetsUsd"`
+		BadDebtAssetsUsd json.Number `json:"badDebtAssetsUsd"`
+		Liquidator       string      `json:"liquidator"`
+		Market           struct {
+			MarketId        string `json:"marketId"`
+			LoanAsset       Asset  `json:"loanAsset"`
+			CollateralAsset Asset  `json:"collateralAsset"`
+		} `json:"market"`
+		Position struct {
+			User struct {
+				Address string `json:"address"`
+			} `json:"user"`
+		} `json:"position"`
+	} `json:"data"`
+}
+
+type LiquidationsResult struct {
+	Transactions struct {
+		Items    []LiquidationItem `json:"items"`
+		PageInfo PageInfo          `json:"pageInfo"`
+	} `json:"transactions"`
+}
+
 // ── TYPES ────────────────────────────────────────────────────────────────────
 
 // Dans types.go ou en haut de api.go

@@ -2,7 +2,6 @@ package main
 
 import (
 	"sync"
-	"time"
 
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/runner"
@@ -19,25 +18,33 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(4)
+	/*
+		go func() {
+			defer wg.Done()
+			time.Sleep(100 * time.Second)
+			// to avoid too much logs at the same time
+			runner.Wrapper(config.LoadArbitrumConfig(), arbitrum)
+		}()
 
+		go func() {
+			defer wg.Done()
+			time.Sleep(200 * time.Second)
+			// to avoid too much logs at the same time
+			runner.Wrapper(config.LoadKatanaConfig(), arbitrum)
+		}()
+	*/
+	/*
+		go func() {
+			defer wg.Done()
+			// to avoid too much logs at the same time
+			runner.Wrapper(config.LoadMainnetConfig(), arbitrum)
+		}()
+	*/
 	go func() {
 		defer wg.Done()
-		time.Sleep(100 * time.Second)
 		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadArbitrumConfig(), arbitrum)
+		runner.Wrapper(config.LoadMonadConfig(), arbitrum)
 	}()
 
-	go func() {
-		defer wg.Done()
-		time.Sleep(200 * time.Second)
-		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadKatanaConfig(), arbitrum)
-	}()
-
-	go func() {
-		defer wg.Done()
-		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadBaseConfig(), arbitrum)
-	}()
 	wg.Wait()
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/db"
@@ -103,6 +104,7 @@ func (c *MarketConsumer) LogMarkets() {
 func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
 	var wg sync.WaitGroup
 	for _, id := range c.Cache.Markets.Ids() {
+		time.Sleep(200 * time.Millisecond)
 		wg.Add(1)
 		go func(id [32]byte) {
 			m := c.Cache.MarketMap[id]

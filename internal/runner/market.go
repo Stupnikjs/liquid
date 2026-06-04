@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -202,7 +203,14 @@ func distanceToInterval(distance float64) time.Duration {
 func (r *MarketConsumer) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
 	r.Store.Mu.Lock()
 	defer r.Store.Mu.Unlock()
+	if len(snap.Positions) > 5 {
+		fmt.Println(snap.Positions[0:5])
+	} else {
+		fmt.Println(snap.Positions)
+	}
+
 	for _, pos := range snap.Positions {
+
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD1DOT05) >= 0 {
 			break // slice trié, on peut break
 		}
