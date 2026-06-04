@@ -94,11 +94,11 @@ func (s *MarketSnapshot) Analysis() MarketAnalysis {
 func (a MarketAnalysis) String() string {
 	var sb strings.Builder
 
-	fmt.Fprintf(&sb, "Positions: %d", a.FollowedPos)
+	fmt.Fprintf(&sb, "Pos: %d", a.FollowedPos)
 	fmt.Fprintf(&sb, " [1.0-1.1]: %d", a.Repartition[0])
 	fmt.Fprintf(&sb, " [1.1-1.5]: %d", a.Repartition[1])
-	fmt.Fprintf(&sb, " [1.5-2.0]: %d", a.Repartition[2])
-	fmt.Fprintf(&sb, " [>2.0]: %d \n", a.Repartition[3])
-	fmt.Fprintf(&sb, " USD less than 10 pct from liq: %s \n", utils.FormatWAD(a.TotalAtRiskUSD))
+	// fmt.Fprintf(&sb, " [1.5-2.0]: %d", a.Repartition[2])
+	//fmt.Fprintf(&sb, " [>2.0]: %d \n", a.Repartition[3])
+	fmt.Fprintf(&sb, " USD < 10pct from liq: %s \n", utils.FormatWAD(a.TotalAtRiskUSD))
 	return sb.String()
 }

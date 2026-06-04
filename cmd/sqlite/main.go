@@ -25,9 +25,10 @@ type PositionSnapshot struct {
 
 func main() {
 
-	chainid := os.Args[0]
+	chainid := os.Args[1]
 	chainint, err := strconv.ParseInt(chainid, 10, 64)
 	dbname := fmt.Sprintf("./data/%d.db", chainint)
+	fmt.Println(dbname)
 	db, err := sql.Open("sqlite", dbname)
 	if err != nil {
 		log.Fatal(err)
@@ -62,8 +63,8 @@ func main() {
 		positions = append(positions, p)
 	}
 
+	fmt.Printf("Found table with %d entries \n", len(positions))
 	for _, p := range positions {
-
 		fmt.Printf("%+v\n", p)
 	}
 }

@@ -108,9 +108,8 @@ func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32
 	r.LiquidationCheck(ctx, *snap, ms, liquidationCh)
 	latency := (time.Now().UnixNano() - start) / 1_000_000
 	if ms.tickCount%100 == 0 {
-		log.Printf("latency:%d %s oracle_price:%s  hf:%f", latency, morphoM.GetPair(), snap.Oracle.Price.String(), utils.BigIntWADToFloat(snap.GetFirstHF()))
+		log.Printf("latency:%dms %s %s", latency, morphoM.GetPair(), snap.Analysis().String())
 	}
-	log.Printf("%s %s", morphoM.GetPair(), snap.Analysis().String())
 	err := r.ToDBEntryQueue(id, *snap)
 	if err != nil {
 		log.Printf("error adding entry to queue: %v", err)
@@ -140,7 +139,6 @@ func (r *MarketConsumer) MarketRecompute(ms *marketState, id [32]byte) {
 		if ms.tickCount%10 == 0 {
 			m.RecomputeHFUnsafe(len(m.Positions))
 			m.SortAllPositionsByHFUnsafe()
-
 		}
 	})
 
@@ -160,6 +158,8 @@ func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.Market
 			continue
 		}
 		morphoM := r.Cache.MarketMap[snap.ID]
+
+		// now HF is < 1
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
 			log.Printf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
 				pos.Address,
