@@ -12,7 +12,6 @@ const QUOTE_RATE_LIMIT = 50 * time.Millisecond
 func (q *QuoteConsumer) QuotePools() {
 	for id, m := range q.Cache.MarketMap {
 		snap := q.Cache.Markets.GetSnapshot(id)
-		log.Printf("quoting %s \n", m.GetPair())
 		if snap == nil {
 			continue
 		}

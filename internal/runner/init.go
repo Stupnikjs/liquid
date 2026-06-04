@@ -66,8 +66,6 @@ func NewRunner(conn connector.Connector, config lqtypes.Config, routeCache *swap
 		log.Fatalf("failed to open database: %v", err)
 	}
 	return &Runner{
-		//Conn:              conn,
-		//Config:            config,
 		LiquidateConsumer: liquidate.NewConsumer(conn, config, mCache, routeCache, liquidateCh),
 		QuoteConsumer:     NewQuoteConsumer(conn, config, mCache, routeCache),
 		MarketConsumer:    NewMarketConsumer(conn, config, mCache, routeCache, &db.Store{DB: database, EntryToFlush: []db.Entry{}}),
