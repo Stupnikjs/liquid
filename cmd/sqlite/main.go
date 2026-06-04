@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 
 	_ "modernc.org/sqlite"
 )
@@ -23,7 +25,10 @@ type PositionSnapshot struct {
 
 func main() {
 
-	db, err := sql.Open("sqlite", "./data/999.db")
+	chainid := os.Args[0]
+	chainint, err := strconv.ParseInt(chainid, 10, 64)
+	dbname := fmt.Sprintf("./data/%d.db", chainint)
+	db, err := sql.Open("sqlite", dbname)
 	if err != nil {
 		log.Fatal(err)
 	}

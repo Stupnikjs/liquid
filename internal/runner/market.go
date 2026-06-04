@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-var MAX_FLUSH_QUEUE_SIZE = 5_000
+var MAX_FLUSH_QUEUE_SIZE = 50 // for test
 
 // One routine per market with dynamic interval based on distance to liquidation (HF = 1)
 // Hold Liquidation logic
