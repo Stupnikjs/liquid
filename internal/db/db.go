@@ -130,3 +130,26 @@ func (s *Store) FlushEntries() {
 	s.EntryToFlush = s.EntryToFlush[:0] // Clear the slice
 
 }
+
+/*
+func GetPositionAtTS(db *sql.DB, addr, marketID string, ts int64) (*Snapshot, error) {
+    var s Snapshot
+    err := db.QueryRow(`
+        SELECT borrower_address, market_id, borrow_shares, total_borrow_shares,
+               total_borrow_assets, collateral_assets, oracle_price, health_factor, snapshot_ts
+        FROM position_snapshots
+        WHERE borrower_address = ?
+          AND market_id = ?
+          AND snapshot_ts <= ?
+        ORDER BY snapshot_ts DESC
+        LIMIT 1
+    `, addr, marketID, ts).Scan(
+        &s.BorrowerAddress, &s.MarketID, &s.BorrowShares,
+        &s.TotalBorrowShares, &s.TotalBorrowAssets, &s.CollateralAssets,
+        &s.OraclePrice, &s.HealthFactor, &s.SnapshotTS,
+    )
+    if err != nil {
+        return nil, err
+    }
+    return &s, nil
+}*/
