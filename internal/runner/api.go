@@ -43,11 +43,7 @@ func (r *Runner) ApiCall() error {
 			for _, pos := range fetched {
 				p := cache.ApiItemToPos(pos, id)
 				// pos less than 1 dollard
-				if r.MarketConsumer.Config.ChainID == 1 {
-					if p.BorrowAssetsUsd.Cmp(utils.WAD_2) < 0 || p.BorrowAssetsUsd.Cmp(utils.WAD_10) > 0 {
-						continue
-					}
-				}
+
 				if p.BorrowAssetsUsd.Cmp(utils.WAD_5) < 0 || p.BorrowAssetsUsd.Cmp(utils.WAD_10_000) > 0 {
 					continue
 				}

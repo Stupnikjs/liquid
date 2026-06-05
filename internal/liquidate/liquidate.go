@@ -62,6 +62,7 @@ func (c *Consumer) Run(ctx context.Context) {
 	}
 }
 
+// args snap market can be deleted since all is in consumer only need pos
 func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) {
 
 	result, err := c.SimulateAndPreComputeTx(ctx, market, snap, p)

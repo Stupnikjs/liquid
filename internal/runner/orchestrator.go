@@ -11,7 +11,7 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/swap"
 )
 
-// logs ethcalls missing
+// separér les dependances par routine
 
 func (r *Runner) Run(ctx context.Context) {
 	go r.MarketConsumer.SubscribePositionRoutine(ctx)

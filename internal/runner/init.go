@@ -18,8 +18,6 @@ import (
 )
 
 type Runner struct {
-	//Conn              connector.Connector
-	//Config            lqtypes.Config
 	MarketConsumer    *MarketConsumer
 	QuoteConsumer     *QuoteConsumer
 	LiquidateConsumer *liquidate.Consumer
@@ -42,11 +40,10 @@ type QuoteConsumer struct {
 
 func NewMarketConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, routes *swap.RouteCache, store *db.Store) *MarketConsumer {
 	return &MarketConsumer{
-		Conn:   conn,
-		Config: config,
-		Cache:  cache,
-		Store:  store,
-
+		Conn:    conn,
+		Config:  config,
+		Cache:   cache,
+		Store:   store,
 		EventCh: make(<-chan *types.Log),
 	}
 }

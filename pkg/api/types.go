@@ -99,9 +99,6 @@ func LiquidationsQuery(chainID uint32, skip int) string {
                                 decimals
                             }
                         }
-                        position {
-                            user { address }
-                        }
                     }
                 }
             }

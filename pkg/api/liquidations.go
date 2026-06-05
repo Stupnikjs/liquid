@@ -19,6 +19,10 @@ func FetchAllLiquidations(ctx context.Context, chainID uint32) ([]LiquidationIte
 		tx := result.Transactions
 		all = append(all, tx.Items...)
 
+		// for debug
+		if skip > 5000 {
+			break
+		}
 		skip += tx.PageInfo.Count
 		if skip >= tx.PageInfo.CountTotal {
 			break
