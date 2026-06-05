@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/Stupnikjs/liquid/pkg/api"
 	_ "modernc.org/sqlite"
@@ -26,56 +25,50 @@ type PositionSnapshot struct {
 	SnapshotTS        int64
 }
 
-/*
-
-This cmd is for intering over liquidation on a chainid that occurs
-=> call graphql api
-=> gets []Liquidation
-=> compare matching borrow id and market id function SELECT Entry WHERE borrow ==
-=> prepare fine output if match
-*/
-
-func main() {
-
-	chainid := os.Args[1]
-
-	chainint, err := strconv.ParseInt(chainid, 10, 64)
+func GetLiquidations(chainint int64) []api.LiquidationItem {
 	liquidations, err := api.FetchAllLiquidations(context.Background(), uint32(chainint))
-	fmt.Println(liquidations, err)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(liquidations)
+
 	borrowers := []string{}
 	for _, liquidation := range liquidations {
 		borrowers = append(borrowers, liquidation.Data.Liquidator)
 	}
 
-	dbname := fmt.Sprintf("./data/%d.db", chainint)
+	if len(borrowers) == 0 {
+		fmt.Println("No borrowers found")
+		return []api.LiquidationItem{}
+	}
+	return liquidations
+}
+
+func main() {
+	chainid := os.Args[1]
+
+	chainint, err := strconv.ParseInt(chainid, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbname := fmt.Sprintf("./newdata/%d.db", chainint)
 	fmt.Println(dbname)
+
 	db, err := sql.Open("sqlite", dbname)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Construire les placeholders : (?, ?, ?)
-	placeholders := make([]string, len(borrowers))
-	for i := range borrowers {
-		placeholders[i] = "?"
+	query := "SELECT * FROM position_snapshots WHERE borrower_address = ?"
+	rows, err := db.Query(query, "0x7F9A2903E4fb8f8E20aca2941CCd1857c60Fc013")
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	query := fmt.Sprintf(
-		"SELECT * FROM position_snapshots WHERE borrower_address IN (%s)",
-		strings.Join(placeholders, ", "),
-	)
-
-	// Convertir []string en []any pour db.Query
-	args := make([]any, len(borrowers))
-	for i, b := range borrowers {
-		args[i] = b
-	}
-
-	rows, err := db.Query(query, args...)
+	defer rows.Close()
 
 	var positions []PositionSnapshot
-
 	for rows.Next() {
 		var p PositionSnapshot
 		err := rows.Scan(
@@ -95,8 +88,11 @@ func main() {
 		}
 		positions = append(positions, p)
 	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
 
-	fmt.Printf("Found table with %d entries \n", len(positions))
+	fmt.Printf("Found %d entries\n", len(positions))
 	for _, p := range positions {
 		fmt.Printf("%+v\n", p)
 	}
