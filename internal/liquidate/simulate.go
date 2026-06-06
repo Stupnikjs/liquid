@@ -28,6 +28,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketP
 	if err != nil {
 		return nil, fmt.Errorf("error calculating max swap amount: %w", err)
 	}
+	log.Printf("maxswap amount: %s \n", maxSwapAmount.String())
 	l := c.ComputeAmounts(m, snap, p, maxSwapAmount)
 	if len(routes) == 0 {
 		return l, fmt.Errorf("route is len 0")
@@ -84,18 +85,18 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 	out.Pos = p
 
 	// 1. Math pure — pas de RPC
-	repayShares, seizeAssets := morpho.ComputeLiquidationAmounts(
+	seizeAssets := morpho.ComputeSeizedAsset(
 		p.BorrowShares,
 		snap.Stats.TotalBorrowAssets,
 		snap.Stats.TotalBorrowShares,
 		snap.LLTV,
 	)
-	out.RepayShares = repayShares
+	out.RepayShares = 0
 	if seizeAssets.Cmp(maxSwapAmount) > 0 {
 		seizeAssets = new(big.Int).Set(maxSwapAmount)
 	}
 	out.SeizeAssets = seizeAssets
-	minOut := morpho.ComputeMinOut(seizeAssets, snap.Oracle.Price)
+	minOut := morpho.CollateralAssetsInLoan(seizeAssets, snap.Oracle.Price)
 	out.MinOut = minOut
 	return out
 }
