@@ -91,32 +91,6 @@ func (m *ConnectorMetrics) snapshot() MetricsSnapshot {
 }
 
 // ---------------------------------------------------------------------------
-// Error classification
-// ---------------------------------------------------------------------------
-
-// ErrRateLimited is returned when the internal limiter rejects a call.
-var ErrRateLimited = errors.New("connector: rate limit exceeded")
-
-var transientErrors = []string{
-	"Request timeout",
-	"context deadline exceeded",
-	"EOF",
-}
-
-func isTransient(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := err.Error()
-	for _, s := range transientErrors {
-		if stringContains(msg, s) {
-			return true
-		}
-	}
-	return false
-}
-
-// ---------------------------------------------------------------------------
 // EthConnector — concrete implementation
 // ---------------------------------------------------------------------------
 
@@ -184,7 +158,7 @@ func newWithClients(
 // CallCtx dispatches calls on the primary (low-latency) RPC.
 func (c *EthConnector) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error {
 	if err := c.limiter.Wait(ctx); err != nil {
-		return fmt.Errorf("%w: %v", ErrRateLimited, err)
+		return fmt.Errorf("%v", err)
 	}
 	c.mu.RLock()
 	primary := c.primary
@@ -197,7 +171,7 @@ func (c *EthConnector) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) 
 // SecondCallCtx dispatches calls on the secondary (non-critical) RPC.
 func (c *EthConnector) SecondCallCtx(ctx context.Context, calls ...w3types.RPCCaller) error {
 	if err := c.limiter.Wait(ctx); err != nil {
-		return fmt.Errorf("%w: %v", ErrRateLimited, err)
+		return fmt.Errorf("%v", err)
 	}
 	c.mu.RLock()
 	second := c.second
