@@ -85,7 +85,7 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 	out.Pos = p
 
 	// 1. Math pure — pas de RPC
-	_, seizeAssets := morpho.ComputeLiquidationAmounts(
+	seizeAssets := morpho.ComputeSeizedAsset(
 		p.BorrowShares,
 		snap.Stats.TotalBorrowAssets,
 		snap.Stats.TotalBorrowShares,
