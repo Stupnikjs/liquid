@@ -68,9 +68,8 @@ func EstimateProfit(
 	return profit
 }
 
-func ComputeLiquidationAmounts(BorrowShares, TotalBorrowAssets, TotalBorrowShares, LLTV *big.Int) (*big.Int, *big.Int) {
-	// Morpho permet de liquider jusqu'à 100% des shares
-	repayShares := new(big.Int).Set(BorrowShares)
+func ComputeSeizedAsset(BorrowShares, TotalBorrowAssets, TotalBorrowShares, LLTV *big.Int) (*big.Int, *big.Int) {
+	
 	// repayAssets = repayShares * totalBorrowAssets / totalBorrowShares
 	repayAssets := SharesToAssets(repayShares, TotalBorrowAssets, TotalBorrowShares)
 
@@ -80,7 +79,7 @@ func ComputeLiquidationAmounts(BorrowShares, TotalBorrowAssets, TotalBorrowShare
 	seizeAssets := new(big.Int).Mul(repayAssets, new(big.Int).Add(WAD, lif))
 	seizeAssets.Div(seizeAssets, WAD)
 
-	return repayShares, seizeAssets
+	return seizeAssets
 }
 
 func ComputeMinOut(seizedAssets, collateralPrice *big.Int) *big.Int {
