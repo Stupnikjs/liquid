@@ -68,10 +68,10 @@ func EstimateProfit(
 	return profit
 }
 
-func ComputeSeizedAsset(BorrowShares, TotalBorrowAssets, TotalBorrowShares, LLTV *big.Int) (*big.Int, *big.Int) {
-	
+func ComputeSeizedAsset(BorrowShares, TotalBorrowAssets, TotalBorrowShares, LLTV *big.Int) *big.Int {
+
 	// repayAssets = repayShares * totalBorrowAssets / totalBorrowShares
-	repayAssets := SharesToAssets(repayShares, TotalBorrowAssets, TotalBorrowShares)
+	repayAssets := SharesToAssets(BorrowShares, TotalBorrowAssets, TotalBorrowShares)
 
 	// seizeAssets = repayAssets * (WAD + liquidationIncentiveFactor) / WAD
 	// liquidationIncentiveFactor dépend de LLTV (voir Morpho docs)
@@ -100,7 +100,7 @@ func HF(CollateralAssets, BorrowShares, TotalBorrowShares, TotalBorrowAssets, LL
 		return nil // ← nil, not 0
 	}
 	// numerator = collateral * price * LLTV
-	// price of collateral in loan token 
+	// price of collateral in loan token
 	numerator := new(big.Int).Mul(CollateralAssets, OraclePrice)
 	numerator.Mul(numerator, LLTV)
 	// denominator = borrow * 1e36

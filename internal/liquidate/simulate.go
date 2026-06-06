@@ -91,7 +91,7 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 		snap.Stats.TotalBorrowShares,
 		snap.LLTV,
 	)
-	out.RepayShares = 0
+	out.RepayShares = new(big.Int).Set(big.NewInt(0))
 	if seizeAssets.Cmp(maxSwapAmount) > 0 {
 		seizeAssets = new(big.Int).Set(maxSwapAmount)
 	}
