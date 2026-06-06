@@ -40,7 +40,7 @@ func PosToEntry(pos cache.BorrowPosition, totalBorrowShares, totalBorrowAssets, 
 
 func OpenDb(filename string) (*sql.DB, error) {
 	path := path.Join("data", filename)
-	db, err := sql.Open("sqlite", path)
+	db, err := sql.Open("sql", path)
 	if err != nil {
 		log.Fatal(err)
 	}
