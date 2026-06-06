@@ -69,7 +69,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 		eth.Call(&msg, nil, nil).Returns(&callResult),
 		eth.EstimateGas(&msg, nil).Returns(&gasVal)}
 
-	if err := c.Conn.SecondCallCtx(ctx, calls...); err != nil {
+	if err := c.Conn.SecondCallCtx(ctx, calls); err != nil {
 		return 0, fmt.Errorf("dryRun: %w", err)
 	}
 

@@ -13,6 +13,7 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/lmittmann/w3/module/eth"
 	"github.com/lmittmann/w3/w3types"
 )
@@ -101,7 +102,7 @@ func OnChainOracleRefresh(
 	c *cache.Cache, mParam morpho.MarketParams,
 	id [32]byte, morphoAddr common.Address,
 ) error {
-	return refresh(conn, ctx, id, func() ([]w3types.RPCCaller, func()) {
+	return refresh(conn, ctx, id, func() ([]rpc.BatchElem, func()) {
 		res := newResult(id)
 		calls := []w3types.RPCCaller{
 			oracleCall(mParam.Oracle, res),

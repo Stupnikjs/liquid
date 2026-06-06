@@ -9,9 +9,9 @@ import (
 	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type TxParams struct {
@@ -21,18 +21,44 @@ type TxParams struct {
 	GasEstimate uint64
 }
 
-// First Get Nonce and Gas price
-// Then Send signed Tx
-func SendSignedTx(ctx context.Context, conn connector.Connector, msgsender common.Address, signer *lqtypes.Signer, params TxParams) (common.Hash, error) {
-	var nonce uint64
-	var gasPrice *big.Int
-	if err := conn.SecondCallCtx(ctx, []w3types.RPCCaller{
-		eth.Nonce(msgsender, nil).Returns(&nonce),
-		eth.GasPrice().Returns(&gasPrice),
-	}...); err != nil {
+func SendSignedTx(
+	ctx context.Context,
+	conn connector.Connector,
+	msgsender common.Address,
+	signer *lqtypes.Signer,
+	params TxParams,
+) (common.Hash, error) {
+
+	// --- 1. Fetch nonce + gasPrice en batch ---
+	var (
+		nonceHex    hexutil.Uint64
+		gasPriceHex hexutil.Big
+	)
+	batch := []rpc.BatchElem{
+		{
+			Method: "eth_getTransactionCount",
+			Args:   []interface{}{msgsender, "latest"},
+			Result: &nonceHex,
+		},
+		{
+			Method: "eth_gasPrice",
+			Args:   []interface{}{},
+			Result: &gasPriceHex,
+		},
+	}
+	if err := conn.SecondCallCtx(ctx, batch); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", err)
 	}
+	for _, elem := range batch {
+		if elem.Error != nil {
+			return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", elem.Error)
+		}
+	}
 
+	nonce := uint64(nonceHex)
+	gasPrice := gasPriceHex.ToInt()
+
+	// --- 2. Construire et signer la tx ---
 	tx := types.NewTx(&types.DynamicFeeTx{
 		Nonce:     nonce,
 		To:        params.To,
@@ -48,13 +74,27 @@ func SendSignedTx(ctx context.Context, conn connector.Connector, msgsender commo
 		return common.Hash{}, fmt.Errorf("SendSignedTx: sign: %w", err)
 	}
 
-	var receipt common.Hash
-	if err := conn.SecondCallCtx(ctx, []w3types.RPCCaller{
-		eth.SendTx(signedTx).Returns(&receipt),
-	}...); err != nil {
-		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
+	// --- 3. Encoder et envoyer via eth_sendRawTransaction ---
+	rawTx, err := signedTx.MarshalBinary()
+	if err != nil {
+		return common.Hash{}, fmt.Errorf("SendSignedTx: marshal: %w", err)
 	}
 
-	log.Printf("[tx] sent: %s", receipt.Hex())
-	return receipt, nil
+	var hash common.Hash
+	sendBatch := []rpc.BatchElem{
+		{
+			Method: "eth_sendRawTransaction",
+			Args:   []interface{}{hexutil.Encode(rawTx)},
+			Result: &hash,
+		},
+	}
+	if err := conn.CallCtx(ctx, sendBatch); err != nil {
+		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", err)
+	}
+	if sendBatch[0].Error != nil {
+		return common.Hash{}, fmt.Errorf("SendSignedTx: send: %w", sendBatch[0].Error)
+	}
+
+	log.Printf("[tx] sent: %s", hash.Hex())
+	return hash, nil
 }

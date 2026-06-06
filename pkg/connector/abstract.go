@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/lmittmann/w3"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
 	"golang.org/x/time/rate"
 )
 
@@ -27,12 +26,14 @@ import (
 type Connector interface {
 	// CallCtx dispatches batch eth_calls on the primary (low-latency) RPC.
 	// Use for time-critical calls: health factor checks, bundle submission.
-	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
+
+	CallCtx(ctx context.Context, calls []rpc.BatchElem) error
 
 	// SecondCallCtx dispatches batch eth_calls on the secondary RPC.
 	// Use for non-critical calls: historical prices, backtesting, quotes.
-	SecondCallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
+	SecondCallCtx(ctx context.Context, calls []rpc.BatchElem) error
 
+	SendRawTx(ctx context.Context, tx *types.Transaction) (common.Hash, error)
 	// SubscribeLogs opens a WS log subscription for the given FilterQuery.
 	// Returns a read-only channel; the subscription runs until ctx is cancelled.
 	SubscribeLogs(ctx context.Context, query ethereum.FilterQuery) (<-chan *types.Log, error)
@@ -47,9 +48,42 @@ type Connector interface {
 // RPCClient is the minimal surface needed from a w3.Client.
 // Keeping it as an interface makes every method testable without a live endpoint.
 type RPCClient interface {
-	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
-	Subscribe(w3types.RPCSubscriber) (*rpc.ClientSubscription, error)
-	Close() error
+	CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error
+	BatchCallContext(ctx context.Context, b []rpc.BatchElem) error
+	EthSubscribe(ctx context.Context, channel interface{}, args ...interface{}) (*rpc.ClientSubscription, error)
+	Close()
+}
+
+// rpcClientAdapter bridges *rpc.Client (which has Close() with no return value)
+// to the RPCClient interface.
+type rpcClientAdapter struct {
+	c *rpc.Client
+}
+
+// dialRPC dials any endpoint (HTTP, HTTPS, WS, WSS) via go-ethereum's rpc package.
+func dialRPC(ctx context.Context, url string) (RPCClient, error) {
+	c, err := rpc.DialContext(ctx, url)
+
+	if err != nil {
+		return nil, err
+	}
+	return &rpcClientAdapter{c}, nil
+}
+
+func (a *rpcClientAdapter) CallContext(ctx context.Context, result interface{}, method string, args ...interface{}) error {
+	return a.c.CallContext(ctx, result, method, args...)
+}
+
+func (a *rpcClientAdapter) BatchCallContext(ctx context.Context, b []rpc.BatchElem) error {
+	return a.c.BatchCallContext(ctx, b)
+}
+
+func (a *rpcClientAdapter) EthSubscribe(ctx context.Context, channel interface{}, args ...interface{}) (*rpc.ClientSubscription, error) {
+	return a.c.EthSubscribe(ctx, channel, args...)
+}
+
+func (a *rpcClientAdapter) Close() {
+	a.c.Close()
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +95,31 @@ type RPCEndpoints struct {
 	Primary string // fast/colocated node — liquidations, bundle submission
 	Second  string // slower/cheaper node — quotes, historical reads, backtesting
 	WS      string // WebSocket endpoint — log subscriptions
+}
+
+// ---------------------------------------------------------------------------
+// Error classification
+// ---------------------------------------------------------------------------
+
+var ErrRateLimited = errors.New("connector: rate limit exceeded")
+
+var transientErrors = []string{
+	"Request timeout",
+	"context deadline exceeded",
+	"EOF",
+}
+
+func isTransient(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	for _, s := range transientErrors {
+		if stringContains(msg, s) {
+			return true
+		}
+	}
+	return false
 }
 
 // ---------------------------------------------------------------------------
@@ -96,8 +155,8 @@ func (m *ConnectorMetrics) snapshot() MetricsSnapshot {
 
 type EthConnector struct {
 	mu        sync.RWMutex
-	primary   RPCClient // primary is for garbage calls
-	second    RPCClient // second is main
+	primary   RPCClient
+	second    RPCClient
 	ws        RPCClient
 	dialWS    func(url string) (RPCClient, error)
 	endpoints RPCEndpoints
@@ -107,9 +166,13 @@ type EthConnector struct {
 
 // New dials all three endpoints. Panics on failure — connectivity is a hard
 // requirement at bot startup.
+// New dials all three endpoints. Panics on failure — connectivity is a hard
+// requirement at bot startup.
 func New(endpoints RPCEndpoints) *EthConnector {
+	ctx := context.Background()
+
 	dial := func(url string) (RPCClient, error) {
-		return w3.Dial(url)
+		return dialRPC(ctx, url)
 	}
 
 	primary, err := dial(endpoints.Primary)
@@ -135,56 +198,47 @@ func New(endpoints RPCEndpoints) *EthConnector {
 	}
 }
 
-// newWithClients is the test constructor — accepts pre-built RPCClient mocks.
-func newWithClients(
-	endpoints RPCEndpoints,
-	primary, second, ws RPCClient,
-	dialWS func(string) (RPCClient, error),
-) *EthConnector {
-	return &EthConnector{
-		primary:   primary,
-		second:    second,
-		ws:        ws,
-		dialWS:    dialWS,
-		endpoints: endpoints,
-		limiter:   rate.NewLimiter(rate.Every(time.Minute/500), 15),
+func (c *EthConnector) SendRawTx(ctx context.Context, tx *types.Transaction) (common.Hash, error) {
+	data, err := tx.MarshalBinary()
+	if err != nil {
+		return common.Hash{}, err
 	}
+	var hash common.Hash
+	err = c.primary.CallContext(ctx, &hash, "eth_sendRawTransaction", hexutil.Encode(data))
+	return hash, err
 }
 
-// ---------------------------------------------------------------------------
-// Connector interface implementation
-// ---------------------------------------------------------------------------
-
-// CallCtx dispatches calls on the primary (low-latency) RPC.
-func (c *EthConnector) CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error {
+// CallCtx dispatches a JSON-RPC batch on the primary (low-latency) client.
+// Each BatchElem.Error must be checked individually after the call returns nil.
+func (c *EthConnector) CallCtx(ctx context.Context, calls []rpc.BatchElem) error {
 	if err := c.limiter.Wait(ctx); err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("%w: %v", ErrRateLimited, err)
 	}
 	c.mu.RLock()
 	primary := c.primary
 	c.mu.RUnlock()
 
 	c.metrics.PrimaryCalls.Add(uint64(len(calls)))
-	return primary.CallCtx(ctx, calls...)
+	return primary.BatchCallContext(ctx, calls)
 }
 
-// SecondCallCtx dispatches calls on the secondary (non-critical) RPC.
-func (c *EthConnector) SecondCallCtx(ctx context.Context, calls ...w3types.RPCCaller) error {
+// SecondCallCtx dispatches a JSON-RPC batch on the secondary (non-critical) client.
+func (c *EthConnector) SecondCallCtx(ctx context.Context, calls []rpc.BatchElem) error {
 	if err := c.limiter.Wait(ctx); err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("%w: %v", ErrRateLimited, err)
 	}
 	c.mu.RLock()
 	second := c.second
 	c.mu.RUnlock()
 
 	c.metrics.SecondCalls.Add(uint64(len(calls)))
-	return second.CallCtx(ctx, calls...)
+	return second.BatchCallContext(ctx, calls)
 }
 
 // SubscribeLogs opens a WS log subscription for the given query.
 // The returned channel is closed when ctx is cancelled.
-func (c *EthConnector) SubscribeLogs(ctx context.Context, query ethereum.FilterQuery) (<-chan *types.Log, error) {
-	ch := make(chan *types.Log, 100)
+func (c *EthConnector) SubscribeLogs(ctx context.Context, query ethereum.FilterQuery) (<-chan types.Log, error) {
+	ch := make(chan types.Log, 100)
 	go c.watchLogs(ctx, query, ch)
 	return ch, nil
 }
@@ -198,21 +252,11 @@ func (c *EthConnector) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	var errs []error
+	c.primary.Close()
+	c.second.Close()
+	c.ws.Close()
 
-	if err := c.primary.Close(); err != nil {
-		errs = append(errs, fmt.Errorf("primary close failed: %w", err))
-	}
-
-	if err := c.second.Close(); err != nil {
-		errs = append(errs, fmt.Errorf("second close failed: %w", err))
-	}
-
-	if err := c.ws.Close(); err != nil {
-		errs = append(errs, fmt.Errorf("ws close failed: %w", err))
-	}
-
-	return errors.Join(errs...)
+	return nil
 }
 
 // ---------------------------------------------------------------------------
@@ -243,8 +287,20 @@ func (c *EthConnector) reconnectWS() {
 	}
 }
 
-func (c *EthConnector) watchLogs(ctx context.Context, query ethereum.FilterQuery, ch chan *types.Log) {
+func (c *EthConnector) watchLogs(ctx context.Context, query ethereum.FilterQuery, ch chan types.Log) {
 	defer close(ch)
+
+	filterArg := map[string]interface{}{
+		"address": query.Addresses,
+		"topics":  query.Topics,
+	}
+	if query.FromBlock != nil {
+		filterArg["fromBlock"] = hexutil.EncodeBig(query.FromBlock)
+	}
+	if query.ToBlock != nil {
+		filterArg["toBlock"] = hexutil.EncodeBig(query.ToBlock)
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -252,7 +308,7 @@ func (c *EthConnector) watchLogs(ctx context.Context, query ethereum.FilterQuery
 		default:
 		}
 
-		sub, err := c.getWS().Subscribe(eth.NewLogs(ch, query))
+		sub, err := c.getWS().EthSubscribe(ctx, ch, "logs", filterArg)
 		if err != nil {
 			log.Printf("[connector] subscribe failed: %v — reconnecting", err)
 			c.reconnectWS()
