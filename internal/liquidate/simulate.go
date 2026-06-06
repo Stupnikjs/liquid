@@ -96,7 +96,7 @@ func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnaps
 		seizeAssets = new(big.Int).Set(maxSwapAmount)
 	}
 	out.SeizeAssets = seizeAssets
-	minOut := morpho.ComputeMinOut(seizeAssets, snap.Oracle.Price)
+	minOut := morpho.CollateralAssetsInLoan(seizeAssets, snap.Oracle.Price)
 	out.MinOut = minOut
 	return out
 }
