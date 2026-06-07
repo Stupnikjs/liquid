@@ -19,7 +19,8 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(4)
-
+// changer tout ça par des parsing de commande
+// pour les config 
 	go func() {
 		defer wg.Done()
 		time.Sleep(100 * time.Second)
