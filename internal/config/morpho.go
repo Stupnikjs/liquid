@@ -1,4 +1,4 @@
-package abi
+package config
 
 import (
 	"github.com/lmittmann/w3"

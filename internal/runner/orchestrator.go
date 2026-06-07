@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/swap"
@@ -22,7 +22,7 @@ func (r *Runner) Run(ctx context.Context) {
 	<-ctx.Done()
 }
 
-func Wrapper(conf lqtypes.Config, filters api.MarketFilters) {
+func Wrapper(conf config.Config, filters api.MarketFilters) {
 	conn := connector.New(conf.Endpoints)
 	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {

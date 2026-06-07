@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/db"
 	"github.com/Stupnikjs/liquid/internal/liquidate"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
+
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/swap"
@@ -25,7 +26,7 @@ type Runner struct {
 
 type MarketConsumer struct {
 	Conn    connector.Connector
-	Config  lqtypes.Config
+	Config  config.Config
 	Cache   *cache.Cache
 	Store   *db.Store
 	EventCh <-chan *types.Log
@@ -33,12 +34,12 @@ type MarketConsumer struct {
 
 type QuoteConsumer struct {
 	Conn   connector.Connector
-	Config lqtypes.Config
+	Config config.Config
 	Cache  *cache.Cache
 	Routes *swap.RouteCache
 }
 
-func NewMarketConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, routes *swap.RouteCache, store *db.Store) *MarketConsumer {
+func NewMarketConsumer(conn connector.Connector, config config.Config, cache *cache.Cache, routes *swap.RouteCache, store *db.Store) *MarketConsumer {
 	return &MarketConsumer{
 		Conn:    conn,
 		Config:  config,
@@ -48,7 +49,7 @@ func NewMarketConsumer(conn connector.Connector, config lqtypes.Config, cache *c
 	}
 }
 
-func NewQuoteConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, routes *swap.RouteCache) *QuoteConsumer {
+func NewQuoteConsumer(conn connector.Connector, config config.Config, cache *cache.Cache, routes *swap.RouteCache) *QuoteConsumer {
 	return &QuoteConsumer{
 		Conn:   conn,
 		Config: config,
@@ -57,7 +58,7 @@ func NewQuoteConsumer(conn connector.Connector, config lqtypes.Config, cache *ca
 	}
 }
 
-func NewRunner(conn connector.Connector, config lqtypes.Config, routeCache *swap.RouteCache, mCache *cache.Cache) *Runner {
+func NewRunner(conn connector.Connector, config config.Config, routeCache *swap.RouteCache, mCache *cache.Cache) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
 	database, err := db.OpenDb(fmt.Sprintf("%d.db", config.ChainID))
 	if err != nil {
@@ -106,7 +107,7 @@ func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
 		go func(id [32]byte) {
 			m := c.Cache.MarketMap[id]
 			defer wg.Done()
-			err := onchain.OnChainRefresh(c.Conn, c.Config, ctx, c.Cache, m, id)
+			err := onchain.OnChainRefresh(c.Conn, c.Config.Addresses.Morpho, ctx, c.Cache, m, c.Config.MorphoABI.Oracle.Price, c.Config.MorphoABI.Blue.Market)
 			if err != nil {
 				fmt.Println(err)
 			}

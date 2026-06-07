@@ -11,8 +11,8 @@ import (
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 // snap nil guard upon this func
@@ -57,23 +57,32 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketP
 // success, or an error if the call reverts (position not liquidable).
 func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err error) {
 
-	msg := w3types.Message{
-		From:  c.Config.Addresses.Wallet,
-		To:    &c.Config.Addresses.LiquidatorContract,
-		Input: data,
+	arg := map[string]any{
+		"from": c.Config.Addresses.Wallet,
+		"to":   c.Config.Addresses.LiquidatorContract,
+		"data": hexutil.Bytes(data),
 	}
 
-	var callResult []byte
+	var (
+		callResult hexutil.Bytes
+		gasHex     hexutil.Uint64
+	)
 
-	calls := []w3types.RPCCaller{
-		eth.Call(&msg, nil, nil).Returns(&callResult),
-		eth.EstimateGas(&msg, nil).Returns(&gasVal)}
-
-	if err := c.Conn.SecondCallCtx(ctx, calls); err != nil {
-		return 0, fmt.Errorf("dryRun: %w", err)
+	batch := []rpc.BatchElem{
+		{Method: "eth_call", Args: []any{arg, "latest"}, Result: &callResult},
+		{Method: "eth_estimateGas", Args: []any{arg, "latest"}, Result: &gasHex},
 	}
 
-	return gasVal, nil
+	if err := c.Conn.SecondCallCtx(ctx, batch); err != nil {
+		return 0, fmt.Errorf("dryRun batch: %w", err)
+	}
+	for _, b := range batch {
+		if b.Error != nil {
+			return 0, fmt.Errorf("dryRun: %w", b.Error)
+		}
+	}
+
+	return uint64(gasHex), nil
 }
 
 // Gets snapshot

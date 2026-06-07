@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3/w3types"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type RPCClient interface {
-	CallCtx(ctx context.Context, calls ...w3types.RPCCaller) error
+	CallCtx(ctx context.Context, calls []rpc.BatchElem) error
 	Close() error
 }
 

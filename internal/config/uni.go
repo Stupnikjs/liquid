@@ -1,4 +1,4 @@
-package abi
+package config
 
 import (
 	"math/big"

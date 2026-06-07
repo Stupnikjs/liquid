@@ -11,6 +11,9 @@ import (
 	"github.com/lmittmann/w3/w3types"
 )
 
+type UniSwapABI struct {
+}
+
 type QuoteExactInputSingleParams struct {
 	TokenIn           common.Address
 	TokenOut          common.Address

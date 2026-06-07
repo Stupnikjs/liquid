@@ -164,7 +164,7 @@ func TestBorrowUSDC(t *testing.T) {
 	a.WrapETH(t, oneETH)
 
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
-	amount := new(big.Int).Mul(market.Lltv, big.NewInt(2300))
+	amount := new(big.Int).Mul(market.LLTV, big.NewInt(2300))
 	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
@@ -178,7 +178,7 @@ func (a *AnvilInstance) LiquidationSetup(t *testing.T, ethprice *big.Int) {
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
 	// passer le prix de l'eth en usdc
 
-	amount := new(big.Int).Mul(market.Lltv, ethprice)
+	amount := new(big.Int).Mul(market.LLTV, ethprice)
 	borrowAmount := new(big.Int).Div(amount, utils.TenPowInt(42))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)

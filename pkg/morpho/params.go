@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -28,8 +28,8 @@ type MarketParams struct {
 	// 3 padding
 }
 
-func (m *MarketParams) ToMarketContractParams() *lqtypes.MarketContractParams {
-	return &lqtypes.MarketContractParams{
+func (m *MarketParams) ToMarketContractParams() *morpho.MarketContractParams {
+	return &morpho.MarketContractParams{
 		LoanToken:       m.LoanToken,
 		CollateralToken: m.CollateralToken,
 		Oracle:          m.Oracle,

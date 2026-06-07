@@ -6,7 +6,7 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -25,7 +25,7 @@ func SendSignedTx(
 	ctx context.Context,
 	conn connector.Connector,
 	msgsender common.Address,
-	signer *lqtypes.Signer,
+	signer *config.Signer,
 	params TxParams,
 ) (common.Hash, error) {
 

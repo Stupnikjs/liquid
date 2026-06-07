@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/config/abi"
 	"github.com/Stupnikjs/liquid/internal/db"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
@@ -122,12 +121,12 @@ func (r *MarketConsumer) MarketOnchainRefresh(ctx context.Context, ms *marketSta
 	morphoM := r.Cache.MarketMap[id]
 	if ms.tickCount%20 == 0 {
 
-		if err := onchain.OnChainRefresh(r.Conn, r.Config, ctx, r.Cache, morphoM, id); err != nil {
+		if err := onchain.OnChainRefresh(r.Conn, r.Config.Addresses.Morpho, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price, r.Config.MorphoABI.Blue.Market); err != nil {
 			log.Printf("full refresh error: %v", err)
 		}
 		return
 	}
-	if err := onchain.OnChainOracleRefresh(r.Conn, r.Config, ctx, r.Cache, morphoM, id, r.Config.Addresses.Morpho); err != nil {
+	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price); err != nil {
 		log.Printf("oracle refresh error: %v", err)
 	}
 }
@@ -227,11 +226,11 @@ func (r *MarketConsumer) SubscribePositionRoutine(ctx context.Context) {
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{r.Config.Addresses.Morpho},
 		Topics: [][]common.Hash{{
-			abi.EventBorrow.Topic0,
-			abi.EventRepay.Topic0,
-			abi.EventSupplyCollateral.Topic0,
-			abi.EventLiquidate.Topic0,
-			abi.EventAccrueInterest.Topic0,
+			r.Config.MorphoABI.Topics.Borrow,
+			r.Config.MorphoABI.Topics.Repay,
+			r.Config.MorphoABI.Topics.SupplyCollateral,
+			r.Config.MorphoABI.Topics.AccrueInterest,
+			r.Config.MorphoABI.Topics.Liquidate,
 		}},
 	}
 	ch, err := r.Conn.SubscribeLogs(ctx, query)
@@ -252,7 +251,7 @@ func (m *MarketConsumer) EventListener(ctx context.Context) {
 			if !ok {
 				return
 			}
-			onchain.ProcessEvents(m.Cache.Markets, event)
+			onchain.ProcessEvents(m.Cache.Markets, event, m.Config.MorphoABI)
 		}
 	}
 }

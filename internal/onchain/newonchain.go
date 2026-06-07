@@ -6,8 +6,10 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/cache"
 	market "github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/pkg/connector"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -81,11 +83,11 @@ func (a *abiCall) run() error {
 // Constructeurs spécifiques
 // ---------------------------------------------------------------------------
 
-func marketCall(morphoAddr common.Address, id [32]byte, res *OnChainResult, method *abi.Method) (*abiCall, error) {
+func marketCall(morphoAddr common.Address, res *OnChainResult, method *abi.Method) (*abiCall, error) {
 	return newABICall(
 		morphoAddr,
 		method,
-		[]interface{}{id},
+		[]interface{}{res.ID},
 		func(outputs abi.Arguments, data []byte) error {
 			values, err := outputs.Unpack(data)
 			if err != nil {
@@ -120,21 +122,78 @@ func refresh(conn connector.Connector, ctx context.Context, calls []*abiCall) er
 	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
 	defer cancel()
 
-	// extraire les BatchElem
+	// extract btch elem
 	elems := make([]rpc.BatchElem, len(calls))
 	for i, c := range calls {
 		elems[i] = c.elem
 	}
 
+	// rpc call
 	if err := conn.SecondCallCtx(ctx, elems); err != nil {
 		return err
 	}
 
-	// décoder chaque réponse
+	// decoding
 	for _, c := range calls {
 		if err := c.run(); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+// OnChainOracleRefresh fetches only the oracle price.
+func OnChainOracleRefresh(
+	conn connector.Connector,
+	ctx context.Context,
+	c *cache.Cache,
+	mParam morpho.MarketParams,
+	oracleMethod *abi.Method,
+) error {
+	res := newResult(mParam.ID)
+
+	call, err := oracleCall(mParam.Oracle, res, oracleMethod)
+	if err != nil {
+		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+	}
+
+	if err := refresh(conn, ctx, []*abiCall{call}); err != nil {
+		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+	}
+
+	c.Markets.Update(res.ID, func(m *market.Market) {
+		m.Oracle.Price = res.OraclePrice
+	})
+
+	return nil
+}
+
+// OnChainOracleRefresh fetches only the oracle price.
+func OnChainRefresh(
+	conn connector.Connector,
+	morphoAddr common.Address,
+	ctx context.Context,
+	c *cache.Cache,
+	mParam morpho.MarketParams,
+	oracleMethod *abi.Method,
+	marketMethod *abi.Method,
+) error {
+	res := newResult(mParam.ID)
+	oraclecall, err := oracleCall(mParam.Oracle, res, oracleMethod)
+	if err != nil {
+		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+	}
+	marketcall, err := marketCall(morphoAddr, res, marketMethod)
+	if err != nil {
+		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+	}
+	if err := refresh(conn, ctx, []*abiCall{oraclecall, marketcall}); err != nil {
+		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+	}
+
+	c.Markets.Update(res.ID, func(m *market.Market) {
+		m.Oracle.Price = res.OraclePrice
+	})
+
 	return nil
 }
