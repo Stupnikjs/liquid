@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/pkg/api"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
@@ -80,7 +80,7 @@ func NewStore(markets []morpho.MarketParams) *MarketStore {
 	}
 }
 
-func NewCache(conf lqtypes.Config, markets []morpho.MarketParams, filters api.MarketFilters) *Cache {
+func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.MarketFilters) *Cache {
 
 	marketMap := make(map[[32]byte]morpho.MarketParams, len(markets))
 	store := NewStore(markets)

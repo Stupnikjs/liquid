@@ -237,8 +237,8 @@ func (c *EthConnector) SecondCallCtx(ctx context.Context, calls []rpc.BatchElem)
 
 // SubscribeLogs opens a WS log subscription for the given query.
 // The returned channel is closed when ctx is cancelled.
-func (c *EthConnector) SubscribeLogs(ctx context.Context, query ethereum.FilterQuery) (<-chan types.Log, error) {
-	ch := make(chan types.Log, 100)
+func (c *EthConnector) SubscribeLogs(ctx context.Context, query ethereum.FilterQuery) (<-chan *types.Log, error) {
+	ch := make(chan *types.Log, 100)
 	go c.watchLogs(ctx, query, ch)
 	return ch, nil
 }
@@ -287,7 +287,7 @@ func (c *EthConnector) reconnectWS() {
 	}
 }
 
-func (c *EthConnector) watchLogs(ctx context.Context, query ethereum.FilterQuery, ch chan types.Log) {
+func (c *EthConnector) watchLogs(ctx context.Context, query ethereum.FilterQuery, ch chan *types.Log) {
 	defer close(ch)
 
 	filterArg := map[string]interface{}{
