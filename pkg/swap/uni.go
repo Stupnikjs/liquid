@@ -1,14 +1,11 @@
 package swap
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3/module/eth"
-	"github.com/lmittmann/w3/w3types"
 )
 
 type UniSwapABI struct {
@@ -104,23 +101,18 @@ func uniQuoteCall(
 		Fee:               big.NewInt(int64(fee)),
 		SqrtPriceLimitX96: big.NewInt(0),
 	}
-
-	var (
-		amountOut               *big.Int
-		sqrtPriceX96After       *big.Int
-		initializedTicksCrossed uint32
-		gasEstimate             *big.Int
-	)
-
-	if err := conn.CallCtx(context.Background(),
-		[]w3types.RPCCaller{eth.CallFunc(quoterAddr, FuncQuoteExactInputSingleV2, params).Returns(
-			&amountOut,
-			&sqrtPriceX96After,
-			&initializedTicksCrossed,
-			&gasEstimate,
-		)}...); err != nil {
+	res := newResult()
+	QuoteExactSingleInputMethod, err := loadQuoteExactInputSingleMethod()
+	if err != nil {
 		return PoolEdge{}, false
 	}
+	quoteCall, err := QuoteExactInputSingleCall(quoterAddr, params, res, &QuoteExactSingleInputMethod)
+	if err != nil {
+		return PoolEdge{}, false
+	}
+	ici
+	// conn.CallCtx() finir ca
+	quoteCall.Run()
 
 	return PoolEdge{
 		TokenIn:      marketp.GetCollateralToken(),
@@ -128,9 +120,9 @@ func uniQuoteCall(
 		Quoter:       quoterAddr,
 		Router:       routerAddr,
 		Fee:          fee,
-		WCSlippage:   ComputeSlippage(amountIn, amountOut, oraclePrice),
+		WCSlippage:   ComputeSlippage(amountIn, res.AmountOut, oraclePrice),
 		WCAmountIn:   new(big.Int).Set(amountIn),
-		WCAmountOut:  amountOut,
+		WCAmountOut:  res.AmountOut,
 		CalibratedAt: time.Now(),
 		PriceAtQuote: oraclePrice,
 		DexName:      dexname,

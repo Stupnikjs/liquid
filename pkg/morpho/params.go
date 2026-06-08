@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -28,13 +27,22 @@ type MarketParams struct {
 	// 3 padding
 }
 
-func (m *MarketParams) ToMarketContractParams() *morpho.MarketContractParams {
-	return &morpho.MarketContractParams{
+type MarketContractParams struct {
+	LoanToken       common.Address // 20
+	CollateralToken common.Address // 20
+	Oracle          common.Address // 20
+	// 4 padding
+	Irm  common.Address
+	LLTV *big.Int // 8
+}
+
+func (m *MarketParams) ToMarketContractParams() *MarketContractParams {
+	return &MarketContractParams{
 		LoanToken:       m.LoanToken,
 		CollateralToken: m.CollateralToken,
 		Oracle:          m.Oracle,
 		Irm:             m.Irm,
-		Lltv:            m.LLTV,
+		LLTV:            m.LLTV,
 	}
 }
 
