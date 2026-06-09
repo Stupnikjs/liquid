@@ -38,6 +38,7 @@ func (u *UniswapV3) BestAmountIn(
 		mid := new(big.Int).Rsh(new(big.Int).Add(lo, hi), 1)
 
 		result, ok := u.UniQuote(conn, marketp, mid, oraclePrice)
+
 		if ok {
 			best = result
 			found = true

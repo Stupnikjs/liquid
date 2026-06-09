@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -13,6 +14,7 @@ func (q *QuoteConsumer) QuotePools() {
 	for id, m := range q.Cache.MarketMap {
 		snap := q.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
+			fmt.Println("HERE WE ARE")
 			continue
 		}
 		// add router address to struct

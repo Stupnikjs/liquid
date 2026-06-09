@@ -42,10 +42,11 @@ func newResult(id [32]byte) *OnChainResult {
 // ---------------------------------------------------------------------------
 
 func marketCall(morphoAddr common.Address, res *OnChainResult, method *abi.Method) (*ether.AbiCall, error) {
+	fmt.Println(res.ID)
 	return ether.NewABICall(
 		morphoAddr,
 		method,
-		[]interface{}{res.ID},
+		[]any{res.ID},
 		func(outputs abi.Arguments, data []byte) error {
 			values, err := outputs.Unpack(data)
 			if err != nil {
@@ -90,7 +91,9 @@ func refresh(conn connector.Connector, ctx context.Context, calls []*ether.AbiCa
 	if err := conn.SecondCallCtx(ctx, elems); err != nil {
 		return err
 	}
-
+	for i, e := range elems {
+		fmt.Printf("elem[%d] error: %v  raw: %v\n", i, e.Error, e.Result)
+	}
 	// decoding
 	for _, c := range calls {
 		if err := c.Run(); err != nil {
@@ -151,6 +154,8 @@ func OnChainRefresh(
 
 	c.Markets.Update(res.ID, func(m *market.Market) {
 		m.Oracle.Price = res.OraclePrice
+		m.Stats.TotalBorrowAssets = res.Stats.TotalBorrowAssets
+		m.Stats.TotalBorrowShares = res.Stats.TotalBorrowShares
 	})
 
 	return nil
