@@ -12,13 +12,11 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 	s.mu.RLock()
 	market := s.markets[id]
 	s.mu.RUnlock()
-
 	if market == nil {
 		return nil
 	}
 
 	market.Mu.RLock()
-	fmt.Println(market.Oracle.Price, market.Stats.TotalBorrowAssets)
 	defer market.Mu.RUnlock()
 	if market.Canceled ||
 		market.Oracle.Price == nil ||

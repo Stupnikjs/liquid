@@ -107,7 +107,8 @@ func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
 		go func(id [32]byte) {
 			m := c.Cache.MarketMap[id]
 			defer wg.Done()
-			err := onchain.OnChainRefresh(c.Conn, c.Config.Addresses.Morpho, ctx, c.Cache, m, c.Config.MorphoABI.Oracle.Price, c.Config.MorphoABI.Blue.Market)
+			// no fast mode here
+			err := onchain.OnChainRefresh(c.Conn, c.Config.Addresses.Morpho, ctx, c.Cache, m, c.Config.MorphoABI.Oracle.Price, c.Config.MorphoABI.Blue.Market, false)
 			if err != nil {
 				fmt.Println(err)
 			}

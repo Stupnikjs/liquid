@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -22,7 +23,7 @@ type QuoteExactInputSingleParams struct {
 }
 
 func (u *UniswapV3) BestAmountIn(
-	conn RPCClient,
+	conn connector.Connector,
 	marketp MorphoMarket,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
@@ -56,7 +57,7 @@ func (u *UniswapV3) BestAmountIn(
 }
 
 func (u *UniswapV3) UniQuote(
-	conn RPCClient,
+	conn connector.Connector,
 	marketp MorphoMarket,
 	amountIn *big.Int,
 	oraclePrice *big.Int,
@@ -88,7 +89,7 @@ func (u *UniswapV3) UniQuote(
 // ---------------------------------------------------------------------------
 
 func uniQuoteCall(
-	conn RPCClient,
+	conn connector.Connector,
 	marketp MorphoMarket,
 	quoterAddr common.Address,
 	routerAddr common.Address,

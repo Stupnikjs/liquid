@@ -24,6 +24,7 @@ type marketState struct {
 	tickCount int
 	ticker    *time.Ticker
 	interval  time.Duration
+	fastMode  bool // alchemy on true
 }
 
 func (c *MarketConsumer) OnChainRefreshRoutine(ctx context.Context, liquidationCh chan cache.BorrowPosition) {
@@ -50,11 +51,15 @@ func (c *MarketConsumer) MarketRoutine(ctx context.Context, liquidationCh chan c
 		case <-ctx.Done():
 			return
 		case <-ms.ticker.C:
+
 			interval := c.MarketTick(ctx, ms, id, liquidationCh)
 			if interval != ms.interval {
 				ms.ticker.Reset(interval)
 			}
 			ms.interval = interval
+			if interval.Nanoseconds() < 2_000_000_000 || !ms.fastMode {
+				ms.fastMode = true
+			}
 		}
 	}
 }
@@ -106,7 +111,7 @@ func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32
 	_, interval := SnapToTickerInterval(*snap, morphoM)
 	r.LiquidationCheck(ctx, *snap, ms, liquidationCh)
 	latency := (time.Now().UnixNano() - start) / 1_000_000
-	if ms.tickCount%100 == 0 {
+	if ms.tickCount%1000 == 0 {
 		log.Printf("latency:%dms %s %s", latency, morphoM.GetPair(), snap.Analysis().String())
 	}
 	err := r.ToDBEntryQueue(id, *snap)
@@ -121,12 +126,12 @@ func (r *MarketConsumer) MarketOnchainRefresh(ctx context.Context, ms *marketSta
 	morphoM := r.Cache.MarketMap[id]
 	if ms.tickCount%20 == 0 {
 
-		if err := onchain.OnChainRefresh(r.Conn, r.Config.Addresses.Morpho, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price, r.Config.MorphoABI.Blue.Market); err != nil {
+		if err := onchain.OnChainRefresh(r.Conn, r.Config.Addresses.Morpho, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price, r.Config.MorphoABI.Blue.Market, ms.fastMode); err != nil {
 			log.Printf("full refresh error: %v", err)
 		}
 		return
 	}
-	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price); err != nil {
+	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price, ms.fastMode); err != nil {
 		log.Printf("oracle refresh error: %v", err)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -17,7 +18,7 @@ type RPCClient interface {
 type Dex interface {
 	// Quote returns the best PoolEdge for a given amountIn.
 	// Returns false if no route satisfies the market's slippage constraint.
-	BestAmountIn(conn RPCClient, marketp MorphoMarket, amountIn *big.Int, oraclePrice *big.Int, rateLimit time.Duration) (PoolEdge, bool)
+	BestAmountIn(conn connector.Connector, marketp MorphoMarket, amountIn *big.Int, oraclePrice *big.Int, rateLimit time.Duration) (PoolEdge, bool)
 	// DEX returns a human-readable identifier for logging and metrics.
 	DEX() string
 	QuoterAddress() common.Address

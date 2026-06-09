@@ -56,8 +56,8 @@ func LoadBaseConfig() Config {
 		},
 		ChainID: uint32(chainid),
 		Endpoints: connector.RPCEndpoints{
-			Primary: os.Getenv("BASE_HTTP_RPC_DRPC"),
-			Second:  os.Getenv("BASE_HTTP_RPC_ALCH"),
+			Primary: os.Getenv("BASE_HTTP_RPC_ALCH"),
+			Second:  os.Getenv("BASE_HTTP_RPC_DRPC"),
 			WS:      os.Getenv("BASE_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
@@ -89,8 +89,8 @@ func LoadArbitrumConfig() Config {
 		},
 		ChainID: uint32(chainid),
 		Endpoints: connector.RPCEndpoints{
-			Primary: os.Getenv("ARB_HTTP_RPC_DRPC"),
-			Second:  os.Getenv("ARB_HTTP_RPC_ALCH"),
+			Primary: os.Getenv("ARB_HTTP_RPC_ALCH"),
+			Second:  os.Getenv("ARB_HTTP_RPC_DRPC"),
 			WS:      os.Getenv("ARB_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{
@@ -125,8 +125,8 @@ func LoadKatanaConfig() Config {
 		},
 		ChainID: uint32(chainid),
 		Endpoints: connector.RPCEndpoints{
-			Primary: os.Getenv("KATANA_HTTP_RPC_DRPC"),
-			Second:  os.Getenv("KATANA_HTTP_RPC_ALCH"),
+			Primary: os.Getenv("KATANA_HTTP_RPC_ALCH"),
+			Second:  os.Getenv("KATANA_HTTP_RPC_DRPC"),
 			WS:      os.Getenv("KATANA_WS_RPC_ALCH"),
 		},
 		Dexs: []swap.Dex{

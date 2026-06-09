@@ -1,20 +1,18 @@
 package runner
 
 import (
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 )
 
-const QUOTE_RATE_LIMIT = 50 * time.Millisecond
+const QUOTE_RATE_LIMIT = 700 * time.Millisecond
 
 func (q *QuoteConsumer) QuotePools() {
 	for id, m := range q.Cache.MarketMap {
 		snap := q.Cache.Markets.GetSnapshot(id)
 		if snap == nil {
-			fmt.Println("HERE WE ARE")
 			continue
 		}
 		// add router address to struct

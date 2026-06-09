@@ -42,7 +42,6 @@ func newResult(id [32]byte) *OnChainResult {
 // ---------------------------------------------------------------------------
 
 func marketCall(morphoAddr common.Address, res *OnChainResult, method *abi.Method) (*ether.AbiCall, error) {
-	fmt.Println(res.ID)
 	return ether.NewABICall(
 		morphoAddr,
 		method,
@@ -77,7 +76,7 @@ func oracleCall(oracle common.Address, res *OnChainResult, method *abi.Method) (
 	)
 }
 
-func refresh(conn connector.Connector, ctx context.Context, calls []*ether.AbiCall) error {
+func refresh(conn connector.Connector, ctx context.Context, calls []*ether.AbiCall, fastMode bool) error {
 	ctx, cancel := context.WithTimeout(ctx, rpcTimeout)
 	defer cancel()
 
@@ -88,12 +87,16 @@ func refresh(conn connector.Connector, ctx context.Context, calls []*ether.AbiCa
 	}
 
 	// rpc call
-	if err := conn.SecondCallCtx(ctx, elems); err != nil {
-		return err
+	if fastMode {
+		if err := conn.CallCtx(ctx, elems); err != nil {
+			return err
+		}
+	} else {
+		if err := conn.SecondCallCtx(ctx, elems); err != nil {
+			return err
+		}
 	}
-	for i, e := range elems {
-		fmt.Printf("elem[%d] error: %v  raw: %v\n", i, e.Error, e.Result)
-	}
+
 	// decoding
 	for _, c := range calls {
 		if err := c.Run(); err != nil {
@@ -110,6 +113,7 @@ func OnChainOracleRefresh(
 	c *cache.Cache,
 	mParam morpho.MarketParams,
 	oracleMethod *abi.Method,
+	fastMode bool,
 ) error {
 	res := newResult(mParam.ID)
 
@@ -118,7 +122,7 @@ func OnChainOracleRefresh(
 		return fmt.Errorf("OnChainOracleRefresh: %w", err)
 	}
 
-	if err := refresh(conn, ctx, []*ether.AbiCall{call}); err != nil {
+	if err := refresh(conn, ctx, []*ether.AbiCall{call}, fastMode); err != nil {
 		return fmt.Errorf("OnChainOracleRefresh: %w", err)
 	}
 
@@ -138,6 +142,7 @@ func OnChainRefresh(
 	mParam morpho.MarketParams,
 	oracleMethod *abi.Method,
 	marketMethod *abi.Method,
+	fastMode bool,
 ) error {
 	res := newResult(mParam.ID)
 	oraclecall, err := oracleCall(mParam.Oracle, res, oracleMethod)
@@ -148,7 +153,7 @@ func OnChainRefresh(
 	if err != nil {
 		return fmt.Errorf("OnChainOracleRefresh: %w", err)
 	}
-	if err := refresh(conn, ctx, []*ether.AbiCall{oraclecall, marketcall}); err != nil {
+	if err := refresh(conn, ctx, []*ether.AbiCall{oraclecall, marketcall}, fastMode); err != nil {
 		return fmt.Errorf("OnChainOracleRefresh: %w", err)
 	}
 
