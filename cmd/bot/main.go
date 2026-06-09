@@ -28,14 +28,17 @@ func main() {
 	wg.Add(1)
 	go func() {
 		for {
+			var r *runner.Runner
 			switch chainid_int {
 			case 8453:
-				runner.Wrapper(config.LoadBaseConfig(), filter)
+				r = runner.Wrapper(config.LoadBaseConfig(), filter)
 			case 747474:
-				runner.Wrapper(config.LoadKatanaConfig(), filter)
+				r = runner.Wrapper(config.LoadKatanaConfig(), filter)
 			case 42161:
-				runner.Wrapper(config.LoadArbitrumConfig(), filter)
+				// arb marche pas
+				r = runner.Wrapper(config.LoadArbitrumConfig(), filter)
 			}
+			ParseCmd(r)
 		}
 
 	}()

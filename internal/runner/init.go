@@ -77,7 +77,10 @@ func (r *Runner) Init(ctx context.Context) {
 		log.Printf("initial api call error: %v", err)
 	}
 	r.MarketConsumer.OnChainRefreshAll(ctx)
+	fmt.Println("before quote", len(r.MarketConsumer.Cache.Markets.Ids()))
 	r.QuoteConsumer.QuotePools()
+	fmt.Println("after quote", len(r.MarketConsumer.Cache.Markets.Ids()))
+	fmt.Println(len(r.MarketConsumer.Cache.Markets.Ids()))
 	log.Println("Quoting over ")
 	r.MarketConsumer.LogMarkets()
 

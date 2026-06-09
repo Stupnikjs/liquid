@@ -13,6 +13,14 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+/*
+
+Store Entries that represent snapshots of positions
+Aim is to compare those snaphots with missed liquidation from the api
+
+
+*/
+
 type Store struct {
 	DB           *sql.DB
 	EntryToFlush []Entry

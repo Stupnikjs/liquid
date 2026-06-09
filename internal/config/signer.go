@@ -10,6 +10,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// useless remplacer par un seul
+
 func NewBaseSigner(chainId int64) (*Signer, error) {
 
 	keyHex := os.Getenv("BASE_PK")

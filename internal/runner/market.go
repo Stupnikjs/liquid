@@ -199,20 +199,14 @@ func distanceToInterval(distance float64) time.Duration {
 	}
 }
 
-// query quoter to test swaping
-// updating market if swapable
-// canceling if not
-
 func (r *MarketConsumer) ToDBEntryQueue(id [32]byte, snap cache.MarketSnapshot) error {
 	r.Store.Mu.Lock()
 	defer r.Store.Mu.Unlock()
-
 	for _, pos := range snap.Positions {
 
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD1DOT05) >= 0 {
-			break // slice trié, on peut break
+			break
 		}
-
 		e := db.PosToEntry(pos, snap.Oracle.Price, snap.Stats.TotalBorrowAssets, snap.Stats.TotalBorrowShares, time.Now().UnixMilli())
 		if len(r.Store.EntryToFlush) < MAX_FLUSH_QUEUE_SIZE {
 			r.Store.EntryToFlush = append(r.Store.EntryToFlush, e)

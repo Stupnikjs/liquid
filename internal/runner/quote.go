@@ -33,7 +33,9 @@ func (q *QuoteConsumer) QuotePools() {
 func (q *QuoteConsumer) SelectMarketWithRoute() {
 	for _, m := range q.Cache.MarketMap {
 		route, found := q.Routes.FindBestRoute(m.CollateralToken, m.LoanToken)
-		log.Printf("checking route for %s found %v route of len %d \n", m.GetPair(), found, len(route))
+		if found {
+			log.Printf("checking route for %s route of len %d \n", m.GetPair(), len(route))
+		}
 		if !found {
 			q.Cache.Markets.Update(m.ID, func(m *cache.Market) {
 				m.Canceled = true

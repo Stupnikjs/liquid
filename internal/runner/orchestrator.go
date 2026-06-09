@@ -19,15 +19,15 @@ func (r *Runner) Run(ctx context.Context) {
 	go r.MarketConsumer.EventListener(ctx)
 	go r.LiquidateConsumer.Run(ctx)
 	go r.ApiResyncRoutine(ctx)
-	<-ctx.Done()
+	// <-ctx.Done()
 }
 
-func Wrapper(conf config.Config, filters api.MarketFilters) {
+func Wrapper(conf config.Config, filters api.MarketFilters) *Runner {
 	conn := connector.New(conf.Endpoints)
 	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil
 	}
 	markets := api.FilterMarket(result, filters, conf.ChainID)
 	cached := cache.NewCache(conf, markets, filters)
@@ -37,5 +37,5 @@ func Wrapper(conf config.Config, filters api.MarketFilters) {
 	runn := NewRunner(conn, conf, routeCache, cached)
 	runn.Init(context.Background())
 	runn.Run(context.Background())
-
+	return runn
 }
