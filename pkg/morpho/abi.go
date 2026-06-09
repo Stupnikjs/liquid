@@ -42,63 +42,37 @@ const MorphoOracleABIJson = `[
 ]`
 
 const MorphoEventsABIJson = `[
-    {
-        "name": "Borrow",
-        "type": "event",
-        "inputs": [
-            {"name": "id",       "type": "bytes32", "indexed": true},
-            {"name": "caller",   "type": "address", "indexed": false},
-            {"name": "onBehalf", "type": "address", "indexed": true},
-            {"name": "receiver", "type": "address", "indexed": false},
-            {"name": "assets",   "type": "uint256", "indexed": false},
-            {"name": "shares",   "type": "uint256", "indexed": false}
-        ]
-    },
-    {
-        "name": "Repay",
-        "type": "event",
-        "inputs": [
-            {"name": "id",       "type": "bytes32", "indexed": true},
-            {"name": "caller",   "type": "address", "indexed": false},
-            {"name": "onBehalf", "type": "address", "indexed": true},
-            {"name": "assets",   "type": "uint256", "indexed": false},
-            {"name": "shares",   "type": "uint256", "indexed": false}
-        ]
-    },
-    {
-        "name": "SupplyCollateral",
-        "type": "event",
-        "inputs": [
-            {"name": "id",       "type": "bytes32", "indexed": true},
-            {"name": "caller",   "type": "address", "indexed": false},
-            {"name": "onBehalf", "type": "address", "indexed": true},
-            {"name": "assets",   "type": "uint256", "indexed": false}
-        ]
-    },
-    {
-        "name": "Liquidate",
-        "type": "event",
-        "inputs": [
-            {"name": "id",            "type": "bytes32", "indexed": true},
-            {"name": "caller",        "type": "address", "indexed": false},
-            {"name": "borrower",      "type": "address", "indexed": true},
-            {"name": "repaidAssets",  "type": "uint256", "indexed": false},
-            {"name": "repaidShares",  "type": "uint256", "indexed": false},
-            {"name": "seizedAssets",  "type": "uint256", "indexed": false},
-            {"name": "badDebtAssets", "type": "uint256", "indexed": false},
-            {"name": "badDebtShares", "type": "uint256", "indexed": false}
-        ]
-    },
-    {
-        "name": "AccrueInterest",
-        "type": "event",
-        "inputs": [
-            {"name": "id",             "type": "bytes32", "indexed": true},
-            {"name": "prevBorrowRate", "type": "uint256", "indexed": false},
-            {"name": "interest",       "type": "uint256", "indexed": false},
-            {"name": "feeShares",      "type": "uint256", "indexed": false}
-        ]
-    }
+  {"name": "Borrow", "type": "event", "inputs": [
+    {"name": "id",       "type": "bytes32", "indexed": true},
+    {"name": "caller",   "type": "address", "indexed": false},
+    {"name": "onBehalf", "type": "address", "indexed": true},
+    {"name": "receiver", "type": "address", "indexed": true},
+    {"name": "assets",   "type": "uint256", "indexed": false},
+    {"name": "shares",   "type": "uint256", "indexed": false}
+]},
+{"name": "Repay", "type": "event", "inputs": [
+    {"name": "id",       "type": "bytes32", "indexed": true},
+    {"name": "caller",   "type": "address", "indexed": true},
+    {"name": "onBehalf", "type": "address", "indexed": true},
+    {"name": "assets",   "type": "uint256", "indexed": false},
+    {"name": "shares",   "type": "uint256", "indexed": false}
+]},
+{"name": "SupplyCollateral", "type": "event", "inputs": [
+    {"name": "id",       "type": "bytes32", "indexed": true},
+    {"name": "caller",   "type": "address", "indexed": true},
+    {"name": "onBehalf", "type": "address", "indexed": true},
+    {"name": "assets",   "type": "uint256", "indexed": false}
+]},
+{"name": "Liquidate", "type": "event", "inputs": [
+    {"name": "id",            "type": "bytes32", "indexed": true},
+    {"name": "caller",        "type": "address", "indexed": true},
+    {"name": "borrower",      "type": "address", "indexed": true},
+    {"name": "repaidAssets",  "type": "uint256", "indexed": false},
+    {"name": "repaidShares",  "type": "uint256", "indexed": false},
+    {"name": "seizedAssets",  "type": "uint256", "indexed": false},
+    {"name": "badDebtAssets", "type": "uint256", "indexed": false},
+    {"name": "badDebtShares", "type": "uint256", "indexed": false}
+]}
 ]`
 
 // ---------------------------------------------------------------------------

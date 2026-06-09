@@ -11,13 +11,18 @@ import (
 )
 
 /*
-Cache package holds storage logic
-Cache Init
-Snapshot
 
-# HF calculation
 
-Pos insert / update / delete logic
+MarketStore Ids() Active Markets
+MarketStore GetSnapshot(id)
+
+Sorting by HF
+Recalculate all HF
+
+Inserting Pos by hf
+Updating Pos
+
+Markets are sorted by calculated HF
 */
 
 type Cache struct {
@@ -32,14 +37,13 @@ type MarketStore struct {
 }
 
 type Market struct {
-	Mu               sync.RWMutex
-	Canceled         bool
-	Oracle           Oracle
-	LLTV             *big.Int // already in morphomarket
-	Stats            MarketStats
-	LastOnChainBlock *big.Int
-	ActiveIndex      int               // index of last pos with tracked HF
-	Positions        []*BorrowPosition // Borrow positions sorted by HF asc
+	Mu          sync.RWMutex
+	Canceled    bool
+	Oracle      Oracle
+	LLTV        *big.Int // already in morphomarket
+	Stats       MarketStats
+	ActiveIndex int               // index of last pos with tracked HF
+	Positions   []*BorrowPosition // Borrow positions sorted by HF asc
 }
 
 type Oracle struct {
@@ -89,7 +93,6 @@ func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.Mar
 		store.Update(mk.ID, func(m *Market) {
 			m.LLTV = mk.LLTV
 			m.Oracle.Address = mk.Oracle
-			m.LastOnChainBlock = new(big.Int)
 		})
 	}
 

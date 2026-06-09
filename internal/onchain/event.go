@@ -72,7 +72,7 @@ func RepayEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.Morpho
 		return
 	}
 
-	onBehalf := common.BytesToAddress(log.Topics[2].Bytes())
+	onBehalf := common.BytesToAddress(log.Topics[3].Bytes())
 
 	out := map[string]interface{}{}
 	if err := mabi.Events.Repay.Inputs.UnpackIntoMap(out, log.Data); err != nil {
@@ -100,7 +100,7 @@ func LiquidateEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.Mo
 		return
 	}
 
-	borrower := common.BytesToAddress(log.Topics[2].Bytes())
+	borrower := common.BytesToAddress(log.Topics[3].Bytes())
 
 	out := map[string]interface{}{}
 	if err := mabi.Events.Liquidate.Inputs.UnpackIntoMap(out, log.Data); err != nil {
@@ -157,9 +157,9 @@ func SupplyCollateralEventProcess(c *cache.MarketStore, log *types.Log, mabi *mo
 		return
 	}
 
-	onBehalf := common.BytesToAddress(log.Topics[2].Bytes())
+	onBehalf := common.BytesToAddress(log.Topics[3].Bytes())
 
-	out := map[string]interface{}{}
+	out := map[string]any{}
 	if err := mabi.Events.SupplyCollateral.Inputs.UnpackIntoMap(out, log.Data); err != nil {
 		fmt.Println("supply collateral decode error:", err)
 		return

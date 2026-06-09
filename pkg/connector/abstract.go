@@ -194,7 +194,7 @@ func New(endpoints RPCEndpoints) *EthConnector {
 		ws:        ws,
 		dialWS:    dial,
 		endpoints: endpoints,
-		limiter:   rate.NewLimiter(rate.Every(time.Minute/500), 15),
+		limiter:   rate.NewLimiter(rate.Every(time.Minute/300), 10),
 	}
 }
 
@@ -216,10 +216,15 @@ func (c *EthConnector) CallCtx(ctx context.Context, calls []rpc.BatchElem) error
 	}
 	c.mu.RLock()
 	primary := c.primary
+	second := c.second
 	c.mu.RUnlock()
 
 	c.metrics.PrimaryCalls.Add(uint64(len(calls)))
-	return primary.BatchCallContext(ctx, calls)
+	err := primary.BatchCallContext(ctx, calls)
+	if err != nil {
+		return second.BatchCallContext(ctx, calls)
+	}
+	return err
 }
 
 // SecondCallCtx dispatches a JSON-RPC batch on the secondary (non-critical) client.
@@ -229,10 +234,15 @@ func (c *EthConnector) SecondCallCtx(ctx context.Context, calls []rpc.BatchElem)
 	}
 	c.mu.RLock()
 	second := c.second
+	primary := c.primary
 	c.mu.RUnlock()
 
 	c.metrics.SecondCalls.Add(uint64(len(calls)))
-	return second.BatchCallContext(ctx, calls)
+	err := second.BatchCallContext(ctx, calls)
+	if err != nil {
+		return primary.BatchCallContext(ctx, calls)
+	}
+	return err
 }
 
 // SubscribeLogs opens a WS log subscription for the given query.
