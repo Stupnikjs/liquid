@@ -1,11 +1,13 @@
 package swap
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type UniSwapABI struct {
@@ -110,9 +112,14 @@ func uniQuoteCall(
 	if err != nil {
 		return PoolEdge{}, false
 	}
-	ici
-	// conn.CallCtx() finir ca
-	quoteCall.Run()
+	err = conn.CallCtx(context.Background(), []rpc.BatchElem{quoteCall.Elem})
+	if err != nil {
+		return PoolEdge{}, false
+	}
+	err = quoteCall.Run()
+	if err != nil {
+		return PoolEdge{}, false
+	}
 
 	return PoolEdge{
 		TokenIn:      marketp.GetCollateralToken(),

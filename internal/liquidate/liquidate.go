@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/connector"
@@ -28,7 +28,7 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.Cache, swapCache *swap.RouteCache, ch chan cache.BorrowPosition) *Consumer {
+func NewConsumer(conn connector.Connector, config config.Config, cache *cache.Cache, swapCache *swap.RouteCache, ch chan cache.BorrowPosition) *Consumer {
 	return &Consumer{
 		Conn:      conn,
 		Config:    config,
@@ -40,7 +40,7 @@ func NewConsumer(conn connector.Connector, config lqtypes.Config, cache *cache.C
 
 type Consumer struct {
 	Conn      connector.Connector
-	Config    lqtypes.Config
+	Config    config.Config
 	SwapCache *swap.RouteCache
 	Cache     *cache.Cache
 	Ch        chan cache.BorrowPosition

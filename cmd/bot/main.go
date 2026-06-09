@@ -1,8 +1,10 @@
 package main
 
 import (
+	"log"
+	"os"
+	"strconv"
 	"sync"
-	"time"
 
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/runner"
@@ -10,44 +12,34 @@ import (
 )
 
 func main() {
-	var arbitrum api.MarketFilters
+	var filter api.MarketFilters
 
-	arbitrum = api.MarketFilters{
+	filter = api.MarketFilters{
 		MaxUsdMarket: 10_000_000_000,
-		MinUsdMarket: 10_000,
+		MinUsdMarket: 2_000,
 	}
 
+	chainid := os.Args[1]
+	chainid_int, err := strconv.Atoi(chainid)
+	if err != nil {
+		log.Panicln("Must pass integer as first arg")
+	}
 	var wg sync.WaitGroup
-	wg.Add(4)
-// changer tout ça par des parsing de commande
-// pour les config 
+	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		time.Sleep(100 * time.Second)
-		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadArbitrumConfig(), arbitrum)
-	}()
+		for {
+			switch chainid_int {
+			case 8453:
+				runner.Wrapper(config.LoadBaseConfig(), filter)
+			case 747474:
+				runner.Wrapper(config.LoadKatanaConfig(), filter)
+			case 42161:
+				runner.Wrapper(config.LoadArbitrumConfig(), filter)
+			}
+		}
 
-	go func() {
-		defer wg.Done()
-		time.Sleep(200 * time.Second)
-		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadKatanaConfig(), arbitrum)
-	}()
-
-	/*
-		go func() {
-			defer wg.Done()
-			// to avoid too much logs at the same time
-			runner.Wrapper(config.LoadMainnetConfig(), arbitrum)
-		}()
-	*/
-
-	go func() {
-		defer wg.Done()
-		// to avoid too much logs at the same time
-		runner.Wrapper(config.LoadBaseConfig(), arbitrum)
 	}()
 
 	wg.Wait()
+
 }

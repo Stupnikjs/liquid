@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"math/big"
 
-	abi "github.com/Stupnikjs/liquid/internal/config/_abi"
-	"github.com/Stupnikjs/liquid/internal/lqtypes"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/lmittmann/w3"
 )
 
+/*
 // Passer de la logique dans swap pkg
 // ABI de la fonction liquidate
 var liquidateFunc = w3.MustNewFunc(`liquidate(
@@ -22,6 +20,7 @@ var liquidateFunc = w3.MustNewFunc(`liquidate(
     (address target, bytes data, address tokenIn, address tokenOut, uint256 amountInOffset)[] steps,
     uint256 minOut
 )`, "")
+*/
 
 func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
 	m := params.ToMarketContractParams()
@@ -40,15 +39,17 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 		// Encoder le calldata du DEX avec amountIn = 0 (placeholder)
 		switch hop.DexName {
 		case "UNIV3":
-			data, err := abi.ExactInputSingle.EncodeArgs(abi.ExactInputSingleParams{
-				TokenIn:           hop.TokenIn,
-				TokenOut:          hop.TokenOut,
-				Fee:               big.NewInt(int64(hop.Fee)),
-				Recipient:         liquidatorAddress,
-				AmountIn:          big.NewInt(0), // placeholder, patché on-chain
-				AmountOutMinimum:  big.NewInt(0),
-				SqrtPriceLimitX96: big.NewInt(0),
-			})
+
+			exactSingleInputMethod := swap.UniExactInputSingleMethod()
+			data, err := exactSingleInputMethod.Inputs.Pack(
+				hop.TokenIn,
+				hop.TokenOut,
+				big.NewInt(int64(hop.Fee)),
+				liquidatorAddress,
+				big.NewInt(0), // placeholder, patché on-chain
+				big.NewInt(0),
+				big.NewInt(0),
+			)
 			if err != nil {
 				return nil, err
 			}
@@ -62,16 +63,17 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 			}
 
 		case "PANCAKE":
-			data, err := abi.PancakeExactInputSingle.EncodeArgs(abi.PancakeExactInputSingleParams{
-				TokenIn:           hop.TokenIn,
-				TokenOut:          hop.TokenOut,
-				Fee:               big.NewInt(int64(hop.Fee)),
-				Recipient:         liquidatorAddress,
-				Deadline:          big.NewInt(0), // placeholder, patché on-chain
-				AmountIn:          big.NewInt(0), // placeholder, patché on-chain
-				AmountOutMinimum:  big.NewInt(0),
-				SqrtPriceLimitX96: big.NewInt(0),
-			})
+			pankakeExactSingleInputMethod := swap.PancakeExactInputSingleMethod()
+			data, err := pankakeExactSingleInputMethod.Inputs.Pack(
+				hop.TokenIn,
+				hop.TokenOut,
+				big.NewInt(int64(hop.Fee)),
+				liquidatorAddress,
+				big.NewInt(0), // placeholder, patché on-chain
+				big.NewInt(0), // placeholder, patché on-chain
+				big.NewInt(0),
+				big.NewInt(0),
+			)
 			if err != nil {
 				return nil, err
 			}
@@ -93,14 +95,15 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 }
 
 func BuildLiquidateCalldata(
-	marketParams lqtypes.MarketContractParams,
+	marketParams morpho.MarketContractParams,
 	borrower common.Address,
 	seizedAssets *big.Int,
 	repaidShares *big.Int,
 	steps []swap.SwapStep,
 	minOut *big.Int,
 ) ([]byte, error) {
-	return liquidateFunc.EncodeArgs(
+	liquidatorMethod := LiquidatorAbiMethod()
+	args, err := liquidatorMethod.Inputs.Pack(
 		marketParams,
 		borrower,
 		seizedAssets,
@@ -108,4 +111,9 @@ func BuildLiquidateCalldata(
 		steps,
 		minOut,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(liquidatorMethod.ID, args...), nil
 }

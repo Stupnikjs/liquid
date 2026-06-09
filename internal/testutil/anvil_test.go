@@ -210,7 +210,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	a.LiquidationSetup(t, price)
 
 	calldata, err = liquidate.BuildLiquidateCalldata(
-		market,
+		*market.ToMarketContractParams(),
 		common.HexToAddress(FundedAccounts[0]),
 		utils.WAD,
 		big.NewInt(0),
