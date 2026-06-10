@@ -46,7 +46,7 @@ func SendSignedTx(
 			Result: &gasPriceHex,
 		},
 	}
-	if err := conn.SecondCallCtx(ctx, batch); err != nil {
+	if err := conn.CallCtx(ctx, batch); err != nil {
 		return common.Hash{}, fmt.Errorf("SendSignedTx: fetch params: %w", err)
 	}
 	for _, elem := range batch {

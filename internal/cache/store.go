@@ -42,7 +42,6 @@ func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
 	if market == nil {
 		return nil
 	}
-
 	market.Mu.RLock()
 	defer market.Mu.RUnlock()
 	if market.Canceled ||

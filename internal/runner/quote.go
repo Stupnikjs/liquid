@@ -7,7 +7,7 @@ import (
 	"github.com/Stupnikjs/liquid/internal/cache"
 )
 
-const QUOTE_RATE_LIMIT = 700 * time.Millisecond
+const QUOTE_RATE_LIMIT = 500 * time.Millisecond
 
 func (q *QuoteConsumer) QuotePools() {
 	for id, m := range q.Cache.MarketMap {
@@ -37,6 +37,7 @@ func (q *QuoteConsumer) SelectMarketWithRoute() {
 			log.Printf("checking route for %s route of len %d \n", m.GetPair(), len(route))
 		}
 		if !found {
+
 			q.Cache.Markets.Update(m.ID, func(m *cache.Market) {
 				m.Canceled = true
 			})

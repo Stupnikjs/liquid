@@ -31,7 +31,7 @@ type Connector interface {
 
 	// SecondCallCtx dispatches batch eth_calls on the secondary RPC.
 	// Use for non-critical calls: historical prices, backtesting, quotes.
-	SecondCallCtx(ctx context.Context, calls []rpc.BatchElem) error
+	SecondCallCtx(ctx context.Context, calls rpc.BatchElem) error
 
 	SendRawTx(ctx context.Context, tx *types.Transaction) (common.Hash, error)
 	// SubscribeLogs opens a WS log subscription for the given FilterQuery.
@@ -211,9 +211,11 @@ func (c *EthConnector) SendRawTx(ctx context.Context, tx *types.Transaction) (co
 // CallCtx dispatches a JSON-RPC batch on the primary (low-latency) client.
 // Each BatchElem.Error must be checked individually after the call returns nil.
 func (c *EthConnector) CallCtx(ctx context.Context, calls []rpc.BatchElem) error {
-	if err := c.limiter.Wait(ctx); err != nil {
+
+	if err := c.limiter.Wait(context.Background()); err != nil {
 		return fmt.Errorf("%w: %v", ErrRateLimited, err)
 	}
+
 	c.mu.RLock()
 	primary := c.primary
 	second := c.second
@@ -222,27 +224,34 @@ func (c *EthConnector) CallCtx(ctx context.Context, calls []rpc.BatchElem) error
 	c.metrics.PrimaryCalls.Add(uint64(len(calls)))
 	err := primary.BatchCallContext(ctx, calls)
 	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err() // context dead, don't bother with fallback
+		}
 		return second.BatchCallContext(ctx, calls)
 	}
-	return err
+	return nil
 }
 
 // SecondCallCtx dispatches a JSON-RPC batch on the secondary (non-critical) client.
-func (c *EthConnector) SecondCallCtx(ctx context.Context, calls []rpc.BatchElem) error {
-	if err := c.limiter.Wait(ctx); err != nil {
+func (c *EthConnector) SecondCallCtx(ctx context.Context, call rpc.BatchElem) error {
+
+	if err := c.limiter.Wait(context.Background()); err != nil {
 		return fmt.Errorf("%w: %v", ErrRateLimited, err)
 	}
 	c.mu.RLock()
-	second := c.second
 	primary := c.primary
+	second := c.second
 	c.mu.RUnlock()
 
-	c.metrics.SecondCalls.Add(uint64(len(calls)))
-	err := second.BatchCallContext(ctx, calls)
+	c.metrics.PrimaryCalls.Add(uint64(1))
+	err := second.CallContext(ctx, call.Result, call.Method, call.Args...)
 	if err != nil {
-		return primary.BatchCallContext(ctx, calls)
+		if ctx.Err() != nil {
+			return ctx.Err() // context dead, don't bother with fallback
+		}
+		return primary.BatchCallContext(ctx, []rpc.BatchElem{call})
 	}
-	return err
+	return nil
 }
 
 // SubscribeLogs opens a WS log subscription for the given query.

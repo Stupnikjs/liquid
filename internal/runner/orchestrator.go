@@ -15,11 +15,11 @@ import (
 
 func (r *Runner) Run(ctx context.Context) {
 	go r.MarketConsumer.SubscribePositionRoutine(ctx)
-	go r.MarketConsumer.OnChainRefreshRoutine(ctx, r.LiquidateConsumer.Ch)
+	go r.MarketConsumer.MarketRoutineWrapper(ctx, r.LiquidateConsumer.Ch)
 	go r.MarketConsumer.EventListener(ctx)
 	go r.LiquidateConsumer.Run(ctx)
 	go r.ApiResyncRoutine(ctx)
-	// <-ctx.Done()
+	<-ctx.Done()
 }
 
 func Wrapper(conf config.Config, filters api.MarketFilters) *Runner {

@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-const rpcTimeout = 5 * time.Second
+const rpcTimeout = 20 * time.Second
 
 type OnChainResult struct {
 	ID          [32]byte
@@ -92,13 +92,17 @@ func refresh(conn connector.Connector, ctx context.Context, calls []*ether.AbiCa
 			return err
 		}
 	} else {
-		if err := conn.SecondCallCtx(ctx, elems); err != nil {
-			return err
+		for i := range elems {
+			if err := conn.SecondCallCtx(ctx, elems[i]); err != nil {
+				return err
+			}
+
 		}
 	}
 
 	// decoding
-	for _, c := range calls {
+	for i, c := range calls {
+		c.Elem.Error = elems[i].Error
 		if err := c.Run(); err != nil {
 			return err
 		}
@@ -119,7 +123,7 @@ func OnChainOracleRefresh(
 
 	call, err := oracleCall(mParam.Oracle, res, oracleMethod)
 	if err != nil {
-		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+		return fmt.Errorf("OnChainOracleCallFunc err : %w", err)
 	}
 
 	if err := refresh(conn, ctx, []*ether.AbiCall{call}, fastMode); err != nil {
@@ -153,8 +157,10 @@ func OnChainRefresh(
 	if err != nil {
 		return fmt.Errorf("OnChainOracleRefresh: %w", err)
 	}
+
 	if err := refresh(conn, ctx, []*ether.AbiCall{oraclecall, marketcall}, fastMode); err != nil {
-		return fmt.Errorf("OnChainOracleRefresh: %w", err)
+
+		return fmt.Errorf("OnChainRefresh: %w", err)
 	}
 
 	c.Markets.Update(res.ID, func(m *market.Market) {
@@ -164,4 +170,14 @@ func OnChainRefresh(
 	})
 
 	return nil
+}
+
+func OnChainMarketRefresh(conn connector.Connector,
+	morphoAddr common.Address,
+	ctx context.Context,
+	c *cache.Cache,
+	mParam morpho.MarketParams,
+	marketMethod *abi.Method,
+	fastMode bool) {
+
 }

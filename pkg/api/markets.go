@@ -51,7 +51,6 @@ type MarketFilters struct {
 }
 
 func FilterMarket(result MarketsResult, filters MarketFilters, chainid uint32) []morpho.MarketParams {
-
 	var mark []morpho.MarketParams
 	for _, m := range result.Markets.Items {
 		supplyUsd, _ := m.State.SupplyAssetsUsd.Float64()

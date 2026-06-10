@@ -73,7 +73,7 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 		{Method: "eth_estimateGas", Args: []any{arg, "latest"}, Result: &gasHex},
 	}
 
-	if err := c.Conn.SecondCallCtx(ctx, batch); err != nil {
+	if err := c.Conn.CallCtx(ctx, batch); err != nil {
 		return 0, fmt.Errorf("dryRun batch: %w", err)
 	}
 	for _, b := range batch {

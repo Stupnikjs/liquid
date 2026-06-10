@@ -16,7 +16,7 @@ func main() {
 
 	filter = api.MarketFilters{
 		MaxUsdMarket: 10_000_000_000,
-		MinUsdMarket: 2_000,
+		MinUsdMarket: 4_000,
 	}
 
 	chainid := os.Args[1]
@@ -28,17 +28,16 @@ func main() {
 	wg.Add(1)
 	go func() {
 		for {
-			var r *runner.Runner
+
 			switch chainid_int {
 			case 8453:
-				r = runner.Wrapper(config.LoadBaseConfig(), filter)
+				runner.Wrapper(config.LoadBaseConfig(), filter)
 			case 747474:
-				r = runner.Wrapper(config.LoadKatanaConfig(), filter)
+				runner.Wrapper(config.LoadKatanaConfig(), filter)
 			case 42161:
 				// arb marche pas
-				r = runner.Wrapper(config.LoadArbitrumConfig(), filter)
+				runner.Wrapper(config.LoadArbitrumConfig(), filter)
 			}
-			ParseCmd(r)
 		}
 
 	}()

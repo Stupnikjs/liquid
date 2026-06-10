@@ -15,7 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-var MAX_FLUSH_QUEUE_SIZE = 50 // for test
+const MAX_FLUSH_QUEUE_SIZE = 50 // for test
+const NANO_TIME_LIMIT = 2_000_000_000
 
 // One routine per market with dynamic interval based on distance to liquidation (HF = 1)
 // Hold Liquidation logic
@@ -27,7 +28,7 @@ type marketState struct {
 	fastMode  bool // alchemy on true
 }
 
-func (c *MarketConsumer) OnChainRefreshRoutine(ctx context.Context, liquidationCh chan cache.BorrowPosition) {
+func (c *MarketConsumer) MarketRoutineWrapper(ctx context.Context, liquidationCh chan cache.BorrowPosition) {
 	for _, id := range c.Cache.Markets.Ids() {
 		go c.MarketRoutine(ctx, liquidationCh, id)
 	}
@@ -57,8 +58,11 @@ func (c *MarketConsumer) MarketRoutine(ctx context.Context, liquidationCh chan c
 				ms.ticker.Reset(interval)
 			}
 			ms.interval = interval
-			if interval.Nanoseconds() < 2_000_000_000 || !ms.fastMode {
+			if interval.Nanoseconds() < NANO_TIME_LIMIT && !ms.fastMode {
 				ms.fastMode = true
+			}
+			if interval.Nanoseconds() >= NANO_TIME_LIMIT && ms.fastMode {
+				ms.fastMode = false
 			}
 		}
 	}
@@ -95,25 +99,22 @@ func SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.MarketParams
 	return time.NewTicker(interval), interval
 }
 
+// OnchainRefresh
 func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32]byte, liquidationCh chan cache.BorrowPosition) time.Duration {
-	start := time.Now().UnixNano()
 	ms.tickCount++
+
 	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
+
 	snap := r.Cache.Markets.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
-		log.Println("snap is nil or has no pos")
 		return 10 * time.Hour
 	}
-
 	morphoM := r.Cache.MarketMap[id]
-
 	_, interval := SnapToTickerInterval(*snap, morphoM)
+
 	r.LiquidationCheck(ctx, *snap, ms, liquidationCh)
-	latency := (time.Now().UnixNano() - start) / 1_000_000
-	if ms.tickCount%1000 == 0 {
-		log.Printf("latency:%dms %s %s", latency, morphoM.GetPair(), snap.Analysis().String())
-	}
+
 	err := r.ToDBEntryQueue(id, *snap)
 	if err != nil {
 		log.Printf("error adding entry to queue: %v", err)
@@ -124,14 +125,16 @@ func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32
 // RPC Call Oracle only or Markets
 func (r *MarketConsumer) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [32]byte) {
 	morphoM := r.Cache.MarketMap[id]
+	oracleMethod := *r.Config.MorphoABI.Oracle.Price
+	marketMethod := *r.Config.MorphoABI.Blue.Market
 	if ms.tickCount%20 == 0 {
 
-		if err := onchain.OnChainRefresh(r.Conn, r.Config.Addresses.Morpho, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price, r.Config.MorphoABI.Blue.Market, ms.fastMode); err != nil {
+		if err := onchain.OnChainRefresh(r.Conn, r.Config.Addresses.Morpho, ctx, r.Cache, morphoM, &oracleMethod, &marketMethod, ms.fastMode); err != nil {
 			log.Printf("full refresh error: %v", err)
 		}
 		return
 	}
-	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache, morphoM, r.Config.MorphoABI.Oracle.Price, ms.fastMode); err != nil {
+	if err := onchain.OnChainOracleRefresh(r.Conn, ctx, r.Cache, morphoM, &oracleMethod, ms.fastMode); err != nil {
 		log.Printf("oracle refresh error: %v", err)
 	}
 }

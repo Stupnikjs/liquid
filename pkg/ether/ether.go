@@ -33,17 +33,19 @@ func NewABICall(
 	args []any,
 	decode func(outputs abi.Arguments, data []byte) error,
 ) (*AbiCall, error) {
+
 	input, err := method.Inputs.Pack(args...)
 	if err != nil {
 		return nil, fmt.Errorf("pack %s: %w", method.Name, err)
 	}
-	calldata := append(method.ID, input...)
-
+	calldata := make([]byte, 4+len(input))
+	copy(calldata[:4], method.ID)
+	copy(calldata[4:], input)
 	raw := new(hexutil.Bytes)
 	return &AbiCall{
 		Elem: rpc.BatchElem{
 			Method: "eth_call",
-			Args:   []interface{}{CallMsg{To: to, Data: calldata}, "latest"},
+			Args:   []any{CallMsg{To: to, Data: calldata}, "latest"},
 			Result: raw,
 		},
 		Raw: raw,

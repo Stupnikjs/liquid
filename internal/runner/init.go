@@ -105,13 +105,15 @@ func (c *MarketConsumer) LogMarkets() {
 func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
 	var wg sync.WaitGroup
 	for _, id := range c.Cache.Markets.Ids() {
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		wg.Add(1)
 		go func(id [32]byte) {
 			m := c.Cache.MarketMap[id]
 			defer wg.Done()
+			oracleMethod := *c.Config.MorphoABI.Oracle.Price
+			marketMethod := *c.Config.MorphoABI.Blue.Market
 			// no fast mode here
-			err := onchain.OnChainRefresh(c.Conn, c.Config.Addresses.Morpho, ctx, c.Cache, m, c.Config.MorphoABI.Oracle.Price, c.Config.MorphoABI.Blue.Market, false)
+			err := onchain.OnChainRefresh(c.Conn, c.Config.Addresses.Morpho, ctx, c.Cache, m, &oracleMethod, &marketMethod, false)
 			if err != nil {
 				fmt.Println(err)
 			}
