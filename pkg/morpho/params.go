@@ -28,12 +28,11 @@ type MarketParams struct {
 }
 
 type MarketContractParams struct {
-	LoanToken       common.Address // 20
-	CollateralToken common.Address // 20
-	Oracle          common.Address // 20
-	// 4 padding
-	Irm  common.Address
-	LLTV *big.Int // 8
+	LoanToken       common.Address `abi:"loanToken"`
+	CollateralToken common.Address `abi:"collateralToken"`
+	Oracle          common.Address `abi:"oracle"`
+	Irm             common.Address `abi:"irm"`
+	LLTV            *big.Int       `abi:"lltv"`
 }
 
 func (m *MarketParams) ToMarketContractParams() *MarketContractParams {

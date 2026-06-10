@@ -103,6 +103,7 @@ func BuildLiquidateCalldata(
 	minOut *big.Int,
 ) ([]byte, error) {
 	liquidatorMethod := LiquidatorAbiMethod()
+	fmt.Println(marketParams)
 	args, err := liquidatorMethod.Inputs.Pack(
 		marketParams,
 		borrower,

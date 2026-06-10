@@ -14,8 +14,10 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/joho/godotenv"
 )
 
@@ -78,6 +80,7 @@ func TestWrapETH(t *testing.T) {
 func (a *AnvilInstance) ApproveAndBorrow(t *testing.T, collateralAmount, borrowAmount *big.Int) {
 	t.Helper()
 	ctx := context.Background()
+	// borrowing as anvil_pk0
 	txCtx, _ := a.newTxCtx(t, anvil_pk0)
 
 	// 1. Approve WETH → Morpho
@@ -164,7 +167,7 @@ func TestBorrowUSDC(t *testing.T) {
 	a.WrapETH(t, oneETH)
 
 	// Emprunter le max soit 1ETH en USDC * LLTV  (6 décimales)
-	amount := new(big.Int).Mul(market.LLTV, big.NewInt(2300))
+	amount := new(big.Int).Mul(market.LLTV, big.NewInt(1600))
 	borrowAmount := new(big.Int).Div(amount, big.NewInt(1e12))
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
@@ -183,6 +186,7 @@ func (a *AnvilInstance) LiquidationSetup(t *testing.T, ethprice *big.Int) {
 
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
 }
+
 func TestBorrowUSDCAndLiquidate(t *testing.T) {
 
 	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
@@ -192,13 +196,10 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	sender := crypto.PubkeyToAddress(privKey.PublicKey)
 	t.Logf("sender: %s", sender.Hex())
 
-	ownerSel := crypto.Keccak256([]byte("owner()"))[:4]
-	res, _ := txCtx.client.CallContract(ctx, ethereum.CallMsg{
-		To:   &config.BaseLiquidatorNew,
-		Data: ownerSel,
-	}, nil)
-	t.Logf("owner:  0x%x", res[12:32])
-	t.Log(err)
+	err = txCtx.client.Client().Call(nil, "anvil_setBalance", sender.Hex(), hexutil.EncodeBig(new(big.Int).Mul(big.NewInt(10), big.NewInt(1e18))))
+	if err != nil {
+		t.Fatalf("anvil_setBalance: %v", err)
+	}
 	// lire le prix depuis l'oracle Morpho (retourne price avec 36 decimales)
 	calldata := crypto.Keccak256([]byte("price()"))[:4]
 	result, err := txCtx.client.CallContract(ctx, ethereum.CallMsg{
@@ -208,26 +209,38 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	t.Log(err)
 	price := new(big.Int).SetBytes(result)
 	a.LiquidationSetup(t, price)
+	marketParam := *market.ToMarketContractParams()
 
 	calldata, err = liquidate.BuildLiquidateCalldata(
-		*market.ToMarketContractParams(),
+		marketParam,
 		common.HexToAddress(FundedAccounts[0]),
 		utils.WAD,
 		big.NewInt(0),
-		[]swap.SwapStep{{}},
+		[]swap.SwapStep{buildWETHUSDCSwapStep()},
 		big.NewInt(0),
 	)
 	if err != nil {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
+	// Drop oracle à 80%
+	price80 := new(big.Int).Mul(price, big.NewInt(80))
+	price80.Div(price80, big.NewInt(100))
+	a.SetOraclePrice(t, txCtx.client, market.Oracle, price80)
 
-	// time wrap or oracle manipulation
+	setTargetSig := crypto.Keccak256([]byte("setTarget(address,bool)"))[:4]
+	data := make([]byte, 4+32+32)
+	copy(data[:4], setTargetSig)
+	copy(data[4+12:36], config.BaseUniswapV3Router.Bytes())
+	data[67] = 0x01 // bool true
+
+	sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID,
+		config.BaseLiquidatorNew, big.NewInt(0), data, txCtx.privKey)
 
 	receipt := sendAndWait(
 		t,
 		txCtx.client,
 		context.Background(),
-		txCtx.nonce,
+		txCtx.nonce+1,
 		txCtx.gasPrice,
 		txCtx.chainID,
 		config.BaseLiquidatorNew, // to: le contrat liquidateur
@@ -238,16 +251,4 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 
 	t.Logf("liquidation txHash: %s, status: %d", receipt.TxHash, receipt.Status)
 
-}
-
-func TestIntegration(t *testing.T) {
-	// faire un cache avec 1 seul pos
-
-	// lancer le runner sur anvil sans call api ni websocket
-
-	// borrow
-
-	// Crash l'oracle
-
-	// laisser le bot liquidate
 }

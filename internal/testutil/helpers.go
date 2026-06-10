@@ -7,9 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
+	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -124,4 +127,40 @@ func encodeMarketParams(m morpho.MarketParams) []byte {
 	copy(buf[96+12:128], m.Irm.Bytes())
 	m.LLTV.FillBytes(buf[128:160])
 	return buf
+}
+
+func (a *AnvilInstance) SetOraclePrice(t *testing.T, client *ethclient.Client, oracle common.Address, price *big.Int) {
+	priceBytes := make([]byte, 32)
+	price.FillBytes(priceBytes)
+
+	code := []byte{0x7f}
+	code = append(code, priceBytes...)
+	code = append(code, 0x60, 0x00, 0x52, 0x60, 0x20, 0x60, 0x00, 0xf3)
+
+	err := client.Client().Call(nil, "anvil_setCode", oracle.Hex(), hexutil.Encode(code))
+	if err != nil {
+		t.Fatalf("anvil_setCode: %v", err)
+	}
+}
+
+func buildWETHUSDCSwapStep() swap.SwapStep {
+
+	exactSingleInputMethod := swap.UniExactInputSingleMethod()
+	data, _ := exactSingleInputMethod.Inputs.Pack(
+		weth,
+		usdc,
+		big.NewInt(int64(0)),
+		config.BaseLiquidatorNew,
+		big.NewInt(0), // placeholder, patché on-chain
+		big.NewInt(0),
+		big.NewInt(0),
+	)
+
+	return swap.SwapStep{
+		Target:         config.BaseUniswapV3Router,
+		Data:           data,
+		TokenIn:        weth,
+		TokenOut:       usdc,
+		AmountInOffset: big.NewInt(132),
+	}
 }
