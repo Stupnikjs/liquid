@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/big"
 	"slices"
-	"time"
 
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
@@ -147,7 +146,6 @@ func AccrueInterestEventProcess(c *cache.MarketStore, log *types.Log, mabi *morp
 		}
 		m.Stats.TotalBorrowAssets.Add(m.Stats.TotalBorrowAssets, interest)
 		m.Stats.BorrowRate = prevBorrowRate
-		m.Stats.LastUpdate = time.Now().Unix()
 	})
 }
 

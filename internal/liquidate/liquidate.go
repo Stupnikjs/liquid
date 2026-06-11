@@ -69,7 +69,7 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 		return
 	}
 
-	log.Printf("sending liquidation call %s \n", p.String(market, snap.OraclePrice))
+	log.Printf("sending liquidation call %s \n", p.String(market, snap.Oracle.Price))
 	err = c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
 		log.Printf("[liq] tx failed for %s: %v", p.Address, err)

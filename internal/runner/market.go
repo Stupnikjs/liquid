@@ -167,7 +167,7 @@ func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.Market
 
 		// now HF is < 1
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
-			pos.Log()
+			log.Printf("sending pos to liquidation chan \n %s \n", pos.String(morphoM, snap.Oracle.Price))
 			liquidationCh <- pos
 		}
 		ms.ignoreMap[pos.Address]++

@@ -78,7 +78,7 @@ func (r *Runner) Init(ctx context.Context) {
 	}
 	r.MarketConsumer.OnChainRefreshInit(ctx)
 	r.QuoteConsumer.QuotePools()
-	r.MarketConsumer.LogMarkets()
+	r.MarketConsumer.Cache.LogMarkets()
 
 }
 
