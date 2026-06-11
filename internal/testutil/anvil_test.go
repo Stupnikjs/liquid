@@ -234,7 +234,7 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 	data[67] = 0x01 // bool true
 
 	sendAndWait(t, txCtx.client, ctx, txCtx.nonce, txCtx.gasPrice, txCtx.chainID,
-		config.BaseLiquidatorNew, big.NewInt(0), data, txCtx.privKey)
+		config.BaseLiquidatorLast, big.NewInt(0), data, txCtx.privKey)
 
 	receipt := sendAndWait(
 		t,
@@ -243,9 +243,9 @@ func TestBorrowUSDCAndLiquidate(t *testing.T) {
 		txCtx.nonce+1,
 		txCtx.gasPrice,
 		txCtx.chainID,
-		config.BaseLiquidatorNew, // to: le contrat liquidateur
-		big.NewInt(0),            // value: 0 ETH
-		calldata,                 // data: calldata encodé
+		config.BaseLiquidatorLast, // to: le contrat liquidateur
+		big.NewInt(0),             // value: 0 ETH
+		calldata,                  // data: calldata encodé
 		txCtx.privKey,
 	)
 

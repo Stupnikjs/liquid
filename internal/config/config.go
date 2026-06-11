@@ -52,7 +52,7 @@ func LoadBaseConfig() Config {
 		Addresses: Addresses{
 			Wallet:             BaseWalletAddr,
 			Morpho:             MorphoMain,
-			LiquidatorContract: BaseLiquidatorNew,
+			LiquidatorContract: BaseLiquidatorLast,
 		},
 		ChainID: uint32(chainid),
 		Endpoints: connector.RPCEndpoints{
@@ -85,7 +85,7 @@ func LoadArbitrumConfig() Config {
 		Addresses: Addresses{
 			Wallet:             ArbitrumWalletAddress,
 			Morpho:             ArbitrumMorphoBlueAddr,
-			LiquidatorContract: ArbitrumLiquidatorAddr,
+			LiquidatorContract: ArbitrumLiquidatorNew,
 		},
 		ChainID: uint32(chainid),
 		Endpoints: connector.RPCEndpoints{

@@ -150,7 +150,7 @@ func buildWETHUSDCSwapStep() swap.SwapStep {
 		weth,
 		usdc,
 		big.NewInt(int64(0)),
-		config.BaseLiquidatorNew,
+		config.BaseLiquidatorLast,
 		big.NewInt(0), // placeholder, patché on-chain
 		big.NewInt(0),
 		big.NewInt(0),

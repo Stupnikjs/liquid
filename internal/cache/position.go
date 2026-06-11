@@ -6,6 +6,7 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/api"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -92,12 +93,12 @@ func ApiItemToPos(p api.PositionItem, marketId [32]byte) *BorrowPosition {
 
 }
 
-func (p *BorrowPosition) String(morphoM morpho.Market, oraclePrice *big.Int) string {
+func (p *BorrowPosition) String(morphoM morpho.MarketParams, oraclePrice *big.Int) string {
 	return fmt.Sprintf("borrower %s usd:%s for market %s hf:%s collateralAsset:%s oraclePrice:%s",
-		pos.Address,
-		utils.FormatWAD(pos.BorrowAssetsUsd),
+		p.Address,
+		utils.FormatWAD(p.BorrowAssetsUsd),
 		morphoM.GetPair(),
-		utils.FormatWAD(pos.CachedHF),
-		utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
+		utils.FormatWAD(p.CachedHF),
+		utils.FormatDecimals(p.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
 		utils.FormatDecimals(oraclePrice, 36))
 }
