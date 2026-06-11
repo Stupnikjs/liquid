@@ -171,13 +171,3 @@ func OnChainRefresh(
 
 	return nil
 }
-
-func OnChainMarketRefresh(conn connector.Connector,
-	morphoAddr common.Address,
-	ctx context.Context,
-	c *cache.Cache,
-	mParam morpho.MarketParams,
-	marketMethod *abi.Method,
-	fastMode bool) {
-
-}

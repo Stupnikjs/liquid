@@ -29,7 +29,7 @@ type Connector interface {
 
 	CallCtx(ctx context.Context, calls []rpc.BatchElem) error
 
-	// SecondCallCtx dispatches batch eth_calls on the secondary RPC.
+	// SecondCallCtx only take one call by one
 	// Use for non-critical calls: historical prices, backtesting, quotes.
 	SecondCallCtx(ctx context.Context, calls rpc.BatchElem) error
 

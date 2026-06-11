@@ -110,10 +110,6 @@ func (a *AnvilInstance) DialWS(t *testing.T) *w3.Client {
 	return client
 }
 
-// FundedAccounts returns the 10 pre-funded accounts Anvil creates by default.
-// These are deterministic — same private keys every run.
-// Index 0 is conventionally used as the "wallet" in tests.
-
 // WaitForBlock blocks until Anvil has mined at least n blocks beyond the
 // current head, or ctx is cancelled. Useful for tests that need confirmations.
 func WaitForBlock(ctx context.Context, client *w3.Client, n uint64) error {
