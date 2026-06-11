@@ -40,7 +40,7 @@ func LoadBaseConfig() Config {
 	}
 	chainid := 8453
 
-	signer, err := NewBaseSigner(int64(chainid))
+	signer, err := NewSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -73,7 +73,7 @@ func LoadArbitrumConfig() Config {
 	}
 	chainid := 42161
 
-	signer, err := NewArbitrumSigner(int64(chainid))
+	signer, err := NewSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -105,7 +105,7 @@ func LoadKatanaConfig() Config {
 		log.Println("no .env file found, using system env")
 	}
 	chainid := 747474
-	signer, err := NewKatanaSigner(int64(chainid))
+	signer, err := NewSigner(int64(chainid))
 	if err != nil {
 		fmt.Println(err)
 	}

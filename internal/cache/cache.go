@@ -55,8 +55,6 @@ type Oracle struct {
 // within api refresh time bigest borrow might be over swappable amount if liquidated fast
 type MarketStats struct {
 	TotalBorrowAssets, TotalBorrowShares, BorrowRate, MaxCollateralPos *big.Int
-	SwapFee                                                            uint32
-	LastUpdate                                                         int64
 }
 
 type MarketSnapshot struct {
@@ -100,8 +98,4 @@ func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.Mar
 		Markets:   store,
 		MarketMap: marketMap, // immutable
 	}
-}
-
-func (c *Cache) GetMorphoMarketFromId(id [32]byte) morpho.MarketParams {
-	return c.MarketMap[id]
 }

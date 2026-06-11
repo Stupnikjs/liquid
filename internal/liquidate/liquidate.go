@@ -9,11 +9,9 @@ import (
 	"github.com/Stupnikjs/liquid/internal/cache"
 	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/internal/onchain"
-	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 type Liquidable struct {
@@ -71,13 +69,13 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 		return
 	}
 
-	log.Printf("[liq] sending tx for %s seized=%s market %s  \n", p.Address, utils.FormatDecimals(result.SeizeAssets, int(market.CollateralTokenDecimals)), market.GetPair())
+	log.Printf("sending liquidation call %s \n", p.String(market, snap.OraclePrice))
 	err = c.LiquidateCall(ctx, result.CallData, result.GasEstimate)
 	if err != nil {
 		log.Printf("[liq] tx failed for %s: %v", p.Address, err)
 		return
 	}
-	log.Printf("[liq] ✓ liquidated pair%s marketid:%s borrower:%s", market.GetPair(), hexutil.Encode(market.ID[:]), p.Address)
+
 }
 
 func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {
@@ -86,6 +84,7 @@ func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstima
 		Calldata:    calldata,
 		GasEstimate: gasEstimate,
 	}
+
 	_, err := onchain.SendSignedTx(ctx, c.Conn, c.Config.Addresses.Wallet, c.Config.Signer, tx)
 	return err
 }

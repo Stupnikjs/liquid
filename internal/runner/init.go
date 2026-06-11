@@ -76,33 +76,15 @@ func (r *Runner) Init(ctx context.Context) {
 	if err != nil {
 		log.Printf("initial api call error: %v", err)
 	}
-	r.MarketConsumer.OnChainRefreshAll(ctx)
-	fmt.Println("before quote", len(r.MarketConsumer.Cache.Markets.Ids()))
+	r.MarketConsumer.OnChainRefreshInit(ctx)
 	r.QuoteConsumer.QuotePools()
-	fmt.Println("after quote", len(r.MarketConsumer.Cache.Markets.Ids()))
-	fmt.Println(len(r.MarketConsumer.Cache.Markets.Ids()))
-	log.Println("Quoting over ")
 	r.MarketConsumer.LogMarkets()
 
 }
 
-func (c *MarketConsumer) LogMarkets() {
-	ids := c.Cache.Markets.Ids()
-	for _, id := range ids {
-		m := c.Cache.MarketMap[id]
-		snap := c.Cache.Markets.GetSnapshot(id)
-		if snap == nil {
-			continue
-		}
-		fmt.Printf("[%s/%s] chain %d \n",
-			m.CollateralTokenStr,
-			m.LoanTokenStr,
-			c.Config.ChainID)
-	}
-}
-
 // on chain call for all active market
-func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
+// slow mode
+func (c *MarketConsumer) OnChainRefreshInit(ctx context.Context) {
 	var wg sync.WaitGroup
 	for _, id := range c.Cache.Markets.Ids() {
 		time.Sleep(100 * time.Millisecond)
@@ -112,7 +94,7 @@ func (c *MarketConsumer) OnChainRefreshAll(ctx context.Context) {
 			defer wg.Done()
 			oracleMethod := *c.Config.MorphoABI.Oracle.Price
 			marketMethod := *c.Config.MorphoABI.Blue.Market
-			// no fast mode here
+
 			err := onchain.OnChainRefresh(c.Conn, c.Config.Addresses.Morpho, ctx, c.Cache, m, &oracleMethod, &marketMethod, false)
 			if err != nil {
 				fmt.Println(err)

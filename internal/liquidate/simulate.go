@@ -15,8 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-// snap nil guard upon this func
-// err is passed to Liquidable
 func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) (*Liquidable, error) {
 	routes := c.SwapCache.FindRoutes(m.CollateralToken, m.LoanToken, 3)
 	route, err := swap.BestRoute(routes, big.NewInt(0))
@@ -28,7 +26,7 @@ func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketP
 	if err != nil {
 		return nil, fmt.Errorf("error calculating max swap amount: %w", err)
 	}
-	log.Printf("maxswap amount: %s \n", maxSwapAmount.String())
+
 	l := c.ComputeAmounts(m, snap, p, maxSwapAmount)
 	if len(routes) == 0 {
 		return l, fmt.Errorf("route is len 0")
@@ -85,15 +83,10 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 	return uint64(gasHex), nil
 }
 
-// Gets snapshot
-// Compute liquidation values
-// Encode args
-// Simulate with eth_call
 func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition, maxSwapAmount *big.Int) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
 
-	// 1. Math pure — pas de RPC
 	seizeAssets := morpho.ComputeSeizedAsset(
 		p.BorrowShares,
 		snap.Stats.TotalBorrowAssets,

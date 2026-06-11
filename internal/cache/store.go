@@ -81,6 +81,18 @@ type MarketAnalysis struct {
 	TotalAtRiskUSD *big.Int // valeur totale HF < 1.1
 }
 
+func (c *Cache) LogMarkets() {
+	ids := c.Markets.Ids()
+	for _, id := range ids {
+		m := c.MarketMap[id]
+		snap := c.Markets.GetSnapshot(id)
+		if snap == nil {
+			continue
+		}
+		fmt.Printf("[%s/%s]", m.CollateralTokenStr, m.LoanTokenStr)
+	}
+}
+
 func (s *MarketSnapshot) Analysis() MarketAnalysis {
 
 	onedot1 := []BorrowPosition{}

@@ -12,11 +12,11 @@ import (
 
 // useless remplacer par un seul
 
-func NewBaseSigner(chainId int64) (*Signer, error) {
+func NewSigner(chainId int64) (*Signer, error) {
 
 	keyHex := os.Getenv("BASE_PK")
 	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__BASE_PRIVATE_KEY not set")
+		return nil, fmt.Errorf("LIQUIDATOR__PRIVATE_KEY not set")
 	}
 	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
 	if err != nil {
@@ -30,143 +30,4 @@ func NewBaseSigner(chainId int64) (*Signer, error) {
 
 func (s *Signer) Sign(tx *types.Transaction) (*types.Transaction, error) {
 	return types.SignTx(tx, s.signer, s.key)
-}
-
-func NewMainnetSigner() (*Signer, error) {
-	return nil, nil
-}
-
-func NewArbitrumSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__ARBITRUM_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewOptimismSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__OPT_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewUniChainSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("UNI_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__UNI_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewWorldChainSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("WORLD_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__WORLD_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewKatanaSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__KATANA_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewHypeSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__HYPE_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewUnichainSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR__UNICHAIN_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewPolygonSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR_POLYGON_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
-}
-
-func NewMonadSigner(chainid int64) (*Signer, error) {
-	keyHex := os.Getenv("BASE_PK")
-	if keyHex == "" {
-		return nil, fmt.Errorf("LIQUIDATOR_MONAD_PRIVATE_KEY not set")
-	}
-	key, err := crypto.HexToECDSA(strings.TrimPrefix(keyHex, "0x"))
-	if err != nil {
-		return nil, fmt.Errorf("invalid private key: %w", err)
-	}
-	return &Signer{
-		key:    key,
-		signer: types.NewLondonSigner(big.NewInt(chainid)),
-	}, nil
 }

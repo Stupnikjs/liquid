@@ -26,33 +26,6 @@ type PositionSnapshot struct {
 	SnapshotTS        int64
 }
 
-// for every liquidation we try to find matching borrower
-func GetLiquidations(chainint int64) []api.LiquidationItem {
-	liquidations, err := api.FetchAllLiquidations(context.Background(), uint32(chainint))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	borrowers := []string{}
-	for _, liquidation := range liquidations {
-		borrowers = append(borrowers, liquidation.Data.Liquidator)
-	}
-
-	if len(borrowers) == 0 {
-		fmt.Println("No borrowers found")
-		return []api.LiquidationItem{}
-	}
-	return liquidations
-}
-
-func BorrowersFromLiquidations(liqItems []api.LiquidationItem) []string {
-	borrowers := []string{}
-	for _, item := range liqItems {
-		borrowers = append(borrowers, item.Data.Position.User.Address)
-	}
-	return borrowers
-}
-
 func main() {
 	chainid := os.Args[1]
 	chainint, err := strconv.ParseInt(chainid, 10, 64)
@@ -100,6 +73,7 @@ func CheckLiquidations(db *sql.DB, chainint int64) ([]PositionSnapshot, error) {
 		args[i] = b
 	}
 
+	// ajouter une fenetre temporelle pour filtrer
 	query := fmt.Sprintf(
 		"SELECT * FROM position_snapshots WHERE borrower_address IN (%s)",
 		strings.Join(placeholders, ","),
@@ -134,5 +108,33 @@ func CheckLiquidations(db *sql.DB, chainint int64) ([]PositionSnapshot, error) {
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
+	if len(positions) == 0 {
+		TruncDB(db)
+	}
 	return positions, err
+}
+
+// for every liquidation we try to find matching borrower
+func GetLiquidations(chainint int64) []api.LiquidationItem {
+	liquidations, err := api.FetchAllLiquidations(context.Background(), uint32(chainint))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return liquidations
+}
+
+func BorrowersFromLiquidations(liqItems []api.LiquidationItem) []string {
+	borrowers := []string{}
+	for _, item := range liqItems {
+		borrowers = append(borrowers, item.Data.Position.User.Address)
+	}
+	return borrowers
+}
+
+func TruncDB(db *sql.DB) {
+	_, err := db.Exec("DELETE FROM position_snapshots")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("DB truncated")
 }

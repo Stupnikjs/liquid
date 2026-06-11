@@ -12,7 +12,6 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 const MAX_FLUSH_QUEUE_SIZE = 50 // for test
@@ -103,6 +102,8 @@ func SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.MarketParams
 func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32]byte, liquidationCh chan cache.BorrowPosition) time.Duration {
 	ms.tickCount++
 
+	// Fetch MarketStats OraclePrice
+	// Recompute HF and sort
 	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
 
@@ -151,15 +152,13 @@ func (r *MarketConsumer) MarketRecompute(ms *marketState, id [32]byte) {
 
 }
 
-// Checking hf and sending pos into liquidation channel
-// updating market state ignore map on malformed pos
 func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState, liquidationCh chan cache.BorrowPosition) {
 	for _, pos := range snap.Positions {
 		// since positions are sorted by HF, we can break early
 		if pos.CachedHF == nil || pos.CachedHF.Cmp(utils.WAD) >= 0 {
 			break
 		}
-		// baddebt
+		// HF under 0.5
 		if pos.CachedHF.Cmp(utils.HALF_WAD) < 0 {
 			ms.ignoreMap[pos.Address] = 999
 			continue
@@ -168,14 +167,7 @@ func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.Market
 
 		// now HF is < 1
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {
-			log.Printf("liquidation check borrower %s usd:%s for market %s %s hf:%s collateralAsset:%s oraclePrice:%s",
-				pos.Address,
-				utils.FormatWAD(pos.BorrowAssetsUsd),
-				morphoM.GetPair(),
-				hexutil.Encode(pos.MarketID[:]),
-				utils.FormatWAD(pos.CachedHF),
-				utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
-				snap.Oracle.Price.String())
+			pos.Log()
 			liquidationCh <- pos
 		}
 		ms.ignoreMap[pos.Address]++

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/Stupnikjs/liquid/internal/utils"
@@ -89,4 +90,14 @@ func ApiItemToPos(p api.PositionItem, marketId [32]byte) *BorrowPosition {
 		Address:          common.HexToAddress(p.User.Address),
 	}
 
+}
+
+func (p *BorrowPosition) String(morphoM morpho.Market, oraclePrice *big.Int) string {
+	return fmt.Sprintf("borrower %s usd:%s for market %s hf:%s collateralAsset:%s oraclePrice:%s",
+		pos.Address,
+		utils.FormatWAD(pos.BorrowAssetsUsd),
+		morphoM.GetPair(),
+		utils.FormatWAD(pos.CachedHF),
+		utils.FormatDecimals(pos.CollateralAssets, int(morphoM.CollateralTokenDecimals)),
+		utils.FormatDecimals(oraclePrice, 36))
 }

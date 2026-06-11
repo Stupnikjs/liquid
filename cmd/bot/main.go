@@ -16,7 +16,7 @@ func main() {
 
 	filter = api.MarketFilters{
 		MaxUsdMarket: 10_000_000_000,
-		MinUsdMarket: 4_000,
+		MinUsdMarket: 1_000,
 	}
 
 	chainid := os.Args[1]
@@ -35,7 +35,6 @@ func main() {
 			case 747474:
 				runner.Wrapper(config.LoadKatanaConfig(), filter)
 			case 42161:
-				// arb marche pas
 				runner.Wrapper(config.LoadArbitrumConfig(), filter)
 			}
 		}
