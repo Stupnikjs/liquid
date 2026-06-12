@@ -2,8 +2,7 @@ package runner
 
 
 type QuoterCache interface {
-
-
+     QuotePools()
 }
 
 
