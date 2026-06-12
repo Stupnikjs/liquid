@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-func ProcessEvents(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {
+func ProcessEvents(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) {
 	if len(log.Topics) == 0 {
 		return
 	}

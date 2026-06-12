@@ -3,15 +3,13 @@ package runner
 import (
 	"log"
 	"time"
-
-	"github.com/Stupnikjs/liquid/internal/cache"
 )
 
 const QUOTE_RATE_LIMIT = 500 * time.Millisecond
 
 func (q *QuoteConsumer) QuotePools() {
-	for id, m := range q.Cache.MarketMap {
-		snap := q.Cache.Markets.GetSnapshot(id)
+	for _, m := range q.Cache.AllMarkets() {
+		snap := q.Cache.GetSnapshot(m.ID)
 		if snap == nil {
 			continue
 		}
@@ -31,16 +29,14 @@ func (q *QuoteConsumer) QuotePools() {
 
 // cache
 func (q *QuoteConsumer) SelectMarketWithRoute() {
-	for _, m := range q.Cache.MarketMap {
+	for _, m := range q.Cache.AllMarkets() {
 		route, found := q.Routes.FindBestRoute(m.CollateralToken, m.LoanToken)
 		if found {
 			log.Printf("checking route for %s route of len %d \n", m.GetPair(), len(route))
 		}
 		if !found {
 
-			q.Cache.Markets.Update(m.ID, func(m *cache.Market) {
-				m.Canceled = true
-			})
+			q.Cache.CancelMarket(m.ID)
 		}
 	}
 }

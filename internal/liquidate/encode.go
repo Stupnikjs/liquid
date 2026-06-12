@@ -22,9 +22,9 @@ var liquidateFunc = w3.MustNewFunc(`liquidate(
 )`, "")
 */
 
-func (c *Consumer) ToLiquidationArg(l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
+func ToLiquidationArg(liquidatorContractAddr common.Address, l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
 	m := params.ToMarketContractParams()
-	steps, err := BuildSteps(route, c.Config.Addresses.LiquidatorContract)
+	steps, err := BuildSteps(route, liquidatorContractAddr)
 	if err != nil {
 		return nil, fmt.Errorf("build steps: %w", err)
 	}

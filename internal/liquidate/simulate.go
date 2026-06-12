@@ -15,45 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-func (c *Consumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) (*Liquidable, error) {
-	routes := c.SwapCache.FindRoutes(m.CollateralToken, m.LoanToken, 3)
-	route, err := swap.BestRoute(routes, big.NewInt(0))
-	if err != nil {
-		return nil, fmt.Errorf("err finding best route: %w", err)
-	}
-
-	maxSwapAmount, err := swap.RouteMaxAmountIn(route)
-	if err != nil {
-		return nil, fmt.Errorf("error calculating max swap amount: %w", err)
-	}
-
-	l := c.ComputeAmounts(m, snap, p, maxSwapAmount)
-	if len(routes) == 0 {
-		return l, fmt.Errorf("route is len 0")
-	}
-
-	data, err := c.ToLiquidationArg(l, m, route)
-	if err != nil {
-		return l, fmt.Errorf("to liquidation arg encoding err : %w", err)
-
-	}
-
-	l.CallData = data
-	gasVal, err := c.dryRun(ctx, data)
-	l.SimulatedAt = time.Now()
-	if err != nil {
-		return l, fmt.Errorf("eth_call failed: %w", err)
-	}
-	l.GasEstimate = gasVal
-	log.Printf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(m.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF))
-	l.IsLiquidable = true
-	return l, nil
-}
-
-// dryRun performs a batched eth_call + gas estimation against the liquidator
-// contract without submitting a transaction. Returns the gas estimate on
-// success, or an error if the call reverts (position not liquidable).
-func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err error) {
+func (c *LiquidateConsumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err error) {
 
 	arg := map[string]any{
 		"from": c.Config.Addresses.Wallet,
@@ -83,7 +45,46 @@ func (c *Consumer) dryRun(ctx context.Context, data []byte) (gasVal uint64, err 
 	return uint64(gasHex), nil
 }
 
-func (c *Consumer) ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition, maxSwapAmount *big.Int) *Liquidable {
+func (c *LiquidateConsumer) SimulateAndPreComputeTx(ctx context.Context, m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) (*Liquidable, error) {
+	routes := c.SwapCache.FindRoutes(m.CollateralToken, m.LoanToken, 3)
+	route, err := swap.BestRoute(routes, big.NewInt(0))
+	if err != nil {
+		return nil, fmt.Errorf("err finding best route: %w", err)
+	}
+
+	maxSwapAmount, err := swap.RouteMaxAmountIn(route)
+	if err != nil {
+		return nil, fmt.Errorf("error calculating max swap amount: %w", err)
+	}
+
+	l := ComputeAmounts(m, snap, p, maxSwapAmount)
+	if len(routes) == 0 {
+		return l, fmt.Errorf("route is len 0")
+	}
+
+	data, err := ToLiquidationArg(c.Config.Addresses.LiquidatorContract, l, m, route)
+	if err != nil {
+		return l, fmt.Errorf("to liquidation arg encoding err : %w", err)
+
+	}
+
+	l.CallData = data
+	gasVal, err := c.dryRun(ctx, data)
+	l.SimulatedAt = time.Now()
+	if err != nil {
+		return l, fmt.Errorf("eth_call failed: %w", err)
+	}
+	l.GasEstimate = gasVal
+	log.Printf("seized asset %s with successfull simulation  %s", utils.FormatDecimals(l.SeizeAssets, int(m.CollateralTokenDecimals)), utils.FormatWAD(l.Pos.CachedHF))
+	l.IsLiquidable = true
+	return l, nil
+}
+
+// dryRun performs a batched eth_call + gas estimation against the liquidator
+// contract without submitting a transaction. Returns the gas estimate on
+// success, or an error if the call reverts (position not liquidable).
+
+func ComputeAmounts(m morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition, maxSwapAmount *big.Int) *Liquidable {
 	out := &Liquidable{}
 	out.Pos = p
 

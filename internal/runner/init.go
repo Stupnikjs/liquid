@@ -14,7 +14,6 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/pkg/connector"
-	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -22,40 +21,29 @@ import (
 type Runner struct {
 	MarketConsumer    *MarketConsumer
 	QuoteConsumer     *QuoteConsumer
-	LiquidateConsumer *liquidate.Consumer
-}
-
-type MarketCache interface {
-
-	// API
-	ApiCall() error
-	ApiResyncRoutine(ctx context.Context)
-
-	// Lecture
-	Ids() [][32]byte
-	GetSnapshot(id [32]byte) *cache.MarketSnapshot
-	MorphoMarketByID(id [32]byte) morpho.MarketParams
-
-	// Debug
-	LogMarkets()
+	LiquidateConsumer *liquidate.LiquidateConsumer
 }
 
 type MarketConsumer struct {
 	Conn    connector.Connector
 	Config  config.Config
-	Cache   *cache.Cache
+	Cache   cache.MarketCache
 	Store   *db.Store
 	EventCh <-chan *types.Log
+}
+
+type QuoterCache interface {
+	QuotePools()
 }
 
 type QuoteConsumer struct {
 	Conn   connector.Connector
 	Config config.Config
-	Cache  *cache.Cache
+	Cache  cache.MarketCache
 	Routes *swap.RouteCache
 }
 
-func NewMarketConsumer(conn connector.Connector, config config.Config, cache *cache.Cache, routes *swap.RouteCache, store *db.Store) *MarketConsumer {
+func NewMarketConsumer(conn connector.Connector, config config.Config, cache cache.MarketCache, routes *swap.RouteCache, store *db.Store) *MarketConsumer {
 	return &MarketConsumer{
 		Conn:    conn,
 		Config:  config,
@@ -65,7 +53,7 @@ func NewMarketConsumer(conn connector.Connector, config config.Config, cache *ca
 	}
 }
 
-func NewQuoteConsumer(conn connector.Connector, config config.Config, cache *cache.Cache, routes *swap.RouteCache) *QuoteConsumer {
+func NewQuoteConsumer(conn connector.Connector, config config.Config, cache cache.MarketCache, routes *swap.RouteCache) *QuoteConsumer {
 	return &QuoteConsumer{
 		Conn:   conn,
 		Config: config,
@@ -74,14 +62,14 @@ func NewQuoteConsumer(conn connector.Connector, config config.Config, cache *cac
 	}
 }
 
-func NewRunner(conn connector.Connector, config config.Config, routeCache *swap.RouteCache, mCache *cache.Cache) *Runner {
+func NewRunner(conn connector.Connector, config config.Config, routeCache *swap.RouteCache, mCache cache.MarketCache) *Runner {
 	liquidateCh := make(chan cache.BorrowPosition, 1)
 	database, err := db.OpenDb(fmt.Sprintf("%d.db", config.ChainID))
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}
 	return &Runner{
-		LiquidateConsumer: liquidate.NewConsumer(conn, config, mCache, routeCache, liquidateCh),
+		LiquidateConsumer: liquidate.NewLiquidateConsumer(conn, config, mCache, routeCache, liquidateCh),
 		QuoteConsumer:     NewQuoteConsumer(conn, config, mCache, routeCache),
 		MarketConsumer:    NewMarketConsumer(conn, config, mCache, routeCache, &db.Store{DB: database, EntryToFlush: []db.Entry{}}),
 	}
@@ -102,11 +90,11 @@ func (r *Runner) Init(ctx context.Context) {
 // slow mode
 func (c *MarketConsumer) OnChainRefreshInit(ctx context.Context) {
 	var wg sync.WaitGroup
-	for _, id := range c.Cache.Markets.Ids() {
+	for _, id := range c.Cache.Ids() {
 		time.Sleep(100 * time.Millisecond)
 		wg.Add(1)
 		go func(id [32]byte) {
-			m := c.Cache.MarketMap[id]
+			m := c.Cache.MorphoMarketByID(id)
 			defer wg.Done()
 			oracleMethod := *c.Config.MorphoABI.Oracle.Price
 			marketMethod := *c.Config.MorphoABI.Blue.Market

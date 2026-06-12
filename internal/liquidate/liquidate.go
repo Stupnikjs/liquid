@@ -26,8 +26,8 @@ type Liquidable struct {
 	CallData     []byte
 }
 
-func NewConsumer(conn connector.Connector, config config.Config, cache *cache.Cache, swapCache *swap.RouteCache, ch chan cache.BorrowPosition) *Consumer {
-	return &Consumer{
+func NewLiquidateConsumer(conn connector.Connector, config config.Config, cache cache.MarketCache, swapCache *swap.RouteCache, ch chan cache.BorrowPosition) *LiquidateConsumer {
+	return &LiquidateConsumer{
 		Conn:      conn,
 		Config:    config,
 		SwapCache: swapCache,
@@ -36,22 +36,22 @@ func NewConsumer(conn connector.Connector, config config.Config, cache *cache.Ca
 	}
 }
 
-type Consumer struct {
+type LiquidateConsumer struct {
 	Conn      connector.Connector
 	Config    config.Config
 	SwapCache *swap.RouteCache
-	Cache     *cache.Cache
+	Cache     cache.MarketCache
 	Ch        chan cache.BorrowPosition
 }
 
-func (c *Consumer) Run(ctx context.Context) {
+func (c *LiquidateConsumer) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case pos := <-c.Ch:
-			m := c.Cache.MarketMap[pos.MarketID]
-			snap := c.Cache.Markets.GetSnapshot(pos.MarketID)
+			m := c.Cache.MorphoMarketByID(pos.MarketID)
+			snap := c.Cache.GetSnapshot(pos.MarketID)
 			if snap == nil {
 				continue
 			}
@@ -61,7 +61,7 @@ func (c *Consumer) Run(ctx context.Context) {
 }
 
 // args snap market can be deleted since all is in consumer only need pos
-func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) {
+func (c *LiquidateConsumer) liquidateWrapper(ctx context.Context, market morpho.MarketParams, snap *cache.MarketSnapshot, p *cache.BorrowPosition) {
 
 	result, err := c.SimulateAndPreComputeTx(ctx, market, snap, p)
 	if err != nil {
@@ -78,7 +78,7 @@ func (c *Consumer) liquidateWrapper(ctx context.Context, market morpho.MarketPar
 
 }
 
-func (c *Consumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {
+func (c *LiquidateConsumer) LiquidateCall(ctx context.Context, calldata []byte, gasEstimate uint64) error {
 	tx := onchain.TxParams{
 		To:          &c.Config.Addresses.LiquidatorContract,
 		Calldata:    calldata,

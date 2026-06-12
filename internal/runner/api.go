@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"log"
-	"math/big"
 	"sort"
 	"sync"
 	"time"
@@ -26,7 +25,7 @@ func (r *MarketConsumer) ApiCall() error {
 	var mu sync.Mutex
 	var firstErr error
 	ctx := context.Background()
-	for _, id := range r.Cache.Markets.Ids() {
+	for _, id := range r.Cache.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
@@ -68,13 +67,9 @@ func (r *MarketConsumer) ApiCall() error {
 				return
 			}
 			// maybe sorting by collateral here
-			r.Cache.Markets.Update(id, func(m *cache.Market) {
-				m.Positions = positions
-			})
+			r.Cache.UpdatePositionsSlice(id, positions)
 
-			r.Cache.Markets.Update(id, func(m *cache.Market) {
-				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
-			})
+			r.Cache.UpdateMaxCollateralPos(id, positions[0].CollateralAssets)
 
 		}(id)
 	}

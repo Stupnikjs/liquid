@@ -107,11 +107,11 @@ func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32
 	r.MarketOnchainRefresh(ctx, ms, id)
 	r.MarketRecompute(ms, id)
 
-	snap := r.Cache.Markets.GetSnapshot(id)
+	snap := r.Cache.GetSnapshot(id)
 	if snap == nil || len(snap.Positions) == 0 {
 		return 10 * time.Hour
 	}
-	morphoM := r.Cache.MarketMap[id]
+	morphoM := r.Cache.MorphoMarketByID(id)
 	_, interval := SnapToTickerInterval(*snap, morphoM)
 
 	r.LiquidationCheck(ctx, *snap, ms, liquidationCh)
@@ -125,7 +125,7 @@ func (r *MarketConsumer) MarketTick(ctx context.Context, ms *marketState, id [32
 
 // RPC Call Oracle only or Markets
 func (r *MarketConsumer) MarketOnchainRefresh(ctx context.Context, ms *marketState, id [32]byte) {
-	morphoM := r.Cache.MarketMap[id]
+	morphoM := r.Cache.MorphoMarketByID(id)
 	oracleMethod := *r.Config.MorphoABI.Oracle.Price
 	marketMethod := *r.Config.MorphoABI.Blue.Market
 	if ms.tickCount%20 == 0 {
@@ -163,7 +163,7 @@ func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.Market
 			ms.ignoreMap[pos.Address] = 999
 			continue
 		}
-		morphoM := r.Cache.MarketMap[snap.ID]
+		morphoM := r.Cache.MorphoMarketByID(pos.MarketID)
 
 		// now HF is < 1
 		if count, ok := ms.ignoreMap[pos.Address]; !ok || count < 10 {

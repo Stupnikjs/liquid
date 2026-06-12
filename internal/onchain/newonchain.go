@@ -114,7 +114,7 @@ func refresh(conn connector.Connector, ctx context.Context, calls []*ether.AbiCa
 func OnChainOracleRefresh(
 	conn connector.Connector,
 	ctx context.Context,
-	c *cache.Cache,
+	c cache.MarketCache,
 	mParam morpho.MarketParams,
 	oracleMethod *abi.Method,
 	fastMode bool,
@@ -130,9 +130,7 @@ func OnChainOracleRefresh(
 		return fmt.Errorf("OnChainOracleRefresh: %w", err)
 	}
 
-	c.Markets.Update(res.ID, func(m *market.Market) {
-		m.Oracle.Price = res.OraclePrice
-	})
+	c.UpdateOraclePrice(res.ID, res.OraclePrice)
 
 	return nil
 }
@@ -142,7 +140,7 @@ func OnChainRefresh(
 	conn connector.Connector,
 	morphoAddr common.Address,
 	ctx context.Context,
-	c *cache.Cache,
+	c cache.MarketCache,
 	mParam morpho.MarketParams,
 	oracleMethod *abi.Method,
 	marketMethod *abi.Method,
@@ -163,11 +161,7 @@ func OnChainRefresh(
 		return fmt.Errorf("OnChainRefresh: %w", err)
 	}
 
-	c.Markets.Update(res.ID, func(m *market.Market) {
-		m.Oracle.Price = res.OraclePrice
-		m.Stats.TotalBorrowAssets = res.Stats.TotalBorrowAssets
-		m.Stats.TotalBorrowShares = res.Stats.TotalBorrowShares
-	})
+	c.UpdateOnchainRefresh(res.ID, res.Stats.TotalBorrowShares, res.Stats.TotalBorrowAssets, res.OraclePrice)
 
 	return nil
 }

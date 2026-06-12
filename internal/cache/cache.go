@@ -103,3 +103,11 @@ func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.Mar
 func (c *Cache) MorphoMarketByID(id [32]byte) morpho.MarketParams {
 	return c.MarketMap[id]
 }
+
+func (c *Cache) AllMarkets() []morpho.MarketParams {
+	markets := make([]morpho.MarketParams, len(c.MarketMap))
+	for _, m := range c.MarketMap {
+		markets = append(markets, m)
+	}
+	return markets
+}
