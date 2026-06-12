@@ -7,6 +7,13 @@ type QuoterCache interface {
 
 
 type MarketCache interface {
-
+  UpdatePos
+  GetSnashot 
+  GetMarket
+  UpdateOnchainRefresh
+  UpdateOraclePrice
+  MarketRoutine
+  ApiCall
+ 
 
 }
