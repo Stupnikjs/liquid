@@ -31,11 +31,11 @@ func main() {
 
 			switch chainid_int {
 			case 8453:
-				runner.Wrapper(config.LoadBaseConfig(), filter)
+				runner.LaunchRunner(config.LoadBaseConfig(), filter)
 			case 747474:
-				runner.Wrapper(config.LoadKatanaConfig(), filter)
+				runner.LaunchRunner(config.LoadKatanaConfig(), filter)
 			case 42161:
-				runner.Wrapper(config.LoadArbitrumConfig(), filter)
+				runner.LaunchRunner(config.LoadArbitrumConfig(), filter)
 			}
 		}
 

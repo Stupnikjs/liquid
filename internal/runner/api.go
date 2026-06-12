@@ -13,7 +13,7 @@ import (
 	"github.com/Stupnikjs/liquid/pkg/api"
 )
 
-func (r *Runner) ApiResyncRoutine(ctx context.Context) {
+func (r *MarketConsumer) ApiResyncRoutine(ctx context.Context) {
 	utils.RunTicker(ctx, 30*time.Minute, func() {
 		if err := r.ApiCall(); err != nil {
 			log.Printf("api resync error: %v", err)
@@ -21,16 +21,16 @@ func (r *Runner) ApiResyncRoutine(ctx context.Context) {
 	})
 }
 
-func (r *Runner) ApiCall() error {
+func (r *MarketConsumer) ApiCall() error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var firstErr error
 	ctx := context.Background()
-	for _, id := range r.MarketConsumer.Cache.Markets.Ids() {
+	for _, id := range r.Cache.Markets.Ids() {
 		wg.Add(1)
 		go func(id [32]byte) {
 			defer wg.Done()
-			fetched, err := api.FetchAllPositions(ctx, id, r.MarketConsumer.Config.ChainID)
+			fetched, err := api.FetchAllPositions(ctx, id, r.Config.ChainID)
 			if err != nil {
 				mu.Lock()
 				if firstErr == nil {
@@ -68,11 +68,11 @@ func (r *Runner) ApiCall() error {
 				return
 			}
 			// maybe sorting by collateral here
-			r.MarketConsumer.Cache.Markets.Update(id, func(m *cache.Market) {
+			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Positions = positions
 			})
 
-			r.MarketConsumer.Cache.Markets.Update(id, func(m *cache.Market) {
+			r.Cache.Markets.Update(id, func(m *cache.Market) {
 				m.Stats.MaxCollateralPos = new(big.Int).Set(positions[0].CollateralAssets)
 			})
 

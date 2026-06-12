@@ -99,3 +99,7 @@ func NewCache(conf config.Config, markets []morpho.MarketParams, filters api.Mar
 		MarketMap: marketMap, // immutable
 	}
 }
+
+func (c *Cache) MorphoMarketByID(id [32]byte) morpho.MarketParams {
+	return c.MarketMap[id]
+}

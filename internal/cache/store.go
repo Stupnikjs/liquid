@@ -21,6 +21,7 @@ func (s *MarketStore) Ids() [][32]byte {
 
 }
 
+// need to unexport update for interface
 func (s *MarketStore) Update(id [32]byte, fn func(m *Market)) {
 	s.mu.RLock()
 	m := s.markets[id]
@@ -33,6 +34,39 @@ func (s *MarketStore) Update(id [32]byte, fn func(m *Market)) {
 	m.Mu.Lock()
 	fn(m)
 	m.Mu.Unlock()
+}
+
+// errase positions by new positions array
+func (c *Cache) UpdatePositionsSlice(id [32]byte, positions []*BorrowPosition) {
+	c.Markets.Update(id, func(m *Market) {
+		m.Positions = positions
+	})
+}
+
+func (c *Cache) UpdateMarketStats(id [32]byte, stats MarketStats) {
+	c.Markets.Update(id, func(m *Market) {
+		m.Stats = stats
+	})
+}
+
+func (c *Cache) UpdateOnchainRefresh(id [32]byte, totalBorrowShares, totalBorrowAssets, oraclePrice *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		m.Stats.TotalBorrowAssets = totalBorrowAssets
+		m.Stats.TotalBorrowShares = totalBorrowShares
+		m.Oracle.Price = oraclePrice
+	})
+}
+
+func (c *Cache) UpdateOraclePrice(id [32]byte, oraclePrice *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		m.Oracle.Price = oraclePrice
+	})
+}
+
+func (c *Cache) UpdateMaxCollateralPos(id [32]byte, MaxCollateralPos *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		m.Stats.MaxCollateralPos = MaxCollateralPos
+	})
 }
 
 func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {

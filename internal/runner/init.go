@@ -14,6 +14,7 @@ import (
 
 	"github.com/Stupnikjs/liquid/internal/onchain"
 	"github.com/Stupnikjs/liquid/pkg/connector"
+	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/Stupnikjs/liquid/pkg/swap"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -22,6 +23,21 @@ type Runner struct {
 	MarketConsumer    *MarketConsumer
 	QuoteConsumer     *QuoteConsumer
 	LiquidateConsumer *liquidate.Consumer
+}
+
+type MarketCache interface {
+
+	// API
+	ApiCall() error
+	ApiResyncRoutine(ctx context.Context)
+
+	// Lecture
+	Ids() [][32]byte
+	GetSnapshot(id [32]byte) *cache.MarketSnapshot
+	MorphoMarketByID(id [32]byte) morpho.MarketParams
+
+	// Debug
+	LogMarkets()
 }
 
 type MarketConsumer struct {
@@ -72,7 +88,7 @@ func NewRunner(conn connector.Connector, config config.Config, routeCache *swap.
 }
 
 func (r *Runner) Init(ctx context.Context) {
-	err := r.ApiCall()
+	err := r.MarketConsumer.ApiCall()
 	if err != nil {
 		log.Printf("initial api call error: %v", err)
 	}

@@ -18,11 +18,13 @@ func (r *Runner) Run(ctx context.Context) {
 	go r.MarketConsumer.MarketRoutineWrapper(ctx, r.LiquidateConsumer.Ch)
 	go r.MarketConsumer.EventListener(ctx)
 	go r.LiquidateConsumer.Run(ctx)
-	go r.ApiResyncRoutine(ctx)
+	go r.MarketConsumer.ApiResyncRoutine(ctx)
 	<-ctx.Done()
 }
 
-func Wrapper(conf config.Config, filters api.MarketFilters) *Runner {
+// for an integration test
+// mock api call => return same pos over and over
+func LaunchRunner(conf config.Config, filters api.MarketFilters) *Runner {
 	conn := connector.New(conf.Endpoints)
 	result, err := api.QueryMarkets(conf.ChainID)
 	if err != nil {
