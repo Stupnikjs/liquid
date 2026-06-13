@@ -28,7 +28,7 @@ type marketState struct {
 }
 
 func (c *MarketConsumer) MarketRoutineWrapper(ctx context.Context, liquidationCh chan cache.BorrowPosition) {
-	for _, id := range c.Cache.Markets.Ids() {
+	for _, id := range c.Cache.Ids() {
 		go c.MarketRoutine(ctx, liquidationCh, id)
 	}
 }
@@ -75,10 +75,10 @@ func (c *MarketConsumer) MarketInitTicker(ctx context.Context, id [32]byte) (*ti
 		case <-ctx.Done():
 			return nil, time.Second
 		case <-time.After(500 * time.Millisecond):
-			snap = c.Cache.Markets.GetSnapshot(id)
+			snap = c.Cache.GetSnapshot(id)
 		}
 	}
-	morphoM := c.Cache.MarketMap[id]
+	morphoM := c.Cache.MorphoMarketByID(id)
 	return SnapToTickerInterval(*snap, morphoM)
 
 }
@@ -142,14 +142,7 @@ func (r *MarketConsumer) MarketOnchainRefresh(ctx context.Context, ms *marketSta
 
 // Sorting + Hf recalculate
 func (r *MarketConsumer) MarketRecompute(ms *marketState, id [32]byte) {
-	r.Cache.Markets.Update(id, func(m *cache.Market) {
-		m.RecomputeHFUnsafe(len(m.Positions) / 2)
-		if ms.tickCount%10 == 0 {
-			m.RecomputeHFUnsafe(len(m.Positions))
-			m.SortAllPositionsByHFUnsafe()
-		}
-	})
-
+	r.Cache.UpdateRecompute(id, ms.tickCount)
 }
 
 func (r *MarketConsumer) LiquidationCheck(ctx context.Context, snap cache.MarketSnapshot, ms *marketState, liquidationCh chan cache.BorrowPosition) {
@@ -245,7 +238,7 @@ func (m *MarketConsumer) EventListener(ctx context.Context) {
 			if !ok {
 				return
 			}
-			onchain.ProcessEvents(m.Cache.Markets, event, m.Config.MorphoABI)
+			onchain.ProcessEvents(m.Cache, event, m.Config.MorphoABI)
 		}
 	}
 }

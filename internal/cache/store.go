@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/Stupnikjs/liquid/internal/utils"
+	"github.com/ethereum/go-ethereum/common"
 )
 
-func (s *MarketStore) Ids() [][32]byte {
+func (s *Cache) Ids() [][32]byte {
 	s.mu.RLock()
-	ids := make([][32]byte, 0, len(s.markets))
-	for id, m := range s.markets {
+	ids := make([][32]byte, 0, len(s.Markets.markets))
+	for id, m := range s.Markets.markets {
 		if !m.Canceled {
 			ids = append(ids, id)
 		}
@@ -69,9 +70,105 @@ func (c *Cache) UpdateMaxCollateralPos(id [32]byte, MaxCollateralPos *big.Int) {
 	})
 }
 
-func (s *MarketStore) GetSnapshot(id [32]byte) *MarketSnapshot {
+func (c *Cache) UpdateAccrueInterest(id [32]byte, interest, prevBorrowRate *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		if m.Stats.TotalBorrowAssets == nil {
+			return
+		}
+		m.Stats.TotalBorrowAssets.Add(m.Stats.TotalBorrowAssets, interest)
+		m.Stats.BorrowRate = prevBorrowRate
+	})
+}
+
+func (c *Cache) UpdateRepay(id [32]byte, onBehalf common.Address, shares *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p == nil {
+			return
+		}
+		p.BorrowShares.Sub(p.BorrowShares, shares)
+		if p.BorrowShares.Sign() <= 0 {
+			m.RemovePosition(onBehalf)
+		}
+		m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, shares)
+	})
+}
+
+func (c *Cache) UpdateBorrow(id [32]byte, onBehalf common.Address, shares *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p != nil {
+			if p.BorrowShares == nil {
+				p.BorrowShares = new(big.Int)
+			}
+			p.BorrowShares.Add(p.BorrowShares, shares)
+		} else {
+			m.InsertPositionUnsafe(&BorrowPosition{
+				MarketID:     id,
+				Address:      onBehalf,
+				BorrowShares: new(big.Int).Set(shares),
+			})
+		}
+		m.Stats.TotalBorrowShares.Add(m.Stats.TotalBorrowShares, shares)
+	})
+}
+
+func (c *Cache) UpdateSupplyCollateral(id [32]byte, onBehalf common.Address, assets *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p == nil {
+			m.InsertPositionUnsafe(&BorrowPosition{
+				MarketID:         id,
+				Address:          onBehalf,
+				CollateralAssets: new(big.Int).Set(assets),
+			})
+		} else {
+			if p.CollateralAssets == nil {
+				p.CollateralAssets = new(big.Int).Set(assets)
+			} else {
+				p.CollateralAssets.Add(p.CollateralAssets, assets)
+			}
+		}
+	})
+}
+
+func (c *Cache) UpdateLiquidate(id [32]byte, onBehalf common.Address, repaidShares, badDebtShares *big.Int) {
+	c.Markets.Update(id, func(m *Market) {
+		p := m.GetBorrowPosition(onBehalf)
+		if p == nil {
+			return
+		}
+		p.BorrowShares.Sub(p.BorrowShares, repaidShares)
+		if p.BorrowShares.Sign() <= 0 {
+			fmt.Println("borrow liquidated :", p.Address)
+			m.RemovePosition(onBehalf)
+		}
+		if m.Stats.TotalBorrowShares != nil {
+			m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, repaidShares)
+			m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, badDebtShares)
+		}
+	})
+}
+
+func (c *Cache) UpdateRecompute(id [32]byte, tickCount int) {
+	c.Markets.Update(id, func(m *Market) {
+		m.RecomputeHFUnsafe(len(m.Positions) / 2)
+		if tickCount%10 == 0 {
+			m.RecomputeHFUnsafe(len(m.Positions))
+			m.SortAllPositionsByHFUnsafe()
+		}
+	})
+}
+
+func (c *Cache) CancelMarket(id [32]byte) {
+	c.Markets.Update(id, func(m *Market) {
+		m.Canceled = true
+	})
+}
+
+func (s *Cache) GetSnapshot(id [32]byte) *MarketSnapshot {
 	s.mu.RLock()
-	market := s.markets[id]
+	market := s.Markets.markets[id]
 	s.mu.RUnlock()
 	if market == nil {
 		return nil
@@ -116,10 +213,10 @@ type MarketAnalysis struct {
 }
 
 func (c *Cache) LogMarkets() {
-	ids := c.Markets.Ids()
+	ids := c.Ids()
 	for _, id := range ids {
 		m := c.MarketMap[id]
-		snap := c.Markets.GetSnapshot(id)
+		snap := c.GetSnapshot(id)
 		if snap == nil {
 			continue
 		}

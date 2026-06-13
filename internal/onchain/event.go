@@ -31,7 +31,7 @@ func ProcessEvents(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) 
 	}
 }
 
-func BorrowEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {
+func BorrowEventProcess(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) {
 	// indexed → topics
 	id := [32]byte(log.Topics[1])
 	if !slices.Contains(c.Ids(), id) {
@@ -47,25 +47,10 @@ func BorrowEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.Morph
 	}
 	shares := out["shares"].(*big.Int)
 
-	c.Update(id, func(m *cache.Market) {
-		p := m.GetBorrowPosition(onBehalf)
-		if p != nil {
-			if p.BorrowShares == nil {
-				p.BorrowShares = new(big.Int)
-			}
-			p.BorrowShares.Add(p.BorrowShares, shares)
-		} else {
-			m.InsertPositionUnsafe(&cache.BorrowPosition{
-				MarketID:     id,
-				Address:      onBehalf,
-				BorrowShares: new(big.Int).Set(shares),
-			})
-		}
-		m.Stats.TotalBorrowShares.Add(m.Stats.TotalBorrowShares, shares)
-	})
+	c.UpdateBorrow(id, onBehalf, shares)
 }
 
-func RepayEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {
+func RepayEventProcess(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) {
 	id := [32]byte(log.Topics[1])
 	if !slices.Contains(c.Ids(), id) {
 		return
@@ -79,21 +64,11 @@ func RepayEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.Morpho
 		return
 	}
 	shares := out["shares"].(*big.Int)
+	c.UpdateRepay(id, onBehalf, shares)
 
-	c.Update(id, func(m *cache.Market) {
-		p := m.GetBorrowPosition(onBehalf)
-		if p == nil {
-			return
-		}
-		p.BorrowShares.Sub(p.BorrowShares, shares)
-		if p.BorrowShares.Sign() <= 0 {
-			m.RemovePosition(onBehalf)
-		}
-		m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, shares)
-	})
 }
 
-func LiquidateEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {
+func LiquidateEventProcess(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) {
 	id := [32]byte(log.Topics[1])
 	if !slices.Contains(c.Ids(), id) {
 		return
@@ -101,32 +76,18 @@ func LiquidateEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.Mo
 
 	borrower := common.BytesToAddress(log.Topics[3].Bytes())
 
-	out := map[string]interface{}{}
+	out := map[string]any{}
 	if err := mabi.Events.Liquidate.Inputs.UnpackIntoMap(out, log.Data); err != nil {
 		fmt.Println("liquidate decode error:", err)
 		return
 	}
 	repaidShares := out["repaidShares"].(*big.Int)
 	badDebtShares := out["badDebtShares"].(*big.Int)
+	c.UpdateLiquidate(id, borrower, repaidShares, badDebtShares)
 
-	c.Update(id, func(m *cache.Market) {
-		p := m.GetBorrowPosition(borrower)
-		if p == nil {
-			return
-		}
-		p.BorrowShares.Sub(p.BorrowShares, repaidShares)
-		if p.BorrowShares.Sign() <= 0 {
-			fmt.Println("borrow liquidated :", p.Address)
-			m.RemovePosition(borrower)
-		}
-		if m.Stats.TotalBorrowShares != nil {
-			m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, repaidShares)
-			m.Stats.TotalBorrowShares.Sub(m.Stats.TotalBorrowShares, badDebtShares)
-		}
-	})
 }
 
-func AccrueInterestEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {
+func AccrueInterestEventProcess(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) {
 	id := [32]byte(log.Topics[1])
 	if !slices.Contains(c.Ids(), id) {
 		return
@@ -139,17 +100,11 @@ func AccrueInterestEventProcess(c *cache.MarketStore, log *types.Log, mabi *morp
 	}
 	interest := out["interest"].(*big.Int)
 	prevBorrowRate := out["prevBorrowRate"].(*big.Int)
+	c.UpdateAccrueInterest(id, interest, prevBorrowRate)
 
-	c.Update(id, func(m *cache.Market) {
-		if m.Stats.TotalBorrowAssets == nil {
-			return
-		}
-		m.Stats.TotalBorrowAssets.Add(m.Stats.TotalBorrowAssets, interest)
-		m.Stats.BorrowRate = prevBorrowRate
-	})
 }
 
-func SupplyCollateralEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {
+func SupplyCollateralEventProcess(c cache.MarketCache, log *types.Log, mabi *morpho.MorphoABI) {
 	id := [32]byte(log.Topics[1])
 	if !slices.Contains(c.Ids(), id) {
 		return
@@ -163,23 +118,8 @@ func SupplyCollateralEventProcess(c *cache.MarketStore, log *types.Log, mabi *mo
 		return
 	}
 	assets := out["assets"].(*big.Int)
+	c.UpdateSupplyCollateral(id, onBehalf, assets)
 
-	c.Update(id, func(m *cache.Market) {
-		p := m.GetBorrowPosition(onBehalf)
-		if p == nil {
-			m.InsertPositionUnsafe(&cache.BorrowPosition{
-				MarketID:         id,
-				Address:          onBehalf,
-				CollateralAssets: new(big.Int).Set(assets),
-			})
-		} else {
-			if p.CollateralAssets == nil {
-				p.CollateralAssets = new(big.Int).Set(assets)
-			} else {
-				p.CollateralAssets.Add(p.CollateralAssets, assets)
-			}
-		}
-	})
 }
 
 func WithdrawCollateralEventProcess(c *cache.MarketStore, log *types.Log, mabi *morpho.MorphoABI) {}
