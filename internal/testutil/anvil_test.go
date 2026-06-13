@@ -81,9 +81,9 @@ func TestLiquidate(t *testing.T) {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
 	// Drop oracle à 80%
-	price70 := new(big.Int).Mul(price, big.NewInt(70))
-	price70.Div(price70, big.NewInt(100))
-	a.SetOraclePrice(t, txCtx.client, market.Oracle, price70)
+	price60 := new(big.Int).Mul(price, big.NewInt(60))
+	price60.Div(price60, big.NewInt(100))
+	a.SetOraclePrice(t, txCtx.client, market.Oracle, price60)
 
 	new_price := txCtx.PriceCall(ctx)
 	t.Logf("new %s old %s", utils.FormatDecimals(new_price, 24), utils.FormatDecimals(price, 24))

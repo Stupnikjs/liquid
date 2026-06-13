@@ -47,7 +47,7 @@ func buildWETHUSDCSwapStep() swap.SwapStep {
 	data, _ := exactSingleInputMethod.Inputs.Pack(
 		weth,
 		usdc,
-		big.NewInt(int64(0)),
+		big.NewInt(int64(500)),
 		config.BaseLiquidatorLast,
 		big.NewInt(0), // placeholder, patché on-chain
 		big.NewInt(0),
@@ -59,7 +59,7 @@ func buildWETHUSDCSwapStep() swap.SwapStep {
 		Data:           data,
 		TokenIn:        weth,
 		TokenOut:       usdc,
-		AmountInOffset: big.NewInt(132),
+		AmountInOffset: big.NewInt(164),
 	}
 }
 
@@ -190,7 +190,11 @@ func (a *AnvilInstance) LiquidationSetup(t *testing.T, ethprice *big.Int) {
 	// passer le prix de l'eth en usdc
 
 	amount := new(big.Int).Mul(market.LLTV, ethprice)
-	borrowAmount := new(big.Int).Div(amount, utils.TenPowInt(42))
+	amount.Mul(amount, big.NewInt(95)) // 95% du LLTV max
+	amount.Div(amount, big.NewInt(100))
+	borrowAmount := new(big.Int).Div(amount, utils.TenPowInt(36))
 
+	t.Logf("ethprice: %s", ethprice.String())
+	t.Logf("borrowAmount: %s", borrowAmount.String())
 	a.ApproveAndBorrow(t, oneETH, borrowAmount)
 }

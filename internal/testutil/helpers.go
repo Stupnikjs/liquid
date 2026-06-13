@@ -78,7 +78,7 @@ func (c *txCtx) CallPosition(ctx context.Context) {
 	morphoABI := `[{"inputs":[{"type":"bytes32"},{"type":"address"}],"name":"position","outputs":[{"name":"supplyShares","type":"uint256"},{"name":"borrowShares","type":"uint128"},{"name":"collateral","type":"uint128"}],"stateMutability":"view","type":"function"}]`
 
 	parsed, _ := abi.JSON(strings.NewReader(morphoABI))
-	marketId := "0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda"
+	marketId := common.HexToHash("0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda")
 	calldata, _ := parsed.Pack("position", marketId, common.HexToAddress(FundedAccounts[0]))
 
 	result, err := c.client.CallContract(ctx, ethereum.CallMsg{
