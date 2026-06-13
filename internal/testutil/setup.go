@@ -2,10 +2,7 @@ package testutil
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"math/big"
-	"os"
 	"testing"
 
 	"github.com/Stupnikjs/liquid/internal/config"
@@ -18,18 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-
-	"github.com/joho/godotenv"
 )
-
-func TestMain(m *testing.M) {
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Println("no .env file found, using system env")
-	}
-	fmt.Println(os.Getenv("BASE_HTTP_RPC_ALCH"))
-	os.Exit(m.Run())
-
-}
 
 func encodeMarketParams(m morpho.MarketParams) []byte {
 	buf := make([]byte, 5*32)

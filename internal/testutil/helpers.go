@@ -2,11 +2,15 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/big"
+	"strings"
 
+	"github.com/Stupnikjs/liquid/internal/config"
 	"github.com/Stupnikjs/liquid/pkg/morpho"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -68,4 +72,31 @@ func (c *txCtx) PriceCall(ctx context.Context) *big.Int {
 	}
 
 	return new(big.Int).SetBytes(result)
+}
+
+func (c *txCtx) CallPosition(ctx context.Context) {
+	morphoABI := `[{"inputs":[{"type":"bytes32"},{"type":"address"}],"name":"position","outputs":[{"name":"supplyShares","type":"uint256"},{"name":"borrowShares","type":"uint128"},{"name":"collateral","type":"uint128"}],"stateMutability":"view","type":"function"}]`
+
+	parsed, _ := abi.JSON(strings.NewReader(morphoABI))
+	marketId := "0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda"
+	calldata, _ := parsed.Pack("position", marketId, common.HexToAddress(FundedAccounts[0]))
+
+	result, err := c.client.CallContract(ctx, ethereum.CallMsg{
+		To:   &config.MorphoMain,
+		Data: calldata,
+	}, nil)
+	if err != nil {
+		fmt.Println("CallContract error:", err)
+		return
+	}
+
+	vals, err := parsed.Unpack("position", result)
+	if err != nil {
+		fmt.Println("Unpack error:", err)
+		return
+	}
+
+	fmt.Println("supplyShares:", vals[0])
+	fmt.Println("borrowShares:", vals[1])
+	fmt.Println("collateral:  ", vals[2])
 }

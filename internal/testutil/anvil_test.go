@@ -2,6 +2,8 @@ package testutil
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"math/big"
 	"os"
 	"testing"
@@ -13,7 +15,17 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/joho/godotenv"
 )
+
+func TestMain(m *testing.M) {
+	if err := godotenv.Load("../../.env"); err != nil {
+		log.Println("no .env file found, using system env")
+	}
+	fmt.Println(os.Getenv("BASE_HTTP_RPC_ALCH"))
+	os.Exit(m.Run())
+
+}
 
 func TestWrapETH(t *testing.T) {
 	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
@@ -69,14 +81,16 @@ func TestLiquidate(t *testing.T) {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
 	// Drop oracle à 80%
-	price80 := new(big.Int).Mul(price, big.NewInt(80))
-	price80.Div(price80, big.NewInt(100))
-	a.SetOraclePrice(t, txCtx.client, market.Oracle, price80)
+	price70 := new(big.Int).Mul(price, big.NewInt(70))
+	price70.Div(price70, big.NewInt(100))
+	a.SetOraclePrice(t, txCtx.client, market.Oracle, price70)
 
 	new_price := txCtx.PriceCall(ctx)
+	t.Logf("new %s old %s", utils.FormatDecimals(new_price, 24), utils.FormatDecimals(price, 24))
 	if new_price.Cmp(price) == 0 || new_price.Cmp(price) > 1 {
 		t.Error("SetOraclePrice failed ")
 	}
+	txCtx.CallPosition(ctx)
 	receipt := sendAndWait(
 		t,
 		txCtx.client,
