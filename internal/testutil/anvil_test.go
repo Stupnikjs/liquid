@@ -12,9 +12,11 @@ import (
 	"github.com/Stupnikjs/liquid/internal/liquidate"
 	"github.com/Stupnikjs/liquid/internal/utils"
 	"github.com/Stupnikjs/liquid/pkg/swap"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/joho/godotenv"
 )
 
@@ -91,11 +93,27 @@ func TestLiquidate(t *testing.T) {
 		t.Error("SetOraclePrice failed ")
 	}
 	txCtx.CallPosition(ctx)
+	// avant sendAndWait
+	gas, err := txCtx.client.EstimateGas(ctx, ethereum.CallMsg{
+		From: sender,
+		To:   &config.BaseLiquidatorLast,
+		Data: calldata,
+	})
+	if err != nil {
+		t.Fatalf("estimateGas: %v", err)
+	}
+	t.Logf("estimateGas: %d", gas)
+
+	senderNonce, err := txCtx.client.PendingNonceAt(ctx, sender)
+	if err != nil {
+		t.Fatalf("nonce: %v", err)
+	}
+
 	receipt := sendAndWait(
 		t,
 		txCtx.client,
 		context.Background(),
-		txCtx.nonce+1,
+		senderNonce,
 		txCtx.gasPrice,
 		txCtx.chainID,
 		config.BaseLiquidatorLast, // to: le contrat liquidateur

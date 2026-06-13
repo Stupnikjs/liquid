@@ -217,8 +217,8 @@ func sendAndWait(t *testing.T, client *ethclient.Client, ctx context.Context,
 	t.Logf("txHash: %s", signed.Hash())
 
 	var receipt *types.Receipt
-	for i := 0; i < 20; i++ {
-		time.Sleep(300 * time.Millisecond)
+	for i := 0; i < 60; i++ {
+		time.Sleep(500 * time.Millisecond)
 		receipt, err = client.TransactionReceipt(ctx, signed.Hash())
 		if err == nil {
 			break

@@ -42,24 +42,38 @@ func (a *AnvilInstance) SetOraclePrice(t *testing.T, client *ethclient.Client, o
 }
 
 func buildWETHUSDCSwapStep() swap.SwapStep {
-
 	exactSingleInputMethod := swap.UniExactInputSingleMethod()
-	data, _ := exactSingleInputMethod.Inputs.Pack(
-		weth,
-		usdc,
-		big.NewInt(int64(500)),
-		config.BaseLiquidatorLast,
-		big.NewInt(0), // placeholder, patché on-chain
-		big.NewInt(0),
-		big.NewInt(0),
-	)
+
+	type ExactInputSingleParams struct {
+		TokenIn           common.Address
+		TokenOut          common.Address
+		Fee               *big.Int
+		Recipient         common.Address
+		AmountIn          *big.Int
+		AmountOutMinimum  *big.Int
+		SqrtPriceLimitX96 *big.Int
+	}
+
+	data, _ := exactSingleInputMethod.Inputs.Pack(ExactInputSingleParams{
+		TokenIn:           weth,
+		TokenOut:          usdc,
+		Fee:               big.NewInt(500),
+		Recipient:         config.BaseLiquidatorLast,
+		AmountIn:          big.NewInt(0),
+		AmountOutMinimum:  big.NewInt(0),
+		SqrtPriceLimitX96: big.NewInt(0),
+	})
+
+	// ajouter le selector manuellement
+	selector := exactSingleInputMethod.ID // 4 bytes
+	calldata := append(selector, data...)
 
 	return swap.SwapStep{
 		Target:         config.BaseUniswapV3Router,
-		Data:           data,
+		Data:           calldata,
 		TokenIn:        weth,
 		TokenOut:       usdc,
-		AmountInOffset: big.NewInt(164),
+		AmountInOffset: big.NewInt(132),
 	}
 }
 
