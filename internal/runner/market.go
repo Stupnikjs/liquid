@@ -173,12 +173,12 @@ func distanceToInterval(distance float64) time.Duration {
 		return 1 * time.Second
 	case distance < 0.005:
 		return 2 * time.Second
-	// 2% to liquidation or 0.02% for correlated ETH pairs
+	// 1% to liquidation or 0.02% for correlated ETH pairs
 	case distance < 0.01:
 		return 4 * time.Second
 	case distance < 0.02:
 		return 10 * time.Second
-	// 20% to liquidation or 0.2% for correlated ETH pairs
+	// 2% to liquidation or 0.02% for correlated ETH pairs
 	case distance < 0.10:
 		// 8min20sec
 		return 500 * time.Second

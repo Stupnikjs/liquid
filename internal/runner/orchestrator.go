@@ -32,6 +32,7 @@ func LaunchRunner(conf config.Config, filters api.MarketFilters) *Runner {
 		return nil
 	}
 	markets := api.FilterMarket(result, filters, conf.ChainID)
+	fmt.Printf("found %d markets from api \n", len(markets))
 	cached := cache.NewCache(conf, markets, filters)
 
 	// pass empty
