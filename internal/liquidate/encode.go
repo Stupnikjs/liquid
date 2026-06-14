@@ -23,15 +23,6 @@ var liquidateFunc = w3.MustNewFunc(`liquidate(
 
 )`, "")
 */
-type ExactInputSingleParams struct {
-	TokenIn           common.Address
-	TokenOut          common.Address
-	Fee               *big.Int
-	Recipient         common.Address
-	AmountIn          *big.Int
-	AmountOutMinimum  *big.Int
-	SqrtPriceLimitX96 *big.Int
-}
 
 func ToLiquidationArg(liquidatorContractAddr common.Address, l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
 	m := params.ToMarketContractParams()
@@ -55,7 +46,7 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 			selector := exactSingleInputMethod.ID
 
 			data, err := exactSingleInputMethod.Inputs.Pack(
-				ExactInputSingleParams{
+				swap.ExactInputSingleParams{
 					TokenIn:           hop.TokenIn,
 					TokenOut:          hop.TokenOut,
 					Fee:               big.NewInt(int64(hop.Fee)),
@@ -83,14 +74,16 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 			pankakeExactSingleInputMethod := swap.PancakeExactInputSingleMethod()
 
 			data, err := pankakeExactSingleInputMethod.Inputs.Pack(
-				hop.TokenIn,
-				hop.TokenOut,
-				big.NewInt(int64(hop.Fee)),
-				liquidatorAddress,
-				big.NewInt(0), // placeholder, patché on-chain
-				big.NewInt(0), // placeholder, patché on-chain
-				big.NewInt(0),
-				big.NewInt(0),
+				swap.PankakeExactInputSingleParams{
+					TokenIn:           hop.TokenIn,
+					TokenOut:          hop.TokenOut,
+					Fee:               big.NewInt(int64(hop.Fee)),
+					Recipient:         liquidatorAddress,
+					Deadline:          big.NewInt(0),
+					AmountIn:          big.NewInt(0), // placeholder, patché on-chain
+					AmountOutMinimum:  big.NewInt(0),
+					SqrtPriceLimitX96: big.NewInt(0), // placeholder, patché on-chain
+				},
 			)
 			if err != nil {
 				return nil, err

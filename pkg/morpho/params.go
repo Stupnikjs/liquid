@@ -49,6 +49,10 @@ func (m *MarketParams) IsETHCorrelated() bool {
 	return strings.Contains(m.CollateralTokenStr, "ETH") && strings.Contains(m.LoanTokenStr, "ETH")
 }
 
+func (m *MarketParams) IsBTCCorrelated() bool {
+	return strings.Contains(m.CollateralTokenStr, "BTC") && strings.Contains(m.LoanTokenStr, "BTC")
+}
+
 func (m *MarketParams) GetPair() string {
 	return fmt.Sprintf("%s/%s", m.CollateralTokenStr, m.LoanTokenStr)
 }

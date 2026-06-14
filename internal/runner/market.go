@@ -91,7 +91,7 @@ func SnapToTickerInterval(snap cache.MarketSnapshot, morphoM morpho.MarketParams
 
 	diff := utils.DiffWADToFloat(firstHF)
 	var interval time.Duration
-	if morphoM.IsETHCorrelated() {
+	if morphoM.IsETHCorrelated() || morphoM.IsBTCCorrelated() {
 		diff *= 100
 	}
 	interval = distanceToInterval(diff)

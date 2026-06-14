@@ -194,7 +194,7 @@ func New(endpoints RPCEndpoints) *EthConnector {
 		ws:        ws,
 		dialWS:    dial,
 		endpoints: endpoints,
-		limiter:   rate.NewLimiter(rate.Every(time.Minute/300), 10),
+		limiter:   rate.NewLimiter(rate.Every(time.Minute/200), 10),
 	}
 }
 

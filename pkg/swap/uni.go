@@ -22,6 +22,27 @@ type QuoteExactInputSingleParams struct {
 	SqrtPriceLimitX96 *big.Int
 }
 
+type ExactInputSingleParams struct {
+	TokenIn           common.Address
+	TokenOut          common.Address
+	Fee               *big.Int
+	Recipient         common.Address
+	AmountIn          *big.Int
+	AmountOutMinimum  *big.Int
+	SqrtPriceLimitX96 *big.Int
+}
+
+type PankakeExactInputSingleParams struct {
+	TokenIn           common.Address
+	TokenOut          common.Address
+	Fee               *big.Int
+	Recipient         common.Address
+	Deadline          *big.Int
+	AmountIn          *big.Int
+	AmountOutMinimum  *big.Int
+	SqrtPriceLimitX96 *big.Int
+}
+
 func (u *UniswapV3) BestAmountIn(
 	conn connector.Connector,
 	marketp MorphoMarket,
