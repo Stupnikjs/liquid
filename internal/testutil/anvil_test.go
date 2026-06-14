@@ -56,6 +56,7 @@ func TestLiquidate(t *testing.T) {
 
 	a := StartAnvilFork(t, os.Getenv("BASE_HTTP_RPC_ALCH"), 0)
 	ctx := context.Background()
+
 	txCtx, err := a.newTxCtx(t, os.Getenv("BASE_PK")[2:])
 	privKey, _ := crypto.HexToECDSA(os.Getenv("BASE_PK")[2:])
 	sender := crypto.PubkeyToAddress(privKey.PublicKey)
@@ -70,11 +71,10 @@ func TestLiquidate(t *testing.T) {
 	a.LiquidationSetup(t, price)
 
 	marketParam := *market.ToMarketContractParams()
-
 	calldata, err := liquidate.BuildLiquidateCalldata(
 		marketParam,
 		common.HexToAddress(FundedAccounts[0]),
-		utils.WAD,
+		utils.WAD, // seize all collateral
 		big.NewInt(0),
 		[]swap.SwapStep{buildWETHUSDCSwapStep()},
 		big.NewInt(0),
@@ -82,7 +82,7 @@ func TestLiquidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("EncodeLiquidateCalldata: %v", err)
 	}
-	// Drop oracle à 80%
+	// Drop oracle à 60%
 	price60 := new(big.Int).Mul(price, big.NewInt(60))
 	price60.Div(price60, big.NewInt(100))
 	a.SetOraclePrice(t, txCtx.client, market.Oracle, price60)

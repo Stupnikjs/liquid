@@ -21,7 +21,6 @@ type MarketParams struct {
 	LoanTokenStr            string   // 16
 	CollateralTokenStr      string   // 16
 	ChainID                 uint32   // 4
-	PoolFee                 int32    // 4 ← change int→int32, suffisant pour un fee
 	LoanTokenDecimals       uint16   // 2
 	CollateralTokenDecimals uint16   // 2
 	// 3 padding
