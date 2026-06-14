@@ -13,14 +13,25 @@ import (
 // Passer de la logique dans swap pkg
 // ABI de la fonction liquidate
 var liquidateFunc = w3.MustNewFunc(`liquidate(
-    (address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
-    address borrower,
-    uint256 seizedAssets,
-    uint256 repaidShares,
-    (address target, bytes data, address tokenIn, address tokenOut, uint256 amountInOffset)[] steps,
-    uint256 minOut
+
+	(address loanToken, address collateralToken, address oracle, address irm, uint256 lltv) marketParams,
+	address borrower,
+	uint256 seizedAssets,
+	uint256 repaidShares,
+	(address target, bytes data, address tokenIn, address tokenOut, uint256 amountInOffset)[] steps,
+	uint256 minOut
+
 )`, "")
 */
+type ExactInputSingleParams struct {
+	TokenIn           common.Address
+	TokenOut          common.Address
+	Fee               *big.Int
+	Recipient         common.Address
+	AmountIn          *big.Int
+	AmountOutMinimum  *big.Int
+	SqrtPriceLimitX96 *big.Int
+}
 
 func ToLiquidationArg(liquidatorContractAddr common.Address, l *Liquidable, params morpho.MarketParams, route []swap.PoolEdge) ([]byte, error) {
 	m := params.ToMarketContractParams()
@@ -41,22 +52,28 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 		case "UNIV3":
 
 			exactSingleInputMethod := swap.UniExactInputSingleMethod()
+			selector := exactSingleInputMethod.ID
+
 			data, err := exactSingleInputMethod.Inputs.Pack(
-				hop.TokenIn,
-				hop.TokenOut,
-				big.NewInt(int64(hop.Fee)),
-				liquidatorAddress,
-				big.NewInt(0), // placeholder, patché on-chain
-				big.NewInt(0),
-				big.NewInt(0),
+				ExactInputSingleParams{
+					TokenIn:           hop.TokenIn,
+					TokenOut:          hop.TokenOut,
+					Fee:               big.NewInt(int64(hop.Fee)),
+					Recipient:         liquidatorAddress,
+					AmountIn:          big.NewInt(0), // placeholder, patché on-chain
+					AmountOutMinimum:  big.NewInt(0),
+					SqrtPriceLimitX96: big.NewInt(0), // placeholder, patché on-chain
+				},
 			)
 			if err != nil {
 				return nil, err
 			}
 
+			calldata := append(append([]byte{}, selector...), data...)
+
 			steps[i] = swap.SwapStep{
 				Target:         hop.Router,
-				Data:           data,
+				Data:           calldata,
 				TokenIn:        hop.TokenIn,
 				TokenOut:       hop.TokenOut,
 				AmountInOffset: big.NewInt(132), // 32 + 4 + 4*32 pour exactInputSingle
@@ -64,6 +81,7 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 
 		case "PANCAKE":
 			pankakeExactSingleInputMethod := swap.PancakeExactInputSingleMethod()
+
 			data, err := pankakeExactSingleInputMethod.Inputs.Pack(
 				hop.TokenIn,
 				hop.TokenOut,
@@ -77,10 +95,11 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 			if err != nil {
 				return nil, err
 			}
-
+			selector := pankakeExactSingleInputMethod.ID
+			calldata := append(append([]byte{}, selector...), data...)
 			steps[i] = swap.SwapStep{
 				Target:         hop.Router,
-				Data:           data,
+				Data:           calldata, // AJOUTER LE SELECTOR
 				TokenIn:        hop.TokenIn,
 				TokenOut:       hop.TokenOut,
 				AmountInOffset: big.NewInt(164), // 32 + 4 + 4*32 pour exactInputSingle
@@ -89,6 +108,7 @@ func BuildSteps(route []swap.PoolEdge, liquidatorAddress common.Address) ([]swap
 		default:
 			return nil, fmt.Errorf("DEX non supporté: %s", hop.DexName)
 		}
+
 	}
 
 	return steps, nil

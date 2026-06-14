@@ -81,6 +81,7 @@ func (c *txCtx) CallPosition(ctx context.Context) {
 	marketId := common.HexToHash("0x8793cf302b8ffd655ab97bd1c695dbd967807e8367a65cb2f4edaf1380ba1bda")
 	calldata, _ := parsed.Pack("position", marketId, common.HexToAddress(FundedAccounts[0]))
 
+	fmt.Println(">>> calling Morpho")
 	result, err := c.client.CallContract(ctx, ethereum.CallMsg{
 		To:   &config.MorphoMain,
 		Data: calldata,
@@ -90,13 +91,32 @@ func (c *txCtx) CallPosition(ctx context.Context) {
 		return
 	}
 
+	fmt.Println(">>> call succeeded")
 	vals, err := parsed.Unpack("position", result)
 	if err != nil {
 		fmt.Println("Unpack error:", err)
 		return
 	}
 
+	fmt.Println(">>> unpack succeeded")
 	fmt.Println("supplyShares:", vals[0])
 	fmt.Println("borrowShares:", vals[1])
 	fmt.Println("collateral:  ", vals[2])
+}
+
+func (c *txCtx) CallTokenBallance(ctx context.Context, token, addr common.Address) *big.Int {
+	calldata := make([]byte, 4+32)
+	copy(calldata[:4], balanceOfSelector)
+	copy(calldata[4+12:], addr.Bytes()) // adresse = 12 bytes de padding + 20 bytes
+
+	result, err := c.client.CallContract(ctx, ethereum.CallMsg{
+		To:   &token,
+		Data: calldata,
+	}, nil)
+	if err != nil {
+		log.Fatalf("balanceOf call: %v", err)
+	}
+	balance := new(big.Int).SetBytes(result)
+
+	return balance
 }

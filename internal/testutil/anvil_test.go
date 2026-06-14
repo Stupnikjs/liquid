@@ -108,7 +108,7 @@ func TestLiquidate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("nonce: %v", err)
 	}
-
+	t.Logf("%s usdc before", txCtx.CallTokenBallance(ctx, usdc, config.BaseLiquidatorLast).String())
 	receipt := sendAndWait(
 		t,
 		txCtx.client,
@@ -122,6 +122,8 @@ func TestLiquidate(t *testing.T) {
 		txCtx.privKey,
 	)
 
+	txCtx.CallPosition(ctx)
 	t.Logf("liquidation txHash: %s, status: %d", receipt.TxHash, receipt.Status)
+	t.Logf("%s usdc after", txCtx.CallTokenBallance(ctx, usdc, config.BaseLiquidatorLast).String())
 
 }

@@ -209,6 +209,16 @@ func sendAndWait(t *testing.T, client *ethclient.Client, ctx context.Context,
 	if err != nil {
 		t.Fatalf("signTx: %v", err)
 	}
+	_, err = client.CallContract(ctx, ethereum.CallMsg{
+		From:  crypto.PubkeyToAddress(privKey.PublicKey),
+		To:    &to,
+		Value: value,
+		Data:  data,
+	}, nil)
+
+	if err != nil {
+		t.Fatalf("simulation failed: %v", err)
+	}
 
 	if err := client.SendTransaction(ctx, signed); err != nil {
 		t.Fatalf("sendTransaction: %v", err)
