@@ -8,7 +8,6 @@ import (
 
 	"github.com/Stupnikjs/liquid/pkg/connector"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type UniSwapABI struct {
@@ -135,7 +134,7 @@ func uniQuoteCall(
 	if err != nil {
 		return PoolEdge{}, false
 	}
-	err = conn.CallCtx(context.Background(), []rpc.BatchElem{quoteCall.Elem})
+	err = conn.SecondCallCtx(context.Background(), quoteCall.Elem)
 	if err != nil {
 		return PoolEdge{}, false
 	}
